@@ -4,6 +4,8 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { bounties$, bounty$ } from "./bounties.state";
+import { useNavigate } from "react-router-dom";
+import { DotValue } from "@/components/DotValue";
 
 export const HomePage = () => {
   const bounties = useStateObservable(bounties$);
@@ -30,22 +32,28 @@ export const HomePage = () => {
     </Card>
   );
 };
+export const homePage$ = bounties$;
 
 const BountyRow: FC<{ id: number }> = ({ id }) => {
   const bounty = useStateObservable(bounty$(id));
+  const navigate = useNavigate();
   if (!bounty) return null;
 
   return (
-    <TableRow>
+    <TableRow
+      className="cursor-pointer"
+      onClick={() => navigate(`/bounty/${id}`)}
+    >
       <TableCell className="font-medium text-right">{id}</TableCell>
       <TableCell>{bounty.description?.asText()}</TableCell>
       <TableCell>{bounty.status.type}</TableCell>
-      <TableCell className="text-right tabular-nums">
-        {formatDot(bounty.value)}
+      <TableCell className="text-right">
+        <DotValue
+          value={bounty.value}
+          className="tabular-nums"
+          fixedDecimals={2}
+        />
       </TableCell>
     </TableRow>
   );
 };
-
-const formatDot = (value: bigint) =>
-  (value / 10_000_000_000n).toLocaleString() + " DOT";
