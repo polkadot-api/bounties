@@ -1,22 +1,9 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { bounties$, bounty$ } from "./bounties.state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export const HomePage = () => {
   const bounties = useStateObservable(bounties$);

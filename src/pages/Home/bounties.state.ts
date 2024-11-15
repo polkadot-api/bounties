@@ -1,11 +1,21 @@
-import { client, typedApi } from "@/chain";
+import { typedApi } from "@/chain";
 import { state } from "@react-rxjs/core";
-import { combineLatest, exhaustMap, filter, from, map, startWith } from "rxjs";
+import {
+  combineLatest,
+  filter,
+  from,
+  map,
+  skip,
+  startWith,
+  switchMap,
+} from "rxjs";
 
 export const bounties$ = state(
   // TODO watchEntries
-  client.finalizedBlock$.pipe(
-    exhaustMap(() => typedApi.query.Bounties.Bounties.getEntries()),
+  typedApi.query.Bounties.BountyCount.watchValue().pipe(
+    skip(1),
+    startWith(null),
+    switchMap(() => typedApi.query.Bounties.Bounties.getEntries()),
     map((v) => v.sort((a, b) => b.keyArgs[0] - a.keyArgs[0]))
   ),
   null
