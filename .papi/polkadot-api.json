@@ -5,6 +5,10 @@
     "polkadot": {
       "chain": "polkadot",
       "metadata": ".papi/metadata/polkadot.scale"
+    },
+    "polkadot_people": {
+      "chain": "polkadot_people",
+      "metadata": ".papi/metadata/polkadot_people.scale"
     }
   }
 }

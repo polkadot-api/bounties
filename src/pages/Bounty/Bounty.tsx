@@ -1,13 +1,15 @@
 import { DotValue } from "@/components/DotValue";
+import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useStateObservable } from "@react-rxjs/core";
-import { FC, PropsWithChildren } from "react";
+import { FC } from "react";
 import { Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { bounty$ } from "../Home/bounties.state";
 import { BlockDue } from "./BlockDue";
+import { BountyDetail } from "./BountyDetail";
 import { childBounties$, childBounty$ } from "./childBounties";
 import { ChildBounty } from "./ChildBounty";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 export const Bounty = () => {
   const id = Number(useParams().id);
@@ -42,28 +44,20 @@ export const Bounty = () => {
           </div>
           <div className="flex gap-2 border border-border rounded p-2 flex-col">
             <BountyDetail title="Status">{bounty.status.type}</BountyDetail>
-            {bounty.status.type === "CuratorProposed" && (
-              <BountyDetail title="Curator Proposed">
-                {bounty.status.value.curator}
+            {bounty.status.value && "curator" in bounty.status.value && (
+              <BountyDetail title="Curator">
+                <OnChainIdentity value={bounty.status.value.curator} />
               </BountyDetail>
             )}
             {bounty.status.type === "Active" && (
-              <>
-                <BountyDetail title="Curator">
-                  {bounty.status.value.curator}
-                </BountyDetail>
-                <BountyDetail title="Update due">
-                  <BlockDue block={bounty.status.value.update_due} />
-                </BountyDetail>
-              </>
+              <BountyDetail title="Update due">
+                <BlockDue block={bounty.status.value.update_due} />
+              </BountyDetail>
             )}
             {bounty.status.type === "PendingPayout" && (
               <>
-                <BountyDetail title="Curator">
-                  {bounty.status.value.curator}
-                </BountyDetail>
                 <BountyDetail title="Beneficiary">
-                  {bounty.status.value.beneficiary}
+                  <OnChainIdentity value={bounty.status.value.beneficiary} />
                 </BountyDetail>
                 <BountyDetail title="Unlock At">
                   <BlockDue block={bounty.status.value.unlock_at} />
@@ -112,16 +106,6 @@ export const Bounty = () => {
     </div>
   );
 };
-
-const BountyDetail: FC<PropsWithChildren<{ title: string }>> = ({
-  title,
-  children,
-}) => (
-  <p className="flex gap-1">
-    <span className="text-card-foreground/80 font-bold">{title}:</span>
-    <span>{children}</span>
-  </p>
-);
 
 const ChildRow: FC<{ id: number; parent: number }> = ({ id, parent }) => {
   const child = useStateObservable(childBounty$(parent, id));
