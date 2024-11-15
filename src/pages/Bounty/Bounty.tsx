@@ -1,12 +1,13 @@
-import { client } from "@/chain";
 import { DotValue } from "@/components/DotValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { state, useStateObservable } from "@react-rxjs/core";
+import { useStateObservable } from "@react-rxjs/core";
 import { FC, PropsWithChildren } from "react";
-import { useParams } from "react-router-dom";
-import { map } from "rxjs";
+import { Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { bounty$ } from "../Home/bounties.state";
+import { BlockDue } from "./BlockDue";
 import { childBounties$, childBounty$ } from "./childBounties";
+import { ChildBounty } from "./ChildBounty";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 export const Bounty = () => {
   const id = Number(useParams().id);
@@ -72,28 +73,42 @@ export const Bounty = () => {
           </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Child Bounties</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {childBounties ? (
-            Object.keys(childBounties).length ? (
-              <ul className="flex flex-col gap-4">
-                {Object.keys(childBounties)
-                  .reverse()
-                  .map((child) => (
-                    <ChildBounty key={child} parent={id} id={Number(child)} />
-                  ))}
-              </ul>
-            ) : (
-              <p>No child bounties found</p>
-            )
-          ) : (
-            <p>Loading…</p>
-          )}
-        </CardContent>
-      </Card>
+      <Routes>
+        <Route path=":childId/*" element={<ChildBounty />} />
+        <Route
+          path="*"
+          element={
+            <Card>
+              <CardHeader>
+                <CardTitle>Child Bounties</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {childBounties ? (
+                  Object.keys(childBounties).length ? (
+                    <Table className="flex flex-col gap-4">
+                      <TableBody>
+                        {Object.keys(childBounties)
+                          .reverse()
+                          .map((child) => (
+                            <ChildRow
+                              key={child}
+                              parent={id}
+                              id={Number(child)}
+                            />
+                          ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p>No child bounties found</p>
+                  )
+                ) : (
+                  <p>Loading…</p>
+                )}
+              </CardContent>
+            </Card>
+          }
+        />
+      </Routes>
     </div>
   );
 };
@@ -108,75 +123,24 @@ const BountyDetail: FC<PropsWithChildren<{ title: string }>> = ({
   </p>
 );
 
-const ChildBounty: FC<{ id: number; parent: number }> = ({ id, parent }) => {
+const ChildRow: FC<{ id: number; parent: number }> = ({ id, parent }) => {
   const child = useStateObservable(childBounty$(parent, id));
+  const navigate = useNavigate();
 
   if (!child) return null;
 
   return (
-    <li className="border border-border rounded p-2 flex flex-col gap-2">
-      <div className="flex gap-2 text-lg">
-        <span>{id}</span>
-        <span className="font-bold">{child.description?.asText()}</span>
-      </div>
-      <div className="flex gap-2 border border-border rounded p-2 flex-wrap justify-evenly">
-        <BountyDetail title="Value">
-          <DotValue value={child.value} />
-        </BountyDetail>
-        <BountyDetail title="Deposit">
-          <DotValue value={child.curator_deposit} />
-        </BountyDetail>
-        <BountyDetail title="Fee">
-          <DotValue value={child.fee} />
-        </BountyDetail>
-      </div>
-      <div className="flex gap-2 border border-border rounded p-2 flex-col">
-        <BountyDetail title="Status">{child.status.type}</BountyDetail>
-        {child.status.type === "CuratorProposed" ||
-          (child.status.type === "Active" && (
-            <BountyDetail title="Curator Proposed">
-              {child.status.value.curator}
-            </BountyDetail>
-          ))}
-        {child.status.type === "PendingPayout" && (
-          <>
-            <BountyDetail title="Curator">
-              {child.status.value.curator}
-            </BountyDetail>
-            <BountyDetail title="Beneficiary">
-              {child.status.value.beneficiary}
-            </BountyDetail>
-            <BountyDetail title="Unlock At">
-              <BlockDue block={child.status.value.unlock_at} />
-            </BountyDetail>
-          </>
-        )}
-      </div>
-    </li>
-  );
-};
-
-const currentFinalized$ = state(
-  client.finalizedBlock$.pipe(map((v) => v.number)),
-  null
-);
-const BLOCK_TIME = 6000;
-const MINUTE_MS = 60_000;
-const BlockDue: FC<{ block: number }> = ({ block }) => {
-  const currentFinalized = useStateObservable(currentFinalized$);
-  if (!currentFinalized) return null;
-
-  const blockDiff = block - currentFinalized;
-  const timeDiff = blockDiff * BLOCK_TIME;
-  const due = new Date(
-    // Round to the minute
-    Math.round((Date.now() + timeDiff) / MINUTE_MS) * MINUTE_MS
-  );
-
-  return (
-    <span className="text-foreground">
-      <span>#{block.toLocaleString()}</span>
-      <span className="ml-1 text-foreground/80">({due.toLocaleString()})</span>
-    </span>
+    <TableRow className="cursor-pointer" onClick={() => navigate(`${id}`)}>
+      <TableCell className="font-medium text-right">{id}</TableCell>
+      <TableCell className="w-full">{child.description?.asText()}</TableCell>
+      <TableCell>{child.status.type}</TableCell>
+      <TableCell className="text-right">
+        <DotValue
+          value={child.value}
+          className="tabular-nums"
+          fixedDecimals={2}
+        />
+      </TableCell>
+    </TableRow>
   );
 };
