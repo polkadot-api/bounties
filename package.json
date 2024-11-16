@@ -11,6 +11,7 @@
   "dependencies": {
     "@noble/hashes": "^1.5.0",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
+    "@radix-ui/react-popover": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.0",
     "@react-rxjs/core": "^0.10.7",
     "@react-rxjs/utils": "^0.9.7",

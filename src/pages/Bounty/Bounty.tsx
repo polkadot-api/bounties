@@ -10,6 +10,7 @@ import { BlockDue } from "./BlockDue";
 import { BountyDetail } from "./BountyDetail";
 import { childBounties$, childBounty$ } from "./childBounties";
 import { ChildBounty } from "./ChildBounty";
+import { IdentityLinksPopover } from "@/components/IdentityLinks";
 
 export const Bounty = () => {
   const id = Number(useParams().id);
@@ -46,7 +47,9 @@ export const Bounty = () => {
             <BountyDetail title="Status">{bounty.status.type}</BountyDetail>
             {bounty.status.value && "curator" in bounty.status.value && (
               <BountyDetail title="Curator">
-                <OnChainIdentity value={bounty.status.value.curator} />
+                <IdentityLinksPopover address={bounty.status.value.curator}>
+                  <OnChainIdentity value={bounty.status.value.curator} />
+                </IdentityLinksPopover>
               </BountyDetail>
             )}
             {bounty.status.type === "Active" && (
