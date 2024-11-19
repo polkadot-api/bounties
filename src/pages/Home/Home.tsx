@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
+import { DotValue } from "@/components/DotValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
-import { bounties$, bounty$ } from "./bounties.state";
 import { useNavigate } from "react-router-dom";
-import { DotValue } from "@/components/DotValue";
+import { CreateBountyButton } from "../CreateBounty";
+import { bounties$, bounty$ } from "./bounties.state";
 
 export const HomePage = () => {
   const bounties = useStateObservable(bounties$);
@@ -14,7 +14,7 @@ export const HomePage = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Active Bounties</CardTitle>
-        <Button>Create bounty</Button>
+        <CreateBountyButton />
       </CardHeader>
       <CardContent>
         {bounties ? (
