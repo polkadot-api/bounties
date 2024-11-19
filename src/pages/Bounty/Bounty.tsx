@@ -1,4 +1,5 @@
 import { DotValue } from "@/components/DotValue";
+import { IdentityLinksPopover } from "@/components/IdentityLinks";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -8,9 +9,9 @@ import { Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { bounty$ } from "../Home/bounties.state";
 import { BlockDue } from "./BlockDue";
 import { BountyDetail } from "./BountyDetail";
+import { BountyReferendum } from "./BountyReferendum";
 import { childBounties$, childBounty$ } from "./childBounties";
 import { ChildBounty } from "./ChildBounty";
-import { IdentityLinksPopover } from "@/components/IdentityLinks";
 
 export const Bounty = () => {
   const id = Number(useParams().id);
@@ -68,6 +69,7 @@ export const Bounty = () => {
               </>
             )}
           </div>
+          {bounty.status.type === "Proposed" && <BountyReferendum id={id} />}
         </CardContent>
       </Card>
       {bounty.status.type === "Active" ? (

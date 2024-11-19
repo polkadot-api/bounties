@@ -1,5 +1,4 @@
 import { typedApi } from "@/chain";
-import { PolkadotRuntimeOriginCaller } from "@polkadot-api/descriptors";
 import { state } from "@react-rxjs/core";
 import { Binary, FixedSizeBinary } from "polkadot-api";
 import {
@@ -11,13 +10,12 @@ import {
   mergeAll,
   mergeMap,
   of,
-  switchMap,
   tap,
   toArray,
 } from "rxjs";
 
 const spenderReferenda$ = defer(
-  typedApi.query.Referenda.ReferendumInfoFor.getEntries
+  typedApi.query.Referenda.ReferendumInfoFor.getEntries,
 ).pipe(
   mergeAll(),
   map((r) => ({ ...r.value, id: r.keyArgs[0] })),
@@ -32,9 +30,9 @@ const spenderReferenda$ = defer(
         "SmallSpender",
         "MediumSpender",
         "BigSpender",
-      ].includes(v.origin.value.type)
+      ].includes(v.origin.value.type),
   ),
-  toArray()
+  toArray(),
 );
 
 export const liveReferenda$ = state(
@@ -59,21 +57,10 @@ export const liveReferenda$ = state(
         map((proposal) => ({
           referendum,
           proposal,
-        }))
+        })),
       );
-    })
-  )
-);
-
-export const simulatedReferenda$ = liveReferenda$.pipeState(
-  mergeMap(({ referendum, proposal }) =>
-    dryRun$(referendum.id, referendum.origin, proposal).pipe(
-      map((dryRunResult) => ({
-        ...referendum,
-        dryRunResult,
-      }))
-    )
-  )
+    }),
+  ),
 );
 
 const preimageCache: Record<string, Binary | undefined> = {};
@@ -83,42 +70,10 @@ const getPreimage$ = (preimage: { hash: FixedSizeBinary<32>; len: number }) => {
     return of(preimageCache[key]);
   }
   return from(
-    typedApi.query.Preimage.PreimageFor.getValue([preimage.hash, preimage.len])
+    typedApi.query.Preimage.PreimageFor.getValue([preimage.hash, preimage.len]),
   ).pipe(
     tap((v) => {
       preimageCache[key] = v;
-    })
-  );
-};
-
-type DryRunResult = Awaited<
-  ReturnType<typeof typedApi.apis.DryRunApi.dry_run_call>
->;
-const dryRunCache: Record<number, DryRunResult | null> = {};
-const dryRun$ = (
-  id: number,
-  origin: PolkadotRuntimeOriginCaller,
-  call: Binary
-) => {
-  if (id in dryRunCache) {
-    return of(dryRunCache[id]);
-  }
-
-  return from(typedApi.compatibilityToken).pipe(
-    switchMap((token) => {
-      try {
-        const tx = typedApi.txFromCallData(call, token);
-        return typedApi.apis.DryRunApi.dry_run_call(
-          origin,
-          tx.decodedCall as any
-        );
-      } catch (ex) {
-        console.warn(ex);
-        return of(null);
-      }
     }),
-    tap((v) => {
-      dryRunCache[id] = v;
-    })
   );
 };
