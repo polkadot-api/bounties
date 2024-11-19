@@ -3,6 +3,7 @@ import { FC } from "react";
 
 const DOT_DECIMALS = 10;
 const DOT_UNIT = 10_000_000_000n;
+const decimalPoint = (0.1).toLocaleString().slice(1, 2);
 export const DotValue: FC<{
   value: bigint;
   fixedDecimals?: number;
@@ -13,7 +14,7 @@ export const DotValue: FC<{
   const decimalPart =
     (fixedDecimals != null && fixedDecimals > 0) ||
     (fixedDecimals == null && decimalValue !== 0n)
-      ? `.${decimalValue
+      ? `${decimalPoint}${decimalValue
           .toString()
           .padStart(DOT_DECIMALS, "0")
           .slice(0, fixedDecimals)
