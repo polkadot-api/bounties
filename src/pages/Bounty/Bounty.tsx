@@ -70,42 +70,44 @@ export const Bounty = () => {
           </div>
         </CardContent>
       </Card>
-      <Routes>
-        <Route path=":childId/*" element={<ChildBounty />} />
-        <Route
-          path="*"
-          element={
-            <Card>
-              <CardHeader>
-                <CardTitle>Child Bounties</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {childBounties ? (
-                  Object.keys(childBounties).length ? (
-                    <Table className="flex flex-col gap-4">
-                      <TableBody>
-                        {Object.keys(childBounties)
-                          .reverse()
-                          .map((child) => (
-                            <ChildRow
-                              key={child}
-                              parent={id}
-                              id={Number(child)}
-                            />
-                          ))}
-                      </TableBody>
-                    </Table>
+      {bounty.status.type === "Active" ? (
+        <Routes>
+          <Route path=":childId/*" element={<ChildBounty />} />
+          <Route
+            path="*"
+            element={
+              <Card>
+                <CardHeader>
+                  <CardTitle>Child Bounties</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {childBounties ? (
+                    Object.keys(childBounties).length ? (
+                      <Table className="flex flex-col gap-4">
+                        <TableBody>
+                          {Object.keys(childBounties)
+                            .reverse()
+                            .map((child) => (
+                              <ChildRow
+                                key={child}
+                                parent={id}
+                                id={Number(child)}
+                              />
+                            ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p>No child bounties found</p>
+                    )
                   ) : (
-                    <p>No child bounties found</p>
-                  )
-                ) : (
-                  <p>Loading…</p>
-                )}
-              </CardContent>
-            </Card>
-          }
-        />
-      </Routes>
+                    <p>Loading…</p>
+                  )}
+                </CardContent>
+              </Card>
+            }
+          />
+        </Routes>
+      ) : null}
     </div>
   );
 };
