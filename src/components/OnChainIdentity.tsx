@@ -78,14 +78,15 @@ const identity$ = state(
 
 export const OnChainIdentity: FC<{
   value: SS58String;
+  name?: string;
   className?: string;
-}> = ({ value, className }) => {
+}> = ({ value, name: inputName, className }) => {
   const identity = useStateObservable(identity$(value));
 
-  const name = identity?.displayName;
+  const name = identity?.displayName ?? inputName;
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center gap-1 overflow-hidden", className)}>
       <PolkadotIdenticon
         className="flex-shrink-0"
         publicKey={getPublicKey(value)}

@@ -1,4 +1,4 @@
-import { useStateObservable } from "@react-rxjs/core";
+import { state, useStateObservable } from "@react-rxjs/core";
 import { InjectedExtension } from "polkadot-api/pjs-signer";
 import { OnChainIdentity } from "../OnChainIdentity";
 import { Button } from "../ui/button";
@@ -25,17 +25,18 @@ import {
   availableExtensions$,
   extensionAccounts$,
   onToggleExtension,
+  selectedAccount$,
   selectedExtensions$,
   selectedValue$,
   selectValue,
 } from "./accounts.state";
+import { twMerge } from "tailwind-merge";
+import { map, timer } from "rxjs";
 
 export const AccountSelector = () => {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button>Select account</Button>
-      </DialogTrigger>
+      <SelectAccountButton />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Select Account</DialogTitle>
@@ -43,6 +44,36 @@ export const AccountSelector = () => {
         <SelectAccountDialog />
       </DialogContent>
     </Dialog>
+  );
+};
+
+const delayed$ = state(timer(200).pipe(map(() => false)), true);
+const SelectAccountButton = () => {
+  const selectedAccount = useStateObservable(selectedAccount$);
+  const delayed = useStateObservable(delayed$);
+
+  return (
+    <DialogTrigger asChild>
+      <Button
+        variant={selectedAccount ? "polkadotOutline" : "polkadot"}
+        className={twMerge(
+          "py-1 h-auto transition-opacity",
+          selectedAccount
+            ? "px-2 max-w-56 overflow-hidden"
+            : "px-4 my-2 rounded-full",
+          delayed && "opacity-0"
+        )}
+      >
+        {selectedAccount ? (
+          <OnChainIdentity
+            value={selectedAccount.address}
+            name={selectedAccount.name}
+          />
+        ) : (
+          "Select account"
+        )}
+      </Button>
+    </DialogTrigger>
   );
 };
 
@@ -133,7 +164,7 @@ const Accounts: React.FC<{ extension: InjectedExtension }> = ({
           key={account.address}
           value={account.address + "-" + extension.name}
         >
-          <OnChainIdentity value={account.address} />
+          <OnChainIdentity value={account.address} name={account.name} />
         </SelectItem>
       ))}
     </SelectGroup>
