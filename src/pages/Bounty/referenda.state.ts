@@ -30,6 +30,8 @@ const spenderReferenda$ = defer(
         "SmallSpender",
         "MediumSpender",
         "BigSpender",
+        "SmallTipper",
+        "BigTipper",
       ].includes(v.origin.value.type),
   ),
   toArray(),
