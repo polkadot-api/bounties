@@ -11,6 +11,7 @@ import {
   scan,
 } from "rxjs";
 import { liveReferenda$ } from "./referenda.state";
+import { ApproveBountyButton } from "../CreateBounty/AproveBounty";
 
 const approvesBounties = (obj: any): number[] => {
   if (typeof obj !== "object") return [];
@@ -40,7 +41,7 @@ const bountiesReferenda$ = combineLatest([
       const decodedCall = typedApi.txFromCallData(proposal, token).decodedCall;
       const approves = approvesBounties(decodedCall);
       return approves.map(
-        (x) => [x, referendum] as [number, typeof referendum],
+        (x) => [x, referendum] as [number, typeof referendum]
       );
     } catch (_) {
       return [];
@@ -53,7 +54,7 @@ const bountiesReferenda$ = combineLatest([
     }
     return acc;
   }, new Map<number, Array<ObservedValueOf<typeof liveReferenda$>["referendum"]>>()),
-  catchError(() => of(null)),
+  catchError(() => of(null))
 );
 
 const bountyRef$ = state((bountyId: number) => {
@@ -63,8 +64,8 @@ const bountyRef$ = state((bountyId: number) => {
         x
           ?.get(bountyId)
           ?.slice()
-          .sort((a, b) => a.id - b.id) ?? null,
-    ),
+          .sort((a, b) => a.id - b.id) ?? null
+    )
   );
 }, null);
 
@@ -73,8 +74,7 @@ export const BountyReferendum: FC<{ id: number }> = ({ id }) => {
   return (
     <div className="flex gap-2 p-2 flex-wrap justify-evenly">
       {approvingReferenda == null ? (
-        // TODO impl
-        <Button>Create referendum to approve bounty</Button>
+        <ApproveBountyButton id={id} />
       ) : (
         // TODO format and maybe some links to subsquare / polkassembly
         <span>

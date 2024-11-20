@@ -111,9 +111,11 @@ const extension$ = (name: string) => {
   });
 
   const initialSelected = extensionIsPreselected(name);
+  console.log("extension is preselected", name, initialSelected);
   return toggleExtension$(name).pipe(
     scan((acc) => !acc, initialSelected),
     startWith(initialSelected),
+    tap((v) => console.log("toggle", name, v)),
     switchMap((selected) =>
       selected
         ? connectWithCleanup$
@@ -122,6 +124,7 @@ const extension$ = (name: string) => {
           })
     ),
     tap((v) => {
+      console.log("connection", v);
       if (v.type === ConnectStatus.Connected) {
         setPreselectedExtension(name, true);
       } else if (v.type === ConnectStatus.Disconnected) {
@@ -153,11 +156,12 @@ export const extensionAccounts$ = state(
     extension$(name).pipe(
       switchMap((x) => {
         if (x.type !== ConnectStatus.Connected) return of([]);
-        return new Observable<InjectedPolkadotAccount[]>((observer) =>
-          x.extension.subscribe((accounts) => {
+        return new Observable<InjectedPolkadotAccount[]>((observer) => {
+          observer.next(x.extension.getAccounts());
+          return x.extension.subscribe((accounts) => {
             observer.next(accounts);
-          })
-        );
+          });
+        });
       })
     ),
   []
