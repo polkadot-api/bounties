@@ -1,6 +1,4 @@
 import { selectedAccount$ } from "@/components/AccountSelector";
-import { FadeText } from "@/components/FadeText";
-import { Spinner } from "@/components/Icons";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,17 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Subscribe, useStateObservable } from "@react-rxjs/core";
-import { TxEvent } from "polkadot-api";
-import { FC } from "react";
-import { twMerge } from "tailwind-merge";
 import {
-  getBountyIndex,
-  isTxInProgress,
-  ProposeBountyState,
-  proposeBountyState$,
-} from "./proposeBounty.state";
-import { ProposeBountyForm } from "./ProposeBountyForm";
-import { SubmitReferendumForm } from "./SubmitReferendumForm";
+  approveBountyState$,
+  getSubmittedReferendum,
+} from "./approveBounty.state";
+import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state";
+import { ProposeBountyStep } from "./ProposeBountyForm";
+import { SubmitReferendumStep } from "./SubmitReferendumForm";
+import { ReferendumCreatedStep } from "./AproveBounty";
 
 export const CreateBountyButton = () => {
   const account = useStateObservable(selectedAccount$);
@@ -53,44 +48,29 @@ const CreateBountyDialog = () => (
 
 const CreateBountyDialogContent = () => {
   const proposeBountyState = useStateObservable(proposeBountyState$);
-  const bountyIndex = getBountyIndex(proposeBountyState);
+  const approveBountyState = useStateObservable(approveBountyState$);
+
+  if (proposeBountyState.type !== "finalized") {
+    return <ProposeBountyStep />;
+  }
+  if (approveBountyState.type !== "finalized") {
+    return (
+      <SubmitReferendumStep
+        title={
+          <p className="mb-2">
+            Bounty {getBountyIndex(proposeBountyState)} created successfully.
+            You should now submit a referendum to get it approved.
+          </p>
+        }
+      />
+    );
+  }
 
   return (
-    <div className="overflow-hidden px-1 relative">
-      {bountyIndex === null ? (
-        <ProposeBountyForm
-          className={twMerge(
-            "transition-opacity",
-            isTxInProgress(proposeBountyState) && "opacity-0"
-          )}
-        />
-      ) : (
-        <SubmitReferendumForm bountyIndex={bountyIndex} />
-      )}
-      {bountyIndex === null && <TxProgress state={proposeBountyState} />}
+    <div className="overflow-hidden px-1">
+      <ReferendumCreatedStep
+        referendum={getSubmittedReferendum(approveBountyState)}
+      />
     </div>
   );
 };
-
-const descriptions: Record<TxEvent["type"], string> = {
-  signed: "Broadcasting the transaction…",
-  broadcasted: "Waiting for the transaction to be included in a block…",
-  txBestBlocksState:
-    "Transaction is included in a block, but it's not confirmed yet. Hang tight…",
-  finalized: "Transaction finalized!",
-};
-const TxProgress: FC<{ state: ProposeBountyState }> = ({ state }) => (
-  <div
-    className={twMerge(
-      "absolute w-full left-1/2 top-1/4 -translate-x-1/2 -translate-y-1/2 opacity-0 flex flex-col items-center gap-2",
-      isTxInProgress(state) && "opacity-100"
-    )}
-  >
-    <Spinner />
-    {state.type in descriptions ? (
-      <FadeText className="text-sm text-foreground/80 text-center">
-        {descriptions[state.type as TxEvent["type"]] ?? "Positioning"}
-      </FadeText>
-    ) : null}
-  </div>
-);

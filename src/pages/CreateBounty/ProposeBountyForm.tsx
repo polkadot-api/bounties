@@ -24,6 +24,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { FC } from "react";
 import { twMerge } from "tailwind-merge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { isTxInProgress, TxProgress } from "./TxProgress";
 
 const DOT_TOKEN = {
   decimals: 10,
@@ -197,6 +198,22 @@ const CallData = () => {
       ) : (
         <div className="text-foreground/50">N/A</div>
       )}
+    </div>
+  );
+};
+
+export const ProposeBountyStep = () => {
+  const proposeBountyState = useStateObservable(proposeBountyState$);
+
+  return (
+    <div className="overflow-hidden px-1 relative">
+      <ProposeBountyForm
+        className={twMerge(
+          "transition-opacity",
+          isTxInProgress(proposeBountyState) && "opacity-0"
+        )}
+      />
+      <TxProgress state={proposeBountyState} />
     </div>
   );
 };

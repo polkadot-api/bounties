@@ -10,7 +10,12 @@ import {
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Subscribe, useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
-import { SubmitReferendumForm } from "./SubmitReferendumForm";
+import { SubmitReferendumStep } from "./SubmitReferendumForm";
+import {
+  approveBountyState$,
+  getSubmittedReferendum,
+  SubmittedReferendum,
+} from "./approveBounty.state";
 
 export const ApproveBountyButton: FC<{ id: number }> = ({ id }) => {
   const account = useStateObservable(selectedAccount$);
@@ -34,15 +39,61 @@ const ApproveBountyDialog: FC<{ id: number }> = ({ id }) => (
       </DialogDescription>
     </DialogHeader>
     <Subscribe fallback="Loading…">
-      <CreateBountyDialogContent id={id} />
+      <ApproveBountyDialogContent id={id} />
     </Subscribe>
   </DialogContent>
 );
 
-const CreateBountyDialogContent: FC<{ id: number }> = ({ id }) => {
+const ApproveBountyDialogContent: FC<{ id: number }> = ({ id }) => {
+  const approveBountyState = useStateObservable(approveBountyState$);
+
+  if (approveBountyState.type !== "finalized") {
+    return <SubmitReferendumStep bountyId={id} />;
+  }
+
   return (
-    <div className="overflow-hidden px-1 relative">
-      <SubmitReferendumForm bountyIndex={id} />
+    <div className="overflow-hidden px-1">
+      <ReferendumCreatedStep
+        referendum={getSubmittedReferendum(approveBountyState)}
+      />
+    </div>
+  );
+};
+
+export const ReferendumCreatedStep: FC<{ referendum: SubmittedReferendum }> = ({
+  referendum,
+}) => {
+  if (!referendum) return null;
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-bold">
+        Referendum {referendum.index} created successfully!
+      </h3>
+      <p className="text-foreground/80">
+        You can now fill in the description and details of the referendum either
+        in{" "}
+        <a
+          className="underline"
+          target="_blank"
+          href={`https://polkadot.polkassembly.io/referenda/${referendum.index}`}
+        >
+          Polkassembly
+        </a>{" "}
+        or{" "}
+        <a
+          className="underline"
+          target="_blank"
+          href={`https://polkadot.subsquare.io/referenda/${referendum.index}`}
+        >
+          Subsquare
+        </a>
+        .
+      </p>
+      <p className="text-foreground/80">
+        Remember that the referendum will need a decision deposit in order to
+        start voting!
+      </p>
     </div>
   );
 };

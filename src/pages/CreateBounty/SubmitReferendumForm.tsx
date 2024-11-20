@@ -4,10 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PolkadotRuntimeOriginCaller } from "@polkadot-api/descriptors";
 import { state, useStateObservable } from "@react-rxjs/core";
-import { FC } from "react";
+import { FC, ReactNode } from "react";
 import { from } from "rxjs";
 import { twMerge } from "tailwind-merge";
-import { approveBountyDetails$ } from "./approveBounty.state";
+import {
+  approveBounty,
+  approveBountyDetails$,
+  approveBountyState$,
+} from "./approveBounty.state";
+import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state";
+import { isTxInProgress, TxProgress } from "./TxProgress";
+import { Loader2 } from "lucide-react";
 
 const compatibilityToken$ = state(from(typedApi.compatibilityToken));
 export const SubmitReferendumForm: FC<{
@@ -48,42 +55,45 @@ export const SubmitReferendumForm: FC<{
       <div className="space-y-2">
         <div>
           <Label>Track</Label>
-          <p className="pl-2 text-foreground/80">
+          <div className="pl-2 text-foreground/80">
             {getTrackName(details.proposal_origin)}
-          </p>
+          </div>
         </div>
         <div>
           <Label>Proposal</Label>
-          <p className="pl-2 text-foreground/80">
+          <div className="pl-2 text-foreground/80">
             Bounties.approveBounty({bountyIndex})
             <span className="text-sm text-foreground/70 ml-1">
               (
               <CopyText text={proposal} binary className="align-middle" />{" "}
               {proposal})
             </span>
-          </p>
+          </div>
         </div>
-        {/* <div>
-          <Label>Enactment</Label>
-          <p className="pl-2 text-foreground/80">
-            After {details.enactment_moment.value} blocks
-          </p>
-        </div> */}
         {callData && (
           <div>
             <Label>Call Data</Label>
-            <p className="pl-2 text-foreground/80 flex items-center gap-1">
+            <div className="pl-2 text-foreground/80 flex items-center gap-1">
               <CopyText text={callData} binary />
               <div className="overflow-hidden text-ellipsis">{callData}</div>
-            </p>
+            </div>
           </div>
         )}
       </div>
-      <Button type="submit" forceSvgSize>
-        Sign and Submit
-        {/* {isLoading && <Loader2 className="animate-spin" />} */}
-      </Button>
+      <SubmitButton onClick={() => approveBounty(bountyIndex)} />
     </div>
+  );
+};
+
+const SubmitButton: FC<{ onClick: () => void }> = ({ onClick }) => {
+  const approveBountyState = useStateObservable(approveBountyState$);
+  const isLoading = approveBountyState.type !== "idle";
+
+  return (
+    <Button type="submit" disabled={isLoading} forceSvgSize onClick={onClick}>
+      Sign and Submit
+      {isLoading && <Loader2 className="animate-spin" />}
+    </Button>
   );
 };
 
@@ -103,4 +113,31 @@ const getTrackName = (origin: PolkadotRuntimeOriginCaller) => {
       return "Big Spender";
   }
   return spenderOrigin.type;
+};
+
+export const SubmitReferendumStep: FC<{
+  bountyId?: number;
+  title?: ReactNode;
+}> = ({ title, bountyId }) => {
+  const approveBountyState = useStateObservable(approveBountyState$);
+  const proposeBountyState = useStateObservable(proposeBountyState$);
+
+  const bountyIndex = bountyId ?? getBountyIndex(proposeBountyState);
+
+  if (bountyIndex === null) return null;
+
+  return (
+    <div className="overflow-hidden px-1 relative">
+      <div
+        className={twMerge(
+          "transition-opacity",
+          isTxInProgress(approveBountyState) && "opacity-0"
+        )}
+      >
+        {title}
+        <SubmitReferendumForm bountyIndex={bountyIndex} />
+      </div>
+      <TxProgress state={approveBountyState} />
+    </div>
+  );
 };

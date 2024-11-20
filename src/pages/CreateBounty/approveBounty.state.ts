@@ -10,30 +10,28 @@ import {
 } from "@polkadot-api/descriptors";
 import { state } from "@react-rxjs/core";
 import { createSignal } from "@react-rxjs/utils";
-import { TxEvent } from "polkadot-api";
 import {
+  catchError,
   combineLatest,
   exhaustMap,
   filter,
   map,
+  of,
+  startWith,
   switchMap,
   take,
   withLatestFrom,
 } from "rxjs";
 import { bounty$ } from "../Home/bounties.state";
+import { SubmitTxState } from "./TxProgress";
 
 export const [approveBounty$, approveBounty] = createSignal<number>();
-export type ApproveBountyState =
-  | {
-      type: "idle";
-      error?: string;
-    }
-  | {
-      type: "signing";
-    }
-  | TxEvent;
-export const isTxInProgress = (state: ApproveBountyState) =>
-  state.type !== "idle" && state.type !== "signing";
+
+export const getSubmittedReferendum = (state: SubmitTxState) =>
+  state.type === "finalized"
+    ? typedApi.event.Referenda.Submitted.filter(state.events)[0] ?? null
+    : null;
+export type SubmittedReferendum = ReturnType<typeof getSubmittedReferendum>;
 
 export const approveBountyDetails$ = state(
   (bountyId: number) =>
@@ -68,13 +66,45 @@ export const approveBountyState$ = state(
         take(1),
         withLatestFrom(selectedAccount$.pipe(filter((v) => !!v))),
         switchMap(([details, selectedAccount]) =>
-          typedApi.tx.Referenda.submit(details).signSubmitAndWatch(
-            selectedAccount.polkadotSigner
-          )
+          typedApi.tx.Referenda.submit(details)
+            .signSubmitAndWatch(selectedAccount.polkadotSigner)
+            .pipe(
+              startWith({
+                type: "signing",
+              } satisfies SubmitTxState),
+              map((v): SubmitTxState => {
+                if (v.type === "finalized") {
+                  if (!v.ok) {
+                    console.error(v.dispatchError);
+                    return {
+                      type: "idle",
+                      error: v.dispatchError.type,
+                    };
+                  }
+                  if (getSubmittedReferendum(v) === null) {
+                    return {
+                      type: "idle",
+                      error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
+                    };
+                  }
+                }
+
+                return v;
+              }),
+              catchError((err) =>
+                of({
+                  type: "idle",
+                  error: err.message,
+                } satisfies SubmitTxState)
+              )
+            )
         )
       )
     )
-  )
+  ),
+  {
+    type: "idle",
+  } satisfies SubmitTxState
 );
 
 const DOT_UNIT = 10_000_000_000n;

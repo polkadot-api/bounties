@@ -2,7 +2,7 @@ import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
 import { state } from "@react-rxjs/core";
 import { createSignal } from "@react-rxjs/utils";
-import { Binary, TxEvent } from "polkadot-api";
+import { Binary } from "polkadot-api";
 import {
   catchError,
   exhaustMap,
@@ -13,24 +13,14 @@ import {
   startWith,
   withLatestFrom,
 } from "rxjs";
+import { SubmitTxState } from "./TxProgress";
 
 export const [proposeBounty$, proposeBounty] = createSignal<{
   description: string;
   value: bigint;
 }>();
 
-export type ProposeBountyState =
-  | {
-      type: "idle";
-      error?: string;
-    }
-  | {
-      type: "signing";
-    }
-  | TxEvent;
-export const isTxInProgress = (state: ProposeBountyState) =>
-  state.type !== "idle" && state.type !== "signing";
-export const getBountyIndex = (state: ProposeBountyState) =>
+export const getBountyIndex = (state: SubmitTxState) =>
   state.type === "finalized"
     ? typedApi.event.Bounties.BountyProposed.filter(state.events)[0]?.index ??
       null
@@ -40,7 +30,7 @@ export const proposeBountyState$ = state(
   proposeBounty$.pipe(
     withLatestFrom(selectedAccount$.pipe(filter((v) => !!v))),
     exhaustMap(
-      ([bounty, account]): Observable<ProposeBountyState> =>
+      ([bounty, account]): Observable<SubmitTxState> =>
         typedApi.tx.Bounties.propose_bounty({
           description: Binary.fromText(bounty.description),
           value: bounty.value,
@@ -49,8 +39,8 @@ export const proposeBountyState$ = state(
           .pipe(
             startWith({
               type: "signing",
-            } satisfies ProposeBountyState),
-            map((v): ProposeBountyState => {
+            } satisfies SubmitTxState),
+            map((v): SubmitTxState => {
               if (v.type === "finalized") {
                 if (!v.ok) {
                   console.error(v.dispatchError);
@@ -73,10 +63,10 @@ export const proposeBountyState$ = state(
               of({
                 type: "idle",
                 error: err.message,
-              } satisfies ProposeBountyState)
+              } satisfies SubmitTxState)
             )
           )
     )
   ),
-  { type: "idle" } satisfies ProposeBountyState
+  { type: "idle" } satisfies SubmitTxState
 );
