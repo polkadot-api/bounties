@@ -32,42 +32,45 @@ const approvesBounties = (obj: any): number[] => {
     approves.push(...approvesBounties(obj[key]));
   return approves;
 };
-const bountiesReferenda$ = combineLatest([
-  liveReferenda$,
-  typedApi.compatibilityToken,
-]).pipe(
-  map(([{ referendum, proposal }, token]) => {
-    try {
-      const decodedCall = typedApi.txFromCallData(proposal, token).decodedCall;
-      const approves = approvesBounties(decodedCall);
-      return approves.map(
-        (x) => [x, referendum] as [number, typeof referendum]
-      );
-    } catch (_) {
-      return [];
-    }
-  }),
-  scan((acc, elements) => {
-    for (const [bountyId, referendum] of elements) {
-      const refs = acc.get(bountyId);
-      refs == null ? acc.set(bountyId, [referendum]) : refs.push(referendum);
-    }
-    return acc;
-  }, new Map<number, Array<ObservedValueOf<typeof liveReferenda$>["referendum"]>>()),
-  catchError(() => of(null))
-);
 
-const bountyRef$ = state((bountyId: number) => {
-  return bountiesReferenda$.pipe(
-    map(
-      (x) =>
-        x
-          ?.get(bountyId)
-          ?.slice()
-          .sort((a, b) => a.id - b.id) ?? null
-    )
-  );
-}, null);
+const bountyRef$ = state(
+  (bountyId: number) =>
+    combineLatest([liveReferenda$, typedApi.compatibilityToken]).pipe(
+      map(([{ referendum, proposal }, token]) => {
+        try {
+          const decodedCall = typedApi.txFromCallData(
+            proposal,
+            token
+          ).decodedCall;
+          const approves = approvesBounties(decodedCall);
+          return approves.map(
+            (x) => [x, referendum] as [number, typeof referendum]
+          );
+        } catch (_) {
+          console.error(_);
+          return [];
+        }
+      }),
+      scan((acc, elements) => {
+        for (const [bountyId, referendum] of elements) {
+          const refs = acc.get(bountyId);
+          refs == null
+            ? acc.set(bountyId, [referendum])
+            : refs.push(referendum);
+        }
+        return acc;
+      }, new Map<number, Array<ObservedValueOf<typeof liveReferenda$>["referendum"]>>()),
+      catchError(() => of(null)),
+      map(
+        (x) =>
+          x
+            ?.get(bountyId)
+            ?.slice()
+            .sort((a, b) => a.id - b.id) ?? null
+      )
+    ),
+  null
+);
 
 export const BountyReferendum: FC<{ id: number }> = ({ id }) => {
   const approvingReferenda = useStateObservable(bountyRef$(id));
