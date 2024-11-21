@@ -5,6 +5,7 @@ import {
   filter,
   from,
   map,
+  ObservedValueOf,
   skip,
   startWith,
   switchMap,
@@ -46,3 +47,8 @@ export const bounty$ = state(
     ),
   null
 );
+
+export type BountyPayload = Exclude<
+  ObservedValueOf<ReturnType<typeof bounty$>>,
+  null
+>;

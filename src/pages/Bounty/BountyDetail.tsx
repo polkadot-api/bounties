@@ -9,3 +9,9 @@ export const BountyDetail: FC<PropsWithChildren<{ title: string }>> = ({
     <span>{children}</span>
   </div>
 );
+
+export const BountyDetailGroup: FC<PropsWithChildren> = ({ children }) => (
+  <div className="flex gap-2 border border-border rounded p-2 flex-col">
+    {children}
+  </div>
+);

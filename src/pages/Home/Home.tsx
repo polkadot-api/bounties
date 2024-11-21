@@ -11,25 +11,27 @@ export const HomePage = () => {
   const bounties = useStateObservable(bounties$);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Active Bounties</CardTitle>
-        <CreateBountyButton />
-      </CardHeader>
-      <CardContent>
-        {bounties ? (
-          <Table>
-            <TableBody>
-              {bounties.map(({ keyArgs: [id] }) => (
-                <BountyRow key={id} id={id} />
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <p className="text-center">Loading…</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="p-2">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Active Bounties</CardTitle>
+          <CreateBountyButton />
+        </CardHeader>
+        <CardContent>
+          {bounties ? (
+            <Table>
+              <TableBody>
+                {bounties.map(({ keyArgs: [id] }) => (
+                  <BountyRow key={id} id={id} />
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <p className="text-center">Loading…</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 export const homePage$ = bounties$;

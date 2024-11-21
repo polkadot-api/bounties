@@ -59,7 +59,7 @@ export type ExtensionState =
 const SELECTED_EXTENSIONS_KEY = "selected-extensions";
 const getPreselectedExtensions = () => {
   try {
-    const res = JSON.parse(localStorage.getItem(SELECTED_EXTENSIONS_KEY)!);
+    const res = ["polkadot-js"]; // JSON.parse(localStorage.getItem(SELECTED_EXTENSIONS_KEY)!);
     if (Array.isArray(res)) return res;
     // eslint-disable-next-line no-empty
   } catch (_) {}
@@ -81,7 +81,10 @@ const extension$ = (name: string) => {
       type: ConnectStatus.Connected as const,
       extension,
     })),
-    catchError(() => of({ type: ConnectStatus.Disconnected as const })),
+    catchError((e) => {
+      console.error(e);
+      return of({ type: ConnectStatus.Disconnected as const });
+    }),
     startWith({ type: ConnectStatus.Connecting as const })
   );
 
@@ -93,6 +96,7 @@ const extension$ = (name: string) => {
         next(value) {
           if (value.type === ConnectStatus.Connected) {
             if (disconnected) {
+              console.log("disconnect just after connecting");
               value.extension.disconnect();
             } else {
               extension = value.extension;
@@ -101,6 +105,7 @@ const extension$ = (name: string) => {
         },
         unsubscribe() {
           if (extension) {
+            console.log("disconnect because of cleanup");
             extension.disconnect();
           } else {
             disconnected = true;
@@ -116,21 +121,14 @@ const extension$ = (name: string) => {
     scan((acc) => !acc, initialSelected),
     startWith(initialSelected),
     tap((v) => console.log("toggle", name, v)),
+    tap((selected) => setPreselectedExtension(name, selected)),
     switchMap((selected) =>
       selected
         ? connectWithCleanup$
         : of({
             type: ConnectStatus.Disconnected as const,
           })
-    ),
-    tap((v) => {
-      console.log("connection", v);
-      if (v.type === ConnectStatus.Connected) {
-        setPreselectedExtension(name, true);
-      } else if (v.type === ConnectStatus.Disconnected) {
-        setPreselectedExtension(name, false);
-      }
-    })
+    )
   );
 };
 

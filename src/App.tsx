@@ -5,12 +5,16 @@ import { Header } from "./pages/Header";
 
 export default function App() {
   return (
-    <div className="w-full max-w-screen-lg h-screen bg-background flex flex-col m-auto">
+    <div className="w-full h-screen bg-background flex flex-col">
       <Header />
-      <Routes>
-        <Route path="bounty/:id/*" element={<Bounty />} />
-        <Route path="*" element={<HomePage />} />
-      </Routes>
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-screen-lg m-auto">
+          <Routes>
+            <Route path="bounty/:id/*" element={<Bounty />} />
+            <Route path="*" element={<HomePage />} />
+          </Routes>
+        </div>
+      </div>
     </div>
   );
 }
