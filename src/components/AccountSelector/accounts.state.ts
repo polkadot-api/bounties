@@ -76,7 +76,11 @@ const setPreselectedExtension = (extension: string, selected: boolean) => {
 };
 
 const extension$ = (name: string) => {
-  const connect$ = defer(() => connectInjectedExtension(name)).pipe(
+  const connect$ = availableExtensions$.pipe(
+    // Wait for the extension to be available
+    filter((extensions) => extensions.includes(name)),
+    take(1),
+    switchMap(() => connectInjectedExtension(name)),
     map((extension) => ({
       type: ConnectStatus.Connected as const,
       extension,
@@ -116,11 +120,9 @@ const extension$ = (name: string) => {
   });
 
   const initialSelected = extensionIsPreselected(name);
-  console.log("extension is preselected", name, initialSelected);
   return toggleExtension$(name).pipe(
     scan((acc) => !acc, initialSelected),
     startWith(initialSelected),
-    tap((v) => console.log("toggle", name, v)),
     tap((selected) => setPreselectedExtension(name, selected)),
     switchMap((selected) =>
       selected
