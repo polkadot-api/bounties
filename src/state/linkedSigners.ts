@@ -1,10 +1,12 @@
 import { typedApi } from "@/chain";
+import { selectedAccount$ } from "@/components/AccountSelector";
+import { multixSigner } from "@/lib/multixSigner";
+import { toHex } from "@polkadot-api/utils";
 import { state, withDefault } from "@react-rxjs/core";
-import { getSs58AddressInfo, HexString, SS58String } from "polkadot-api";
+import { getSs58AddressInfo, PolkadotSigner, SS58String } from "polkadot-api";
 import {
   combineLatest,
   defaultIfEmpty,
-  EMPTY,
   filter,
   from,
   map,
@@ -16,7 +18,6 @@ import {
   tap,
 } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
-import { toHex } from "@polkadot-api/utils";
 
 export type LinkedAccountsResult =
   | {
@@ -87,29 +88,40 @@ export const getNestedLinkedAccounts$ = (
     })
   );
 
-export const getLinkedSigners$ = (
-  address: string
-): Observable<Set<HexString>> => {
-  const info = getSs58AddressInfo(address);
-  if (!info.isValid) return of(new Set<HexString>());
+export const getLinkedSigner$ = (address: string) =>
+  selectedAccount$.pipe(
+    switchMap((account) => {
+      if (!account) return of(null);
 
-  return getLinkedAccounts$(address).pipe(
-    switchMap((result) => {
-      if (result.type === "root") return EMPTY;
+      const getMatchingSigner$ = (
+        address: string
+      ): Observable<PolkadotSigner | null> => {
+        const info = getSs58AddressInfo(address);
+        if (!info.isValid) return of(null);
+        if (toHex(info.publicKey) === toHex(account.polkadotSigner.publicKey))
+          return of(account.polkadotSigner);
 
-      return combineLatest(
-        result.value.map((inner) => getLinkedSigners$(inner))
-      ).pipe(
-        map((nested) => new Set(nested.flatMap((v) => [...v]))),
-        map((v) => {
-          v.add(toHex(info.publicKey));
-          return v;
-        })
-      );
-    }),
-    withDefault(new Set([toHex(info.publicKey)]))
+        return getLinkedAccounts$(address).pipe(
+          switchMap((result) => {
+            if (result.type === "root") return of(null);
+
+            return merge(
+              ...result.value.map((inner) =>
+                getMatchingSigner$(inner).pipe(filter((v) => !!v))
+              )
+            ).pipe(
+              map((nestedSigner) =>
+                result.type === "multisig"
+                  ? multixSigner(address, nestedSigner)
+                  : nestedSigner
+              )
+            );
+          })
+        );
+      };
+      return getMatchingSigner$(address);
+    })
   );
-};
 
 const proxy$ = (address: string) =>
   from(typedApi.query.Proxy.Proxies.getValue(address)).pipe(

@@ -1,12 +1,12 @@
 import { DotValue } from "@/components/DotValue";
-import { IdentityLinksPopover } from "@/components/IdentityLinks";
+import { IdentityLinks } from "@/components/IdentityLinks";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { BountyPayload } from "@/state/bounties";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { BountyPayload } from "../Home/bounties.state";
 import { BlockDue } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
@@ -25,10 +25,8 @@ export const ActiveBounty: FC<{
       <BountyDetails id={id} bounty={bounty}>
         <BountyDetailGroup>
           <BountyDetail title="Status">Active</BountyDetail>
-          <BountyDetail title="Curator">
-            <IdentityLinksPopover address={status.value.curator}>
-              <OnChainIdentity value={status.value.curator} />
-            </IdentityLinksPopover>
+          <BountyDetail title="Curator" className="items-start">
+            <IdentityLinks address={status.value.curator} />
           </BountyDetail>
           <BountyDetail title="Update due">
             <BlockDue block={status.value.update_due} />

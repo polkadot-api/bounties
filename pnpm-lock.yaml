@@ -17,6 +17,15 @@ importers:
       '@polkadot-api/descriptors':
         specifier: file:.papi/descriptors
         version: file:.papi/descriptors(polkadot-api@1.7.4(jiti@1.21.6)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.0))
+      '@polkadot-api/metadata-builders':
+        specifier: ^0.9.2
+        version: 0.9.2
+      '@polkadot-api/polkadot-signer':
+        specifier: ^0.1.6
+        version: 0.1.6
+      '@polkadot-api/substrate-bindings':
+        specifier: ^0.9.4
+        version: 0.9.4
       '@polkadot-api/utils':
         specifier: ^0.1.2
         version: 0.1.2
@@ -586,6 +595,9 @@ packages:
   '@polkadot-api/metadata-builders@0.9.1':
     resolution: {integrity: sha512-yZPm9KKn7QydbjMQMzhKHekDuQSdSZXYdCyqGt74HSNz9DdJSdpFNwHv0p+vmp+9QDlVsKK7nbUTjYxLZT4vCA==}
 
+  '@polkadot-api/metadata-builders@0.9.2':
+    resolution: {integrity: sha512-2vxtjMC5PvN+sTM6DPMopznNfTUJEe6G6CzMhtK19CASb2OeN9NoRpnxmpEagjndO98YPkyQtDv25sKGUVhgAA==}
+
   '@polkadot-api/metadata-compatibility@0.1.11':
     resolution: {integrity: sha512-XHl3McfuPSKDAIviGbiuK0epwzcspmvsWSoBywv0l6+adCPw1IpNKKkoj7Wwx4836duD/y/47hQEmkgIbtNQ3A==}
 
@@ -620,6 +632,9 @@ packages:
 
   '@polkadot-api/substrate-bindings@0.9.3':
     resolution: {integrity: sha512-ygaZo8+xssTdb6lj9mA8RTlanDfyd0iMex3aBFC1IzOSm08XUWdRpuSLRuerFCimLzKuz/oBOTKdqBFGb7ybUQ==}
+
+  '@polkadot-api/substrate-bindings@0.9.4':
+    resolution: {integrity: sha512-SUyetILwgUsodSk1qhNu0HflRBdq2VBCbqAqCBNaoCauE3/Q/G6k7xS+1nE6MTcpjZQex+TriJdDz/trLSvwsA==}
 
   '@polkadot-api/substrate-client@0.3.0':
     resolution: {integrity: sha512-0hEvQLKH2zhaFzE8DPkWehvJilec8u2O2wbIEUStm0OJ8jIFtJ40MFjXQfB01dXBWUz1KaVBqS6xd3sZA90Dpw==}
@@ -2550,6 +2565,11 @@ snapshots:
       '@polkadot-api/substrate-bindings': 0.9.3
       '@polkadot-api/utils': 0.1.2
 
+  '@polkadot-api/metadata-builders@0.9.2':
+    dependencies:
+      '@polkadot-api/substrate-bindings': 0.9.4
+      '@polkadot-api/utils': 0.1.2
+
   '@polkadot-api/metadata-compatibility@0.1.11':
     dependencies:
       '@polkadot-api/metadata-builders': 0.9.1
@@ -2607,6 +2627,13 @@ snapshots:
       - utf-8-validate
 
   '@polkadot-api/substrate-bindings@0.9.3':
+    dependencies:
+      '@noble/hashes': 1.5.0
+      '@polkadot-api/utils': 0.1.2
+      '@scure/base': 1.1.9
+      scale-ts: 1.6.1
+
+  '@polkadot-api/substrate-bindings@0.9.4':
     dependencies:
       '@noble/hashes': 1.5.0
       '@polkadot-api/utils': 0.1.2
