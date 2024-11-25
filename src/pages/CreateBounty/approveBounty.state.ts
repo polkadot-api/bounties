@@ -22,7 +22,7 @@ import {
   take,
   withLatestFrom,
 } from "rxjs";
-import { bounty$ } from "../Home/bounties.state";
+import { bounty$ } from "@/state/bounties";
 import { SubmitTxState } from "./TxProgress";
 
 export const [approveBounty$, approveBounty] = createSignal<number>();

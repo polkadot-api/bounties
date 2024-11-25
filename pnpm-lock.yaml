@@ -17,6 +17,9 @@ importers:
       '@polkadot-api/descriptors':
         specifier: file:.papi/descriptors
         version: file:.papi/descriptors(polkadot-api@1.7.4(jiti@1.21.6)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.0))
+      '@polkadot-api/utils':
+        specifier: ^0.1.2
+        version: 0.1.2
       '@radix-ui/react-dialog':
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

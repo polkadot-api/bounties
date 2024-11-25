@@ -4,10 +4,10 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 import "./index.css";
-import { homePage$ } from "./pages/Home/Home.tsx";
+import { bountiesState$ } from "./state/bounties.ts";
 
 createRoot(document.getElementById("root")!).render(
-  <Subscribe source$={homePage$}>
+  <Subscribe source$={bountiesState$}>
     <StrictMode>
       <BrowserRouter>
         <App />

@@ -1,14 +1,14 @@
 import { DotValue } from "@/components/DotValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { bounty$, bountyIds$ } from "@/state/bounties";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreateBountyButton } from "../CreateBounty";
-import { bounties$, bounty$ } from "./bounties.state";
 
 export const HomePage = () => {
-  const bounties = useStateObservable(bounties$);
+  const bounties = useStateObservable(bountyIds$);
 
   return (
     <div className="p-2">
@@ -21,7 +21,7 @@ export const HomePage = () => {
           {bounties ? (
             <Table>
               <TableBody>
-                {bounties.map(({ keyArgs: [id] }) => (
+                {bounties.map((id) => (
                   <BountyRow key={id} id={id} />
                 ))}
               </TableBody>
@@ -34,7 +34,6 @@ export const HomePage = () => {
     </div>
   );
 };
-export const homePage$ = bounties$;
 
 const BountyRow: FC<{ id: number }> = ({ id }) => {
   const bounty = useStateObservable(bounty$(id));

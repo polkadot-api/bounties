@@ -3,7 +3,7 @@ import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { useParams } from "react-router-dom";
-import { bounty$, BountyPayload } from "../Home/bounties.state";
+import { bounty$, BountyPayload } from "@/state/bounties";
 import { ActiveBounty } from "./ActiveBounty";
 import { BlockDue } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
