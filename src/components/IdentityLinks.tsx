@@ -28,9 +28,13 @@ const NestedLinksDisplay: FC<{
 }> = ({ links }) =>
   !links || links.type === "root" ? null : (
     <div>
-      <div>{links.type === "multisig" ? "Multisig" : "Proxy"}</div>
+      <div>
+        {links.type === "multisig"
+          ? `Multisig threshold=${links.value.threshold}`
+          : "Proxy"}
+      </div>
       <ul className="pl-4 space-y-1">
-        {links.value.map((v, i) => (
+        {links.value.accounts.map((v, i) => (
           <li key={i}>
             <OnChainIdentity value={v.address} />
             <NestedLinksDisplay links={v.linkedAccounts} />

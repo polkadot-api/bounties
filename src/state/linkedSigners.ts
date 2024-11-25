@@ -24,8 +24,17 @@ export type LinkedAccountsResult =
       type: "root";
     }
   | {
-      type: "proxy" | "multisig";
-      value: SS58String[];
+      type: "proxy";
+      value: {
+        addresses: SS58String[];
+      };
+    }
+  | {
+      type: "multisig";
+      value: {
+        threshold: number;
+        addresses: SS58String[];
+      };
     };
 
 const cache: Record<SS58String, LinkedAccountsResult> = {};
@@ -34,7 +43,12 @@ export const getLinkedAccounts$ = state((address: SS58String) => {
   return merge(
     proxy$(address).pipe(
       filter((v) => v.length > 0),
-      map((value): LinkedAccountsResult => ({ type: "proxy", value }))
+      map(
+        (value): LinkedAccountsResult => ({
+          type: "proxy",
+          value: { addresses: value },
+        })
+      )
     ),
     multisig$(address).pipe(
       filter((v) => !!v),
@@ -54,11 +68,23 @@ export type NestedLinkedAccountsResult =
       type: "root";
     }
   | {
-      type: "proxy" | "multisig";
-      value: Array<{
-        address: SS58String;
-        linkedAccounts: NestedLinkedAccountsResult | null;
-      }>;
+      type: "proxy";
+      value: {
+        accounts: Array<{
+          address: SS58String;
+          linkedAccounts: NestedLinkedAccountsResult | null;
+        }>;
+      };
+    }
+  | {
+      type: "multisig";
+      value: {
+        threshold: number;
+        accounts: Array<{
+          address: SS58String;
+          linkedAccounts: NestedLinkedAccountsResult | null;
+        }>;
+      };
     };
 export const getNestedLinkedAccounts$ = (
   address: SS58String
@@ -67,23 +93,43 @@ export const getNestedLinkedAccounts$ = (
     switchMap((result) => {
       if (result.type === "root") return of(result);
 
-      return combineLatest(
-        result.value.map((inner) => getNestedLinkedAccounts$(inner))
+      const accounts$ = combineLatest(
+        result.value.addresses.map((inner) => getNestedLinkedAccounts$(inner))
       ).pipe(
-        map((nested) => ({
-          type: result.type,
-          value: result.value.map((inner, i) => ({
+        map((nested) =>
+          result.value.addresses.map((inner, i) => ({
             address: inner,
             linkedAccounts: nested[i],
-          })),
-        })),
-        withDefault({
-          type: result.type,
-          value: result.value.map((inner) => ({
+          }))
+        ),
+        withDefault(
+          result.value.addresses.map((inner) => ({
             address: inner,
             linkedAccounts: null,
-          })),
-        })
+          }))
+        )
+      );
+
+      if (result.type === "proxy") {
+        return accounts$.pipe(
+          map(
+            (accounts): NestedLinkedAccountsResult => ({
+              type: "proxy",
+              value: { accounts },
+            })
+          )
+        );
+      }
+      return accounts$.pipe(
+        map(
+          (accounts): NestedLinkedAccountsResult => ({
+            type: "multisig",
+            value: {
+              threshold: result.value.threshold,
+              accounts,
+            },
+          })
+        )
       );
     })
   );
@@ -106,7 +152,7 @@ export const getLinkedSigner$ = (address: string) =>
             if (result.type === "root") return of(null);
 
             return merge(
-              ...result.value.map((inner) =>
+              ...result.value.addresses.map((inner) =>
                 getMatchingSigner$(inner).pipe(filter((v) => !!v))
               )
             ).pipe(
@@ -145,6 +191,7 @@ const multisig$ = (address: string) =>
             }
           }
           address
+          threshold
         }
       }
     }
@@ -155,11 +202,26 @@ const multisig$ = (address: string) =>
       operationName: "Multisig",
     }),
   }).pipe(
-    switchMap((v) => v.json()),
-    map(
-      (v): SS58String[] | null =>
-        v.data.accountMultisigs[0]?.multisig.signatories.map(
-          (v: any) => v.signatory.address
-        ) ?? null
-    )
+    switchMap(
+      (v) =>
+        v.json() as Promise<{
+          data: {
+            accountMultisigs: Array<{
+              multisig: {
+                signatories: Array<{ signatory: { address: SS58String } }>;
+                address: SS58String;
+                threshold: number;
+              };
+            }>;
+          };
+        }>
+    ),
+    map((v): { addresses: SS58String[]; threshold: number } | null => {
+      const multisig = v.data.accountMultisigs[0]?.multisig;
+      if (!multisig) return null;
+      return {
+        threshold: multisig.threshold,
+        addresses: multisig.signatories.map((v: any) => v.signatory.address),
+      };
+    })
   );
