@@ -1,17 +1,18 @@
-import { typedApi } from "@/chain";
-import { Button } from "@/components/ui/button";
+import { OngoingReferendum } from "@/sdk/referenda-sdk";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import {
   catchError,
-  combineLatest,
+  EMPTY,
+  filter,
+  from,
   map,
-  ObservedValueOf,
-  of,
-  scan,
+  mergeAll,
+  mergeMap,
+  toArray,
 } from "rxjs";
-import { liveReferenda$ } from "./referenda.state";
 import { ApproveBountyButton } from "../CreateBounty/AproveBounty";
+import { spenderReferenda$ } from "./referenda.state";
 
 const approvesBounties = (obj: any): number[] => {
   if (typeof obj !== "object") return [];
@@ -32,43 +33,43 @@ const approvesBounties = (obj: any): number[] => {
     approves.push(...approvesBounties(obj[key]));
   return approves;
 };
+const approvingReferenda$ = spenderReferenda$.pipeState(
+  mergeAll(),
+  mergeMap((referendum) =>
+    from(referendum.proposal.decodedCall()).pipe(
+      map(approvesBounties),
+      filter((v) => v.length > 0),
+      map((approves) => ({
+        referendum,
+        approves,
+      })),
+      catchError((ex) => {
+        console.error(ex);
+        return EMPTY;
+      })
+    )
+  ),
+  toArray()
+);
+const bountyReferenda$ = approvingReferenda$.pipeState(
+  map((referenda) => {
+    const bountyReferenda: Record<number, OngoingReferendum[]> = {};
+    referenda.forEach(({ referendum, approves }) => {
+      approves.forEach((id) => {
+        bountyReferenda[id] ??= [];
+        bountyReferenda[id].push(referendum);
+      });
+    });
+    Object.keys(bountyReferenda).forEach((id) => {
+      bountyReferenda[Number(id)].sort((a, b) => a.id - b.id);
+    });
+    return bountyReferenda;
+  })
+);
 
 const bountyRef$ = state(
   (bountyId: number) =>
-    combineLatest([liveReferenda$, typedApi.compatibilityToken]).pipe(
-      map(([{ referendum, proposal }, token]) => {
-        try {
-          const decodedCall = typedApi.txFromCallData(
-            proposal,
-            token
-          ).decodedCall;
-          const approves = approvesBounties(decodedCall);
-          return approves.map(
-            (x) => [x, referendum] as [number, typeof referendum]
-          );
-        } catch (_) {
-          console.error(_);
-          return [];
-        }
-      }),
-      scan((acc, elements) => {
-        for (const [bountyId, referendum] of elements) {
-          const refs = acc.get(bountyId);
-          refs == null
-            ? acc.set(bountyId, [referendum])
-            : refs.push(referendum);
-        }
-        return acc;
-      }, new Map<number, Array<ObservedValueOf<typeof liveReferenda$>["referendum"]>>()),
-      catchError(() => of(null)),
-      map(
-        (x) =>
-          x
-            ?.get(bountyId)
-            ?.slice()
-            .sort((a, b) => a.id - b.id) ?? null
-      )
-    ),
+    bountyReferenda$.pipe(map((bountyRef) => bountyRef[bountyId])),
   null
 );
 
