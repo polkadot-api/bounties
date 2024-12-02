@@ -1,7 +1,8 @@
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { Button } from "@/components/ui/button";
-import { bounty$, BountyPayload } from "@/state/bounties";
+import { Bounty as BountyPayload } from "@/sdk/bounties-sdk";
+import { bounty$ } from "@/state/bounties";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { useParams } from "react-router-dom";

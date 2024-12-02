@@ -1,9 +1,8 @@
 import { DotValue } from "@/components/DotValue";
 import { IdentityLinks } from "@/components/IdentityLinks";
-import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { BountyPayload } from "@/state/bounties";
+import { Bounty } from "@/sdk/bounties-sdk";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
@@ -15,8 +14,8 @@ import { ChildBounty } from "./ChildBounty";
 
 export const ActiveBounty: FC<{
   id: number;
-  bounty: BountyPayload;
-  status: BountyPayload["status"] & { type: "Active" };
+  bounty: Bounty;
+  status: Bounty["status"] & { type: "Active" };
 }> = ({ id, bounty, status }) => {
   const childBounties = useStateObservable(childBounties$(id));
 
