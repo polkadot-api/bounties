@@ -82,3 +82,5 @@ export function getReferendaSdk(typedApi: ReferendaSdkTypedApi) {
     getOngoingReferenda,
   };
 }
+
+export type ReferendaSdk = ReturnType<typeof getReferendaSdk>;

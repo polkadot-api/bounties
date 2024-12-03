@@ -13,6 +13,7 @@ import {
   BountiesSdkTypedApi,
   BountyWithoutDescription,
 } from "./bounties-descriptors";
+import { OngoingReferendum } from "./referenda-sdk";
 
 export interface Bounty extends BountyWithoutDescription {
   description: Binary | null;
@@ -49,8 +50,91 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
     map((set) => [...set])
   );
 
+  const bountyReferenda = new WeakMap<
+    OngoingReferendum[],
+    Promise<Record<number, OngoingReferendum[]>>
+  >();
+  function getBountyReferenda(ongoingReferenda: OngoingReferendum[]) {
+    if (bountyReferenda.has(ongoingReferenda))
+      return bountyReferenda.get(ongoingReferenda)!;
+    const promise = (async () => {
+      const spenderReferenda = ongoingReferenda.filter(
+        (ref) =>
+          (ref.origin.type === "Origins" &&
+            spenderOrigins.includes(ref.origin.value.type)) ||
+          (ref.origin.type === "system" && ref.origin.value.type === "Root")
+      );
+      const referenda = (
+        await Promise.all(
+          spenderReferenda.map((referendum) =>
+            referendum.proposal
+              .decodedCall()
+              .then((call) => ({
+                referendum,
+                approves: approvesBounties(call),
+              }))
+              .catch((ex) => {
+                console.error(ex);
+                return null;
+              })
+          )
+        )
+      ).filter((v) => v !== null);
+      const bountyReferenda: Record<number, OngoingReferendum[]> = {};
+      referenda.forEach(({ referendum, approves }) => {
+        approves.forEach((id) => {
+          bountyReferenda[id] ??= [];
+          bountyReferenda[id].push(referendum);
+        });
+      });
+      Object.keys(bountyReferenda).forEach((id) => {
+        bountyReferenda[Number(id)].sort((a, b) => a.id - b.id);
+      });
+      return bountyReferenda;
+    })();
+    bountyReferenda.set(ongoingReferenda, promise);
+    return promise;
+  }
+  async function findApprovingReferenda(
+    ongoingReferenda: OngoingReferendum[],
+    bountyId: number
+  ) {
+    const bountyReferenda = await getBountyReferenda(ongoingReferenda);
+    return bountyReferenda[bountyId] ?? [];
+  }
+
   return {
     bountyIds$,
     getBountyById$,
+    findApprovingReferenda,
   };
 }
+
+const spenderOrigins = [
+  "Treasurer",
+  "SmallSpender",
+  "MediumSpender",
+  "BigSpender",
+  "SmallTipper",
+  "BigTipper",
+];
+
+const approvesBounties = (obj: any): number[] => {
+  if (typeof obj !== "object") return [];
+  if (Array.isArray(obj)) {
+    const approves = [];
+    for (const item of obj) approves.push(...approvesBounties(item));
+    return approves;
+  }
+  if (
+    obj?.type === "Bounties" &&
+    obj?.value?.type === "approve_bounty" &&
+    typeof obj?.value?.value?.bounty_id === "number"
+  ) {
+    return [obj.value.value.bounty_id];
+  }
+  const approves = [];
+  for (const key of Object.keys(obj))
+    approves.push(...approvesBounties(obj[key]));
+  return approves;
+};
