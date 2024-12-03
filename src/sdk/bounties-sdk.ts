@@ -50,14 +50,8 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
     map((set) => [...set])
   );
 
-  const bountyReferenda = new WeakMap<
-    OngoingReferendum[],
-    Promise<Record<number, OngoingReferendum[]>>
-  >();
-  function getBountyReferenda(ongoingReferenda: OngoingReferendum[]) {
-    if (bountyReferenda.has(ongoingReferenda))
-      return bountyReferenda.get(ongoingReferenda)!;
-    const promise = (async () => {
+  const getBountyReferenda = weakMemo(
+    async (ongoingReferenda: OngoingReferendum[]) => {
       const spenderReferenda = ongoingReferenda.filter(
         (ref) =>
           (ref.origin.type === "Origins" &&
@@ -91,10 +85,8 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
         bountyReferenda[Number(id)].sort((a, b) => a.id - b.id);
       });
       return bountyReferenda;
-    })();
-    bountyReferenda.set(ongoingReferenda, promise);
-    return promise;
-  }
+    }
+  );
   async function findApprovingReferenda(
     ongoingReferenda: OngoingReferendum[],
     bountyId: number
@@ -137,4 +129,14 @@ const approvesBounties = (obj: any): number[] => {
   for (const key of Object.keys(obj))
     approves.push(...approvesBounties(obj[key]));
   return approves;
+};
+
+const weakMemo = <Arg extends [object], R>(fn: (...arg: Arg) => R) => {
+  const cache = new WeakMap<Arg[0], R>();
+  return (...arg: Arg) => {
+    if (cache.has(arg[0])) return cache.get(arg[0])!;
+    const result = fn(...arg);
+    cache.set(arg[0], result);
+    return result;
+  };
 };
