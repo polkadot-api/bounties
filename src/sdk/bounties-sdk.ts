@@ -12,6 +12,7 @@ import {
 import {
   BountiesSdkTypedApi,
   BountyWithoutDescription,
+  MultiAddress,
 } from "./bounties-descriptors";
 import { OngoingReferendum } from "./referenda-sdk";
 
@@ -50,7 +51,7 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
     map((set) => [...set])
   );
 
-  const getBountyReferenda = weakMemo(
+  const getDecodedSpenderReferenda = weakMemo(
     async (ongoingReferenda: OngoingReferendum[]) => {
       const spenderReferenda = ongoingReferenda.filter(
         (ref) =>
@@ -58,47 +59,82 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
             spenderOrigins.includes(ref.origin.value.type)) ||
           (ref.origin.type === "system" && ref.origin.value.type === "Root")
       );
-      const referenda = (
-        await Promise.all(
-          spenderReferenda.map((referendum) =>
-            referendum.proposal
-              .decodedCall()
-              .then((call) => ({
-                referendum,
-                approves: approvesBounties(call),
-              }))
-              .catch((ex) => {
-                console.error(ex);
-                return null;
-              })
-          )
+      const response = await Promise.all(
+        spenderReferenda.map((referendum) =>
+          referendum.proposal
+            .decodedCall()
+            .then((call) => ({
+              referendum,
+              call,
+            }))
+            .catch((ex) => {
+              console.error(ex);
+              return null;
+            })
         )
-      ).filter((v) => v !== null);
-      const bountyReferenda: Record<number, OngoingReferendum[]> = {};
-      referenda.forEach(({ referendum, approves }) => {
-        approves.forEach((id) => {
-          bountyReferenda[id] ??= [];
-          bountyReferenda[id].push(referendum);
-        });
-      });
-      Object.keys(bountyReferenda).forEach((id) => {
-        bountyReferenda[Number(id)].sort((a, b) => a.id - b.id);
-      });
-      return bountyReferenda;
+      );
+      return response.filter((v) => !!v);
     }
   );
+
   async function findApprovingReferenda(
     ongoingReferenda: OngoingReferendum[],
     bountyId: number
   ) {
-    const bountyReferenda = await getBountyReferenda(ongoingReferenda);
-    return bountyReferenda[bountyId] ?? [];
+    const spenderReferenda = await getDecodedSpenderReferenda(ongoingReferenda);
+
+    return spenderReferenda
+      .filter(({ call }) =>
+        findCalls(
+          {
+            pallet: "Bounties",
+            name: "approve_bounty",
+          },
+          call
+        ).some((v) => v?.bounty_id === bountyId)
+      )
+      .map(({ referendum }) => referendum)
+      .filter((v) => v !== null);
+  }
+
+  async function findProposingCuratorReferenda(
+    ongoingReferenda: OngoingReferendum[],
+    bountyId: number
+  ) {
+    const spenderReferenda = await getDecodedSpenderReferenda(ongoingReferenda);
+
+    return spenderReferenda
+      .map(({ call, referendum }) => {
+        const proposeCuratorCalls = findCalls(
+          {
+            pallet: "Bounties",
+            name: "propose_curator",
+          },
+          call
+        )
+          .filter(
+            (v) =>
+              v?.bounty_id === bountyId &&
+              typeof v.curator === "object" &&
+              typeof v.fee === "bigint"
+          )
+          .map((v) => ({
+            curator: v.curator as MultiAddress,
+            fee: v.fee as bigint,
+          }));
+        if (!proposeCuratorCalls.length) return null;
+        return { referendum, proposeCuratorCalls };
+      })
+      .filter((v) => v !== null);
   }
 
   return {
     bountyIds$,
     getBountyById$,
-    findApprovingReferenda,
+    referendaFilter: {
+      approving: findApprovingReferenda,
+      proposingCurator: findProposingCuratorReferenda,
+    },
   };
 }
 
@@ -111,23 +147,19 @@ const spenderOrigins = [
   "BigTipper",
 ];
 
-const approvesBounties = (obj: any): number[] => {
+const findCalls = (call: { pallet: string; name: string }, obj: any): any[] => {
   if (typeof obj !== "object") return [];
   if (Array.isArray(obj)) {
     const approves = [];
-    for (const item of obj) approves.push(...approvesBounties(item));
+    for (const item of obj) approves.push(...findCalls(call, item));
     return approves;
   }
-  if (
-    obj?.type === "Bounties" &&
-    obj?.value?.type === "approve_bounty" &&
-    typeof obj?.value?.value?.bounty_id === "number"
-  ) {
-    return [obj.value.value.bounty_id];
+  if (obj?.type === call.pallet && obj?.value?.type === call.name) {
+    return [obj.value.value];
   }
   const approves = [];
   for (const key of Object.keys(obj))
-    approves.push(...approvesBounties(obj[key]));
+    approves.push(...findCalls(call, obj[key]));
   return approves;
 };
 

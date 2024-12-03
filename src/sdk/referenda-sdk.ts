@@ -7,6 +7,10 @@ import {
 
 type RawOngoingReferendum = (ReferendumInfo & { type: "Ongoing" })["value"];
 
+export interface ReferendumDetails {
+  title?: string;
+}
+
 export type OngoingReferendum = Omit<RawOngoingReferendum, "proposal"> & {
   id: number;
   proposal: {
@@ -20,6 +24,7 @@ export type OngoingReferendum = Omit<RawOngoingReferendum, "proposal"> & {
       };
     }>;
   };
+  getDetails: (apiKey: string) => Promise<ReferendumDetails>;
 };
 
 export function getReferendaSdk(typedApi: ReferendaSdkTypedApi) {
@@ -42,7 +47,7 @@ export function getReferendaSdk(typedApi: ReferendaSdkTypedApi) {
           proposal.value.len,
         ]);
         if (!result)
-          throw new Error(`Preimage ${proposal.value.hash} not found`);
+          throw new Error(`Preimage ${proposal.value.hash.asHex()} not found`);
         return result;
       })();
       preimageCache.set(proposal.value.hash.asHex(), promise);
@@ -61,6 +66,25 @@ export function getReferendaSdk(typedApi: ReferendaSdkTypedApi) {
 
           return typedApi.txFromCallData(proposal, token).decodedCall;
         },
+      },
+      async getDetails(subscanApiKey: string) {
+        const result = await fetch(
+          "https://polkadot.api.subscan.io/api/scan/referenda/referendum",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              referendum_index: id,
+            }),
+            headers: {
+              "x-api-key": subscanApiKey,
+            },
+          }
+        ).then((r) => r.json());
+        // status = "Confirm" => Confirming
+
+        return {
+          title: result.data.title,
+        };
       },
     };
   }

@@ -17,13 +17,18 @@ import {
   SubmittedReferendum,
 } from "./approveBounty.state";
 
-export const ApproveBountyButton: FC<{ id: number }> = ({ id }) => {
+export const ApproveBountyButton: FC<{ id: number; className?: string }> = ({
+  id,
+  className,
+}) => {
   const account = useStateObservable(selectedAccount$);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button disabled={!account}>Approve Bounty</Button>
+        <Button disabled={!account} className={className}>
+          Approve Bounty
+        </Button>
       </DialogTrigger>
       <ApproveBountyDialog id={id} />
     </Dialog>

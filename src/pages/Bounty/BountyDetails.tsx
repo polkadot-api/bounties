@@ -1,11 +1,11 @@
 import { DotValue } from "@/components/DotValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bounty } from "@/sdk/bounties-sdk";
 import { FC, PropsWithChildren } from "react";
-import { BountyPayload } from "../Home/bounties.state";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 
 export const BountyDetails: FC<
-  PropsWithChildren<{ id: number; bounty: BountyPayload }>
+  PropsWithChildren<{ id: number; bounty: Bounty }>
 > = ({ id, bounty, children }) => (
   <Card>
     <CardHeader>

@@ -2,6 +2,7 @@ import {
   ApisTypedef,
   Binary,
   Enum,
+  FixedSizeBinary,
   PalletsTypedef,
   SS58String,
   StorageDescriptor,
@@ -71,3 +72,11 @@ type SdkDefinition<P, R> = {
   asset: any;
   metadataTypes: any;
 };
+
+export type MultiAddress = Enum<{
+  Id: SS58String;
+  Index: undefined;
+  Raw: Binary;
+  Address32: FixedSizeBinary<32>;
+  Address20: FixedSizeBinary<20>;
+}>;

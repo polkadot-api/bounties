@@ -3,6 +3,7 @@ import { createClient } from "polkadot-api";
 import { getSmProvider } from "polkadot-api/sm-provider";
 import { startFromWorker } from "polkadot-api/smoldot/from-worker";
 import SmWorker from "polkadot-api/smoldot/worker?worker";
+import { withLogsRecorder } from "polkadot-api/logs-provider";
 
 export const smoldot = startFromWorker(new SmWorker(), {
   logCallback: (level, target, message) => {
@@ -18,6 +19,11 @@ export const polkadotChain = polkadotChainSpec.then(({ chainSpec }) =>
   })
 );
 
-export const client = createClient(getSmProvider(polkadotChain));
+export const client = createClient(
+  withLogsRecorder(
+    (...v) => console.debug("relayChain", ...v),
+    getSmProvider(polkadotChain)
+  )
+);
 
 export const typedApi = client.getTypedApi(polkadot);

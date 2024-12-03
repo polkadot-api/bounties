@@ -12,11 +12,20 @@ export const bounty$ = state(bountiesSdk.getBountyById$, null);
 
 export const bountiesState$ = bountyIds$;
 
-export const bountyRef$ = state(
+export const bountyApprovingReferenda$ = state(
   (bountyId: number) =>
     ongoingReferenda$.pipe(
       switchMap((referenda) =>
-        bountiesSdk.findApprovingReferenda(referenda, bountyId)
+        bountiesSdk.referendaFilter.approving(referenda, bountyId)
+      )
+    ),
+  null
+);
+export const bountyProposingCuratorReferenda$ = state(
+  (bountyId: number) =>
+    ongoingReferenda$.pipe(
+      switchMap((referenda) =>
+        bountiesSdk.referendaFilter.proposingCurator(referenda, bountyId)
       )
     ),
   null

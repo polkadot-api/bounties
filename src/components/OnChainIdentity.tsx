@@ -17,17 +17,21 @@ import { getSmProvider } from "polkadot-api/sm-provider";
 import { FC } from "react";
 import { catchError, map, of, tap } from "rxjs";
 import { PolkadotIdenticon } from "./PolkadotIdenticon";
+import { withLogsRecorder } from "polkadot-api/logs-provider";
 
 const peopleChainSpec = import("polkadot-api/chains/polkadot_people");
 
 const client = createClient(
-  getSmProvider(
-    Promise.all([polkadotChain, peopleChainSpec]).then(
-      ([relayChain, { chainSpec }]) =>
-        smoldot.addChain({
-          chainSpec,
-          potentialRelayChains: [relayChain],
-        })
+  withLogsRecorder(
+    (...v) => console.debug("peopleChain", ...v),
+    getSmProvider(
+      Promise.all([polkadotChain, peopleChainSpec]).then(
+        ([relayChain, { chainSpec }]) =>
+          smoldot.addChain({
+            chainSpec,
+            potentialRelayChains: [relayChain],
+          })
+      )
     )
   )
 );

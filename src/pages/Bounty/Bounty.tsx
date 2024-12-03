@@ -6,11 +6,15 @@ import { bounty$ } from "@/state/bounties";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { useParams } from "react-router-dom";
+import { ApproveBountyButton } from "../CreateBounty/AproveBounty";
 import { ActiveBounty } from "./ActiveBounty";
 import { BlockDue } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
-import { BountyReferendum } from "./BountyReferendum";
+import {
+  ApproveBountyReferendum,
+  ProposeBountyReferendum,
+} from "./BountyReferendum";
 import { bountyCuratorSigner$ } from "./curatorSigner";
 
 export const Bounty = () => {
@@ -21,6 +25,10 @@ export const Bounty = () => {
 
   const getContent = () => {
     switch (bounty.status.type) {
+      case "Proposed":
+        return <ProposedBounty id={id} bounty={bounty} />;
+      case "Funded":
+        return <FundedBounty id={id} bounty={bounty} />;
       case "Active":
         return <ActiveBounty id={id} bounty={bounty} status={bounty.status} />;
       case "CuratorProposed":
@@ -35,8 +43,6 @@ export const Bounty = () => {
         return (
           <PendingPayoutBounty id={id} bounty={bounty} status={bounty.status} />
         );
-      case "Proposed":
-        return <ProposedBounty id={id} bounty={bounty} />;
     }
 
     return (
@@ -51,6 +57,21 @@ export const Bounty = () => {
   return <div className="flex flex-col gap-2 p-2">{getContent()}</div>;
 };
 
+const FundedBounty: FC<{
+  id: number;
+  bounty: BountyPayload;
+}> = ({ id, bounty }) => (
+  <BountyDetails id={id} bounty={bounty}>
+    <BountyDetailGroup>
+      <BountyDetail title="Status">Funded</BountyDetail>
+    </BountyDetailGroup>
+    <Button disabled className="self-center">
+      Propose Curator
+    </Button>
+    <ProposeBountyReferendum id={id} />
+  </BountyDetails>
+);
+
 const ProposedBounty: FC<{
   id: number;
   bounty: BountyPayload;
@@ -59,7 +80,8 @@ const ProposedBounty: FC<{
     <BountyDetailGroup>
       <BountyDetail title="Status">Proposed</BountyDetail>
     </BountyDetailGroup>
-    <BountyReferendum id={id} />
+    <ApproveBountyButton id={id} className="self-center" />
+    <ApproveBountyReferendum id={id} />
   </BountyDetails>
 );
 
