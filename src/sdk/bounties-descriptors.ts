@@ -42,6 +42,14 @@ export interface BountyWithoutDescription {
 
 type BountiesSdkPallets = PalletsTypedef<
   {
+    Preimage: {
+      PreimageFor: StorageDescriptor<
+        [Key: [Binary, number]],
+        Binary,
+        true,
+        never
+      >;
+    };
     Bounties: {
       /**
        * Number of bounty proposals that have been made.

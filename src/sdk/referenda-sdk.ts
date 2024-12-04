@@ -4,6 +4,7 @@ import {
   ReferendumInfo,
   PreimagesBounded,
 } from "./referenda-descriptors";
+import { getPreimageResolver } from "./preimages";
 
 type RawOngoingReferendum = (ReferendumInfo & { type: "Ongoing" })["value"];
 
@@ -28,31 +29,15 @@ export type OngoingReferendum = Omit<RawOngoingReferendum, "proposal"> & {
 };
 
 export function getReferendaSdk(typedApi: ReferendaSdkTypedApi) {
-  const preimageCache = new Map<string, Promise<Binary>>();
+  const resolvePreimage = getPreimageResolver(
+    typedApi.query.Preimage.PreimageFor.getValues
+  );
+
   function enhanceOngoingReferendum(
     id: number,
     referendum: RawOngoingReferendum
   ): OngoingReferendum {
-    const resolveProposal = async () => {
-      const proposal = referendum.proposal;
-      if (proposal.type === "Legacy")
-        throw new Error("Legacy proposals can't be resolved");
-      if (proposal.type === "Inline") return proposal.value;
-
-      const cached = preimageCache.get(proposal.value.hash.asHex());
-      if (cached) return cached;
-      const promise = (async () => {
-        const result = await typedApi.query.Preimage.PreimageFor.getValue([
-          proposal.value.hash,
-          proposal.value.len,
-        ]);
-        if (!result)
-          throw new Error(`Preimage ${proposal.value.hash.asHex()} not found`);
-        return result;
-      })();
-      preimageCache.set(proposal.value.hash.asHex(), promise);
-      return promise;
-    };
+    const resolveProposal = () => resolvePreimage(referendum.proposal);
 
     return {
       ...referendum,
