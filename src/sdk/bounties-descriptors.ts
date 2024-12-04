@@ -2,12 +2,17 @@ import {
   ApisTypedef,
   Binary,
   Enum,
+  FixedSizeArray,
   FixedSizeBinary,
   PalletsTypedef,
   SS58String,
   StorageDescriptor,
   TypedApi,
 } from "polkadot-api";
+import {
+  PolkadotRuntimeOriginCaller,
+  PreimagesBounded,
+} from "./referenda-descriptors";
 
 export type BountiesBountyStatus = Enum<{
   Proposed: undefined;
@@ -41,19 +46,40 @@ type BountiesSdkPallets = PalletsTypedef<
       /**
        * Number of bounty proposals that have been made.
        */
-      BountyCount: StorageDescriptor<[], number, false>;
+      BountyCount: StorageDescriptor<[], number, false, never>;
       /**
        * Bounties that have been made.
        */
       Bounties: StorageDescriptor<
         [Key: number],
         BountyWithoutDescription,
-        true
+        true,
+        never
       >;
       /**
        * The description of each bounty.
        */
-      BountyDescriptions: StorageDescriptor<[Key: number], Binary, true>;
+      BountyDescriptions: StorageDescriptor<[Key: number], Binary, true, never>;
+    };
+    Scheduler: {
+      /**
+       * Items to be executed, indexed by the block number that they should be executed on.
+       */
+      Agenda: StorageDescriptor<
+        [Key: number],
+        Array<
+          | {
+              maybe_id?: FixedSizeBinary<32> | undefined;
+              priority: number;
+              call: PreimagesBounded;
+              maybe_periodic?: FixedSizeArray<2, number> | undefined;
+              origin: PolkadotRuntimeOriginCaller;
+            }
+          | undefined
+        >,
+        false,
+        never
+      >;
     };
   },
   {},

@@ -34,7 +34,8 @@ type LinkedAccountsSdkPallets = PalletsTypedef<
           }>,
           unknown
         ],
-        false
+        false,
+        never
       >;
     };
   },

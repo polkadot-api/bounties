@@ -2,7 +2,7 @@ import { Binary } from "polkadot-api";
 import {
   ReferendaSdkTypedApi,
   ReferendumInfo,
-  ReferendumInfoProposal,
+  PreimagesBounded,
 } from "./referenda-descriptors";
 
 type RawOngoingReferendum = (ReferendumInfo & { type: "Ongoing" })["value"];
@@ -14,7 +14,7 @@ export interface ReferendumDetails {
 export type OngoingReferendum = Omit<RawOngoingReferendum, "proposal"> & {
   id: number;
   proposal: {
-    rawValue: ReferendumInfoProposal;
+    rawValue: PreimagesBounded;
     resolve: () => Promise<Binary>;
     decodedCall: () => Promise<{
       type: string;

@@ -1,3 +1,4 @@
+import { typedApi } from "@/chain";
 import { usePromise } from "@/lib/usePromise";
 import { OngoingReferendum } from "@/sdk/referenda-sdk";
 import {

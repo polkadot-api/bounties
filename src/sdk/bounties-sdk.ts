@@ -97,6 +97,10 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
       .filter((v) => v !== null);
   }
 
+  async function findScheduledApproved(bountyId: number) {}
+
+  async function findScheduledCuratorProposed(bountyId: number) {}
+
   async function findProposingCuratorReferenda(
     ongoingReferenda: OngoingReferendum[],
     bountyId: number
@@ -134,6 +138,10 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
     referendaFilter: {
       approving: findApprovingReferenda,
       proposingCurator: findProposingCuratorReferenda,
+    },
+    scheduled: {
+      approved: findScheduledApproved,
+      curatorProposed: findScheduledCuratorProposed,
     },
   };
 }

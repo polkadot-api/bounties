@@ -19,7 +19,7 @@ type BasicReferndumInfo = [
   WhoAmount | undefined
 ];
 
-type PolkadotRuntimeOriginCaller = Enum<{
+export type PolkadotRuntimeOriginCaller = Enum<{
   system: Enum<{
     Root: undefined;
     Signed: SS58String;
@@ -49,7 +49,7 @@ type PolkadotRuntimeOriginCaller = Enum<{
   Void: undefined;
 }>;
 
-export type ReferendumInfoProposal = Enum<{
+export type PreimagesBounded = Enum<{
   Legacy: {
     hash: Binary;
   };
@@ -64,7 +64,7 @@ export type ReferendumInfo = Enum<{
   Ongoing: {
     track: number;
     origin: PolkadotRuntimeOriginCaller;
-    proposal: ReferendumInfoProposal;
+    proposal: PreimagesBounded;
     enactment: Enum<{
       At: number;
       After: number;
@@ -96,13 +96,23 @@ export type ReferendumInfo = Enum<{
 type ReferendaSdkPallets = PalletsTypedef<
   {
     Preimage: {
-      PreimageFor: StorageDescriptor<[Key: [Binary, number]], Binary, true>;
+      PreimageFor: StorageDescriptor<
+        [Key: [Binary, number]],
+        Binary,
+        true,
+        never
+      >;
     };
     Referenda: {
       /**
        * Information concerning any given referendum.
        */
-      ReferendumInfoFor: StorageDescriptor<[Key: number], ReferendumInfo, true>;
+      ReferendumInfoFor: StorageDescriptor<
+        [Key: number],
+        ReferendumInfo,
+        true,
+        never
+      >;
     };
   },
   {},
