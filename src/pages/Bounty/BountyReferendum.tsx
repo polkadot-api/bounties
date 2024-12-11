@@ -1,12 +1,15 @@
-import { typedApi } from "@/chain";
+import { DotValue } from "@/components/DotValue";
+import { IdentityLinks } from "@/components/IdentityLinks";
 import { usePromise } from "@/lib/usePromise";
 import { OngoingReferendum } from "@/sdk/referenda-sdk";
 import {
+  bountiesSdk,
   bountyApprovingReferenda$,
   bountyProposingCuratorReferenda$,
 } from "@/state/bounties";
-import { useStateObservable } from "@react-rxjs/core";
+import { state, useStateObservable } from "@react-rxjs/core";
 import { FC, PropsWithChildren } from "react";
+import { from } from "rxjs";
 
 export const ApproveBountyReferendum: FC<{ id: number }> = ({ id }) => {
   const referenda = useStateObservable(bountyApprovingReferenda$(id));
@@ -37,11 +40,15 @@ export const ProposeBountyReferendum: FC<{ id: number }> = ({ id }) => {
     if (!referenda) return "Loading referenda…";
     if (referenda.length === 0) {
       return (
-        <span>
-          Can't find any ongoing referenda proposing a curator for this bounty
-        </span>
+        <div>
+          <div>
+            Can't find any ongoing referenda proposing a curator for this bounty
+          </div>
+          <ScheduledProposeResult id={id} />
+        </div>
       );
     }
+    // TODO show curator + fee
     return referenda.map(({ referendum }) => (
       <ReferendumInfo key={referendum.id} referendum={referendum} />
     ));
@@ -51,6 +58,35 @@ export const ProposeBountyReferendum: FC<{ id: number }> = ({ id }) => {
     <div className="flex gap-2 border border-border rounded p-2 flex-col">
       {getContent()}
     </div>
+  );
+};
+
+const scheudledProposeResult$ = state(
+  (id: number) => from(bountiesSdk.scheduledChanges.curatorProposed(id)),
+  null
+);
+const ScheduledProposeResult: FC<{ id: number }> = ({ id }) => {
+  const scheduled = useStateObservable(scheudledProposeResult$(id));
+
+  if (!scheduled) return <span>Looking for scheduled change…</span>;
+
+  const winningCuratorCall =
+    scheduled.length > 0
+      ? scheduled.reduce((min, v) => (v.height < min.height ? v : min))
+      : null;
+  const winningCall = winningCuratorCall?.proposeCuratorCalls[0] ?? null;
+
+  return winningCuratorCall && winningCall ? (
+    <div>
+      <span>
+        The bounty will become "Curator Proposed" at block{" "}
+        {winningCuratorCall.height.toLocaleString()} with the following curator,
+        for a fee of <DotValue value={winningCall.fee} />:
+      </span>
+      <IdentityLinks address={winningCall.curator.value as any} />
+    </div>
+  ) : (
+    <span>No scheduled change found either</span>
   );
 };
 

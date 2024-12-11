@@ -60,6 +60,12 @@ const batch = <T, R>(fn: (values: T[]) => Promise<R[]>) => {
           },
         ];
         setTimeout(execute);
+      } else {
+        batched.push({
+          value,
+          resolve,
+          reject,
+        });
       }
     });
 };

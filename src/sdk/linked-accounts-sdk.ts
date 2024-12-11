@@ -145,7 +145,7 @@ export function getLinkedAccountsSdk(typedApi: LinkedAccountsSdkTypedApi) {
 }
 
 const multisig$ = (address: string) =>
-  fromFetch("https://chainsafe.squids.live/multix-arrow/v/v4/graphql", {
+  fromFetch("https://chainsafe.squids.live/multix-arrow/v/v5/graphql", {
     method: "POST",
     headers: {
       accept: "application/json",

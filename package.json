@@ -13,9 +13,10 @@
     "@hookform/resolvers": "^3.9.1",
     "@noble/hashes": "^1.6.1",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
-    "@polkadot-api/metadata-builders": "^0.9.2",
+    "@polkadot-api/meta-signers": "^0.1.1",
+    "@polkadot-api/metadata-builders": "^0.9.3",
     "@polkadot-api/polkadot-signer": "^0.1.6",
-    "@polkadot-api/substrate-bindings": "^0.9.4",
+    "@polkadot-api/substrate-bindings": "^0.10.0",
     "@polkadot-api/utils": "^0.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
@@ -29,16 +30,17 @@
     "@react-rxjs/utils": "^0.9.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.465.0",
-    "polkadot-api": "^1.7.7",
+    "lucide-react": "^0.468.0",
+    "polkadot-api": "^1.7.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.53.2",
+    "react-hook-form": "^7.54.0",
     "react-router-dom": "^7.0.2",
+    "react-toastify": "^10.0.6",
     "rxjs": "^7.8.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8"
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
@@ -50,7 +52,7 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.16",
     "typescript": "^5.7.2",
-    "vite": "^6.0.2"
+    "vite": "^6.0.3"
   },
   "packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228"
 }

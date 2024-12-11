@@ -4,7 +4,7 @@ import { state } from "@react-rxjs/core";
 import { ongoingReferenda$ } from "./referenda";
 import { switchMap } from "rxjs";
 
-const bountiesSdk = getBountiesSdk(typedApi);
+export const bountiesSdk = getBountiesSdk(typedApi);
 
 export const bountyIds$ = state(bountiesSdk.bountyIds$, null);
 

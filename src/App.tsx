@@ -1,7 +1,8 @@
 import { Route, Routes } from "react-router-dom";
-import { HomePage } from "./pages/Home";
 import { Bounty } from "./pages/Bounty";
 import { Header } from "./pages/Header";
+import { HomePage } from "./pages/Home";
+import { Transactions } from "./Transactions";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           </Routes>
         </div>
       </div>
+      <Transactions />
     </div>
   );
 }

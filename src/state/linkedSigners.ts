@@ -1,10 +1,19 @@
 import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
-import { multixSigner } from "@/lib/multixSigner";
 import { getLinkedAccountsSdk } from "@/sdk/linked-accounts-sdk";
+import { getMultisigSigner, getProxySigner } from "@polkadot-api/meta-signers";
 import { toHex } from "@polkadot-api/utils";
-import { getSs58AddressInfo, PolkadotSigner } from "polkadot-api";
-import { filter, map, merge, Observable, of, switchMap } from "rxjs";
+import { AccountId, getSs58AddressInfo, PolkadotSigner } from "polkadot-api";
+import {
+  defaultIfEmpty,
+  filter,
+  map,
+  merge,
+  Observable,
+  of,
+  switchMap,
+  take,
+} from "rxjs";
 
 const linkedAccountsSdk = getLinkedAccountsSdk(typedApi);
 
@@ -33,11 +42,26 @@ export const getLinkedSigner$ = (address: string) =>
                 getMatchingSigner$(inner).pipe(filter((v) => !!v))
               )
             ).pipe(
+              take(1),
               map((nestedSigner) =>
                 result.type === "multisig"
-                  ? multixSigner(address, nestedSigner)
-                  : nestedSigner
-              )
+                  ? getMultisigSigner(
+                      {
+                        threshold: result.value.threshold,
+                        signatories: result.value.addresses,
+                      },
+                      typedApi.query.Multisig.Multisigs.getValue,
+                      typedApi.apis.TransactionPaymentApi.query_info,
+                      nestedSigner,
+                      {
+                        // In case there are nestings, it could happen that when the
+                        // tx is executed, the outer multisig expects the call data
+                        method: () => "as_multi",
+                      }
+                    )
+                  : getProxySigner({ real: address }, nestedSigner)
+              ),
+              defaultIfEmpty(null)
             );
           })
         );

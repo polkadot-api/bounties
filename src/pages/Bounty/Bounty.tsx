@@ -1,9 +1,12 @@
+import { typedApi } from "@/chain";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { Button } from "@/components/ui/button";
 import { Bounty as BountyPayload } from "@/sdk/bounties-sdk";
 import { bounty$ } from "@/state/bounties";
+import { useSingleTransaction } from "@/Transactions";
 import { useStateObservable } from "@react-rxjs/core";
+import { Loader2 } from "lucide-react";
 import { FC } from "react";
 import { useParams } from "react-router-dom";
 import { ApproveBountyButton } from "../CreateBounty/AproveBounty";
@@ -91,6 +94,7 @@ const CuratorProposedBounty: FC<{
   status: BountyPayload["status"] & { type: "CuratorProposed" };
 }> = ({ id, bounty, status }) => {
   const signer = useStateObservable(bountyCuratorSigner$(id));
+  const [isProposing, trackTx] = useSingleTransaction();
 
   return (
     <BountyDetails id={id} bounty={bounty}>
@@ -101,7 +105,19 @@ const CuratorProposedBounty: FC<{
         </BountyDetail>
       </BountyDetailGroup>
       <div>
-        <Button disabled={!signer}>Accept Curator Role</Button>
+        <Button
+          disabled={!signer || isProposing}
+          onClick={() =>
+            trackTx(
+              typedApi.tx.Bounties.accept_curator({
+                bounty_id: id,
+              }).signSubmitAndWatch(signer!)
+            )
+          }
+        >
+          Accept Curator Role
+          {isProposing && <Loader2 className="animate-spin" />}
+        </Button>
       </div>
     </BountyDetails>
   );
