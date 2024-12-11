@@ -3,7 +3,7 @@ import { selectedAccount$ } from "@/components/AccountSelector";
 import { getLinkedAccountsSdk } from "@/sdk/linked-accounts-sdk";
 import { getMultisigSigner, getProxySigner } from "@polkadot-api/meta-signers";
 import { toHex } from "@polkadot-api/utils";
-import { AccountId, getSs58AddressInfo, PolkadotSigner } from "polkadot-api";
+import { getSs58AddressInfo, PolkadotSigner } from "polkadot-api";
 import {
   defaultIfEmpty,
   filter,

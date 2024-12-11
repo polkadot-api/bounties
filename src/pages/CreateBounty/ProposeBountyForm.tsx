@@ -1,7 +1,8 @@
 import { typedApi } from "@/chain";
 import { CopyText } from "@/components/CopyText";
-import { TokenInput } from "@/components/TokenInput";
+import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 import { format } from "@/components/token-formatter";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,21 +16,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { state, useStateObservable } from "@react-rxjs/core";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Binary } from "polkadot-api";
+import { FC } from "react";
 import { useForm, useFormState, useWatch } from "react-hook-form";
 import { combineLatest, from, map } from "rxjs";
-import { z } from "zod";
-import { proposeBounty, proposeBountyState$ } from "./proposeBounty.state";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { FC } from "react";
 import { twMerge } from "tailwind-merge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { z } from "zod";
 import { isTxInProgress, TxProgress } from "./TxProgress";
-
-const DOT_TOKEN = {
-  decimals: 10,
-  symbol: "DOT",
-};
+import { proposeBounty, proposeBountyState$ } from "./proposeBounty.state";
 
 const getProposeBountySchema = ({
   maxLength,

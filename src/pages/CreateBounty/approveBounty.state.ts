@@ -39,7 +39,6 @@ export const approveBountyDetails$ = state(
       filter(([v]) => !!v),
       take(1),
       map(([bounty, token]) => {
-        console.log("yes");
         const approveBountyTx = typedApi.tx.Bounties.approve_bounty({
           bounty_id: bountyId,
         }).getEncodedData(token);
@@ -117,7 +116,7 @@ const getSpenderOrigin = (value: bigint) => {
   if (value <= 10_000_000n * DOT_UNIT) return GovernanceOrigin.Treasurer();
   return null;
 };
-const getOrigin = (value: bigint) => {
+export const getOrigin = (value: bigint) => {
   const origin = getSpenderOrigin(value);
   return origin
     ? PolkadotRuntimeOriginCaller.Origins(origin)
@@ -132,7 +131,7 @@ const originToTrack: Partial<Record<GovernanceOrigin["type"], string>> = {
   MediumSpender: "medium_spender",
   BigSpender: "big_spender",
 };
-const getEnactment = (
+export const getEnactment = (
   value: bigint,
   referendaTracks: ReturnType<typeof typedApi.constants.Referenda.Tracks>
 ) => {
