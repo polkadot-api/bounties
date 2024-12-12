@@ -19,6 +19,7 @@ import {
   ProposeBountyReferendum,
 } from "./BountyReferendum";
 import { bountyCuratorSigner$ } from "./curatorSigner";
+import { ProposeCurator } from "./ProposeCurator";
 
 export const Bounty = () => {
   const id = Number(useParams().id);
@@ -68,9 +69,7 @@ const FundedBounty: FC<{
     <BountyDetailGroup>
       <BountyDetail title="Status">Funded</BountyDetail>
     </BountyDetailGroup>
-    <Button disabled className="self-center">
-      Propose Curator
-    </Button>
+    <ProposeCurator id={id} />
     <ProposeBountyReferendum id={id} />
   </BountyDetails>
 );

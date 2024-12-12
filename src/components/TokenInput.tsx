@@ -6,6 +6,10 @@ import {
   thousandsSeparator,
 } from "./token-formatter";
 
+export const DOT_TOKEN = {
+  decimals: 10,
+  symbol: "DOT",
+};
 export const TokenInput = forwardRef<
   HTMLDivElement,
   {

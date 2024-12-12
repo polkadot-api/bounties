@@ -30,6 +30,7 @@
     "@react-rxjs/utils": "^0.9.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "1.0.0",
     "lucide-react": "^0.468.0",
     "polkadot-api": "^1.7.8",
     "react": "^18.3.1",
