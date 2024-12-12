@@ -1,7 +1,5 @@
-import {
-  getNestedLinkedAccounts$,
-  NestedLinkedAccountsResult,
-} from "@/state/linkedSigners";
+import { NestedLinkedAccountsResult } from "@/sdk/linked-accounts-sdk";
+import { getNestedLinkedAccounts$ } from "@/state/linkedSigners";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { SS58String } from "polkadot-api";
 import { FC } from "react";

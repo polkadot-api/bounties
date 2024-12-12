@@ -43,13 +43,15 @@ export function trackTransaction(tx$: Observable<TxEvent>) {
       }
     },
     error: (error) => {
+      toast.dismiss(id);
       if (error instanceof InvalidTxError) {
-        toast.dismiss(id);
         toast.error("Transaction failed: " + JSON.stringify(error.error), {
           autoClose: false,
         });
       } else {
-        console.error(error);
+        toast.error("Transaction failed: " + error.message, {
+          autoClose: false,
+        });
       }
     },
   });
