@@ -18,6 +18,7 @@ import { OngoingReferendum } from "./referenda-sdk";
 import { getPreimageResolver } from "./preimages";
 
 export interface Bounty extends BountyWithoutDescription {
+  id: number;
   description: Binary | null;
 }
 
@@ -45,6 +46,7 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
         map(
           ([bounty, description]): Bounty => ({
             ...bounty.value,
+            id,
             description: description ?? null,
           })
         )

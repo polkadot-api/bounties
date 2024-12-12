@@ -1,44 +1,64 @@
-import { typedApi } from "@/chain";
 import { CopyText } from "@/components/CopyText";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { bounty$ } from "@/state/bounties";
+import { referendaSdk } from "@/state/referenda";
 import { PolkadotRuntimeOriginCaller } from "@polkadot-api/descriptors";
 import { state, useStateObservable } from "@react-rxjs/core";
+import { Loader2 } from "lucide-react";
 import { FC, ReactNode } from "react";
-import { from } from "rxjs";
+import { filter, map, switchMap } from "rxjs";
 import { twMerge } from "tailwind-merge";
 import {
   approveBounty,
-  approveBountyDetails$,
   approveBountyState$,
+  getApproveBountyTx,
 } from "./approveBounty.state";
 import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state";
 import { isTxInProgress, TxProgress } from "./TxProgress";
-import { Loader2 } from "lucide-react";
 
-const compatibilityToken$ = state(from(typedApi.compatibilityToken));
+export const approveBountyDetails$ = state(
+  (bountyId: number) =>
+    bounty$(bountyId).pipe(
+      filter((v) => !!v),
+      switchMap((bounty) => {
+        const proposal = getApproveBountyTx(bountyId).getEncodedData();
+        const approveBountyReferenda = proposal.then((data) =>
+          referendaSdk
+            .createSpenderReferenda(data, bounty.value)
+            .getEncodedData()
+        );
+        const spenderTrack = referendaSdk.getSpenderTrack(bounty!.value);
+
+        return Promise.all([
+          spenderTrack.origin,
+          spenderTrack.enactment(),
+          proposal,
+          approveBountyReferenda,
+        ] as const);
+      }),
+      map(([origin, enactment, proposalCall, referendaCall]) => ({
+        origin,
+        enactment,
+        proposalCall,
+        referendaCall,
+      }))
+    ),
+  null
+);
+
 export const SubmitReferendumForm: FC<{
   bountyIndex: number;
   className?: string;
 }> = ({ className, bountyIndex }) => {
   const details = useStateObservable(approveBountyDetails$(bountyIndex));
-  const token = useStateObservable(compatibilityToken$);
 
   if (!details) {
     return <div>Loading…</div>;
   }
 
-  const proposal = details.proposal.value?.asHex();
-  const callData = (() => {
-    try {
-      return typedApi.tx.Referenda.submit(details)
-        .getEncodedData(token)
-        .asHex();
-    } catch (_) {
-      console.error(_);
-      return null;
-    }
-  })();
+  const proposal = details.proposalCall.asHex();
+  const callData = details.referendaCall.asHex();
 
   return (
     <div className={twMerge(className, "space-y-2")}>
@@ -56,7 +76,7 @@ export const SubmitReferendumForm: FC<{
         <div>
           <Label>Track</Label>
           <div className="pl-2 text-foreground/80">
-            {getTrackName(details.proposal_origin)}
+            {getTrackName(details.origin)}
           </div>
         </div>
         <div>
@@ -65,20 +85,22 @@ export const SubmitReferendumForm: FC<{
             Bounties.approveBounty({bountyIndex})
             <span className="text-sm text-foreground/70 ml-1">
               (
-              <CopyText text={proposal} binary className="align-middle" />{" "}
+              <CopyText
+                text={details.proposalCall.asHex()}
+                binary
+                className="align-middle"
+              />{" "}
               {proposal})
             </span>
           </div>
         </div>
-        {callData && (
-          <div>
-            <Label>Call Data</Label>
-            <div className="pl-2 text-foreground/80 flex items-center gap-1">
-              <CopyText text={callData} binary />
-              <div className="overflow-hidden text-ellipsis">{callData}</div>
-            </div>
+        <div>
+          <Label>Call Data</Label>
+          <div className="pl-2 text-foreground/80 flex items-center gap-1">
+            <CopyText text={callData} binary />
+            <div className="overflow-hidden text-ellipsis">{callData}</div>
           </div>
-        )}
+        </div>
       </div>
       <SubmitButton onClick={() => approveBounty(bountyIndex)} />
     </div>

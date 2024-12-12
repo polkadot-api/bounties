@@ -13,9 +13,9 @@ import { FC } from "react";
 import { SubmitReferendumStep } from "./SubmitReferendumForm";
 import {
   approveBountyState$,
-  getSubmittedReferendum,
   SubmittedReferendum,
 } from "./approveBounty.state";
+import { referendaSdk } from "@/state/referenda";
 
 export const ApproveBountyButton: FC<{ id: number; className?: string }> = ({
   id,
@@ -59,7 +59,7 @@ const ApproveBountyDialogContent: FC<{ id: number }> = ({ id }) => {
   return (
     <div className="overflow-hidden px-1">
       <ReferendumCreatedStep
-        referendum={getSubmittedReferendum(approveBountyState)}
+        referendum={referendaSdk.getSubmittedReferendum(approveBountyState)}
       />
     </div>
   );

@@ -23,11 +23,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { bounty$ } from "@/state/bounties";
-import {
-  MultiAddress,
-  PreimagesBounded,
-  TraitsScheduleDispatchTime,
-} from "@polkadot-api/descriptors";
+import { referendaSdk } from "@/state/referenda";
+import { MultiAddress } from "@polkadot-api/descriptors";
 import { state, Subscribe, useStateObservable } from "@react-rxjs/core";
 import { createSignal } from "@react-rxjs/utils";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -49,11 +46,6 @@ import {
 } from "rxjs";
 import { ReferendumCreatedStep } from "../CreateBounty/AproveBounty";
 import { SubmitTxState } from "../CreateBounty/TxProgress";
-import {
-  getEnactment,
-  getOrigin,
-  getSubmittedReferendum,
-} from "../CreateBounty/approveBounty.state";
 
 export const ProposeCurator: FC<{ id: number }> = ({ id }) => {
   const account = useStateObservable(selectedAccount$);
@@ -109,22 +101,14 @@ export const proposeCuratorState$ = state(
     ),
     exhaustMap(([proposal, selectedAccount, token]) =>
       defer(() => {
-        // TODO abstract this with `approveBounty.state`, or move into sdk
         const proposeCuratorTx = typedApi.tx.Bounties.propose_curator({
           bounty_id: proposal.bountyId,
           curator: MultiAddress.Id(proposal.curator),
           fee: proposal.fee,
         }).getEncodedData(token);
 
-        const referendaTracks = typedApi.constants.Referenda.Tracks(token);
-
-        return typedApi.tx.Referenda.submit({
-          proposal_origin: getOrigin(proposal.bounty.value),
-          enactment_moment: TraitsScheduleDispatchTime.After(
-            getEnactment(proposal.bounty.value, referendaTracks)
-          ),
-          proposal: PreimagesBounded.Inline(proposeCuratorTx),
-        })
+        return referendaSdk
+          .createSpenderReferenda(proposeCuratorTx, proposal.fee)
           .signSubmitAndWatch(selectedAccount.polkadotSigner)
           .pipe(
             startWith({
@@ -139,7 +123,7 @@ export const proposeCuratorState$ = state(
                     error: v.dispatchError.type,
                   };
                 }
-                if (getSubmittedReferendum(v) === null) {
+                if (referendaSdk.getSubmittedReferendum(v) === null) {
                   return {
                     type: "idle",
                     error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
@@ -175,7 +159,7 @@ const ProposeCuratorDialogContent: FC<{ id: number }> = ({ id }) => {
   return (
     <div className="overflow-hidden px-1">
       <ReferendumCreatedStep
-        referendum={getSubmittedReferendum(proposeCuratorState)}
+        referendum={referendaSdk.getSubmittedReferendum(proposeCuratorState)}
       />
     </div>
   );

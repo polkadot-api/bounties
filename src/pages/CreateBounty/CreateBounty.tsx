@@ -9,14 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Subscribe, useStateObservable } from "@react-rxjs/core";
-import {
-  approveBountyState$,
-  getSubmittedReferendum,
-} from "./approveBounty.state";
+import { approveBountyState$ } from "./approveBounty.state";
 import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state";
 import { ProposeBountyStep } from "./ProposeBountyForm";
 import { SubmitReferendumStep } from "./SubmitReferendumForm";
 import { ReferendumCreatedStep } from "./AproveBounty";
+import { referendaSdk } from "@/state/referenda";
 
 export const CreateBountyButton = () => {
   const account = useStateObservable(selectedAccount$);
@@ -69,7 +67,7 @@ const CreateBountyDialogContent = () => {
   return (
     <div className="overflow-hidden px-1">
       <ReferendumCreatedStep
-        referendum={getSubmittedReferendum(approveBountyState)}
+        referendum={referendaSdk.getSubmittedReferendum(approveBountyState)}
       />
     </div>
   );

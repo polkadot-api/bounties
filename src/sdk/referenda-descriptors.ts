@@ -4,8 +4,11 @@ import {
   Enum,
   FixedSizeArray,
   PalletsTypedef,
+  PlainDescriptor,
   SS58String,
   StorageDescriptor,
+  TxCallData,
+  TxDescriptor,
   TypedApi,
 } from "polkadot-api";
 
@@ -45,7 +48,7 @@ export type PolkadotRuntimeOriginCaller = Enum<{
   ParachainsOrigin: Enum<{
     Parachain: number;
   }>;
-  XcmPallet: unknown;
+  XcmPallet: any;
   Void: undefined;
 }>;
 
@@ -58,6 +61,10 @@ export type PreimagesBounded = Enum<{
     hash: Binary;
     len: number;
   };
+}>;
+export type TraitsScheduleDispatchTime = Enum<{
+  At: number;
+  After: number;
 }>;
 
 export type ReferendumInfo = Enum<{
@@ -93,6 +100,25 @@ export type ReferendumInfo = Enum<{
   Killed: number;
 }>;
 
+export type ReferendaTypesCurve = Enum<{
+  LinearDecreasing: {
+    length: number;
+    floor: number;
+    ceil: number;
+  };
+  SteppedDecreasing: {
+    begin: number;
+    end: number;
+    step: number;
+    period: number;
+  };
+  Reciprocal: {
+    factor: bigint;
+    x_offset: bigint;
+    y_offset: bigint;
+  };
+}>;
+
 type ReferendaSdkPallets = PalletsTypedef<
   {
     Preimage: {
@@ -115,10 +141,57 @@ type ReferendaSdkPallets = PalletsTypedef<
       >;
     };
   },
+  {
+    Referenda: {
+      submit: TxDescriptor<{
+        proposal_origin: PolkadotRuntimeOriginCaller;
+        proposal: PreimagesBounded;
+        enactment_moment: TraitsScheduleDispatchTime;
+      }>;
+    };
+    Utility: {
+      batch_all: TxDescriptor<{
+        calls: Array<TxCallData>;
+      }>;
+    };
+    Preimage: {
+      note_preimage: TxDescriptor<{
+        bytes: Binary;
+      }>;
+    };
+  },
+  {
+    Referenda: {
+      Submitted: PlainDescriptor<{
+        index: number;
+        track: number;
+        proposal: PreimagesBounded;
+      }>;
+    };
+  },
   {},
-  {},
-  {},
-  {}
+  {
+    Referenda: {
+      Tracks: PlainDescriptor<
+        Array<
+          [
+            number,
+            {
+              name: string;
+              max_deciding: number;
+              decision_deposit: bigint;
+              prepare_period: number;
+              decision_period: number;
+              confirm_period: number;
+              min_enactment_period: number;
+              min_approval: ReferendaTypesCurve;
+              min_support: ReferendaTypesCurve;
+            }
+          ]
+        >
+      >;
+    };
+  }
 >;
 type ReferendaSdkDefinition = SdkDefinition<
   ReferendaSdkPallets,
