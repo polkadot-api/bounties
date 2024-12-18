@@ -144,6 +144,7 @@ export function getLinkedAccountsSdk(typedApi: LinkedAccountsSdkTypedApi) {
   };
 }
 
+// IBP archive nodes
 const multisig$ = (address: string) =>
   fromFetch("https://chainsafe.squids.live/multix-arrow/v/v5/graphql", {
     method: "POST",

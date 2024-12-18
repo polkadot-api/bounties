@@ -1,12 +1,10 @@
 import { typedApi } from "@/chain";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
-import { Button } from "@/components/ui/button";
 import { Bounty as BountyPayload } from "@/sdk/bounties-sdk";
 import { bounty$ } from "@/state/bounties";
-import { useSingleTransaction } from "@/Transactions";
+import { TransactionButton } from "@/Transactions";
 import { useStateObservable } from "@react-rxjs/core";
-import { Loader2 } from "lucide-react";
 import { FC } from "react";
 import { useParams } from "react-router-dom";
 import { ApproveBountyButton } from "../CreateBounty/AproveBounty";
@@ -69,9 +67,22 @@ const FundedBounty: FC<{
     <BountyDetailGroup>
       <BountyDetail title="Status">Funded</BountyDetail>
     </BountyDetailGroup>
-    <ProposeCurator id={id} />
+    <FundedBountyActions id={id} />
     <ProposeBountyReferendum id={id} />
   </BountyDetails>
+);
+
+/**
+ * propose_curator
+ *  => spend origin
+ * unassign_curator
+ *  => reject origin
+ *  => proposed curator
+ * close_bounty
+ *  => reject origin if no active child bounties
+ */
+const FundedBountyActions: FC<{ id: number }> = ({ id }) => (
+  <ProposeCurator id={id} />
 );
 
 const ProposedBounty: FC<{
@@ -82,9 +93,23 @@ const ProposedBounty: FC<{
     <BountyDetailGroup>
       <BountyDetail title="Status">Proposed</BountyDetail>
     </BountyDetailGroup>
+    <ProposedBountyActions id={id} />
+  </BountyDetails>
+);
+
+/**
+ * approve_bounty
+ *  => spend origin
+ * approve_bounty_with_curator (2412+)
+ *  => spend origin
+ * close_bounty
+ *  => reject origin
+ */
+const ProposedBountyActions: FC<{ id: number }> = ({ id }) => (
+  <>
     <ApproveBountyButton id={id} className="self-center" />
     <ApproveBountyReferendum id={id} />
-  </BountyDetails>
+  </>
 );
 
 const CuratorProposedBounty: FC<{
@@ -92,9 +117,6 @@ const CuratorProposedBounty: FC<{
   bounty: BountyPayload;
   status: BountyPayload["status"] & { type: "CuratorProposed" };
 }> = ({ id, bounty, status }) => {
-  const signer = useStateObservable(bountyCuratorSigner$(id));
-  const [isProposing, trackTx] = useSingleTransaction();
-
   return (
     <BountyDetails id={id} bounty={bounty}>
       <BountyDetailGroup>
@@ -103,22 +125,45 @@ const CuratorProposedBounty: FC<{
           <IdentityLinks address={status.value.curator} />
         </BountyDetail>
       </BountyDetailGroup>
-      <div>
-        <Button
-          disabled={!signer || isProposing}
-          onClick={() =>
-            trackTx(
-              typedApi.tx.Bounties.accept_curator({
-                bounty_id: id,
-              }).signSubmitAndWatch(signer!)
-            )
-          }
-        >
-          Accept Curator Role
-          {isProposing && <Loader2 className="animate-spin" />}
-        </Button>
-      </div>
+      <CuratorProposedActions id={id} />
     </BountyDetails>
+  );
+};
+
+/**
+ * accept_curator
+ *  => proposed curator
+ * unassign_curator
+ *  => reject origin
+ *  => proposed curator
+ * close_bounty
+ *  => reject origin if no active child bounties
+ */
+const CuratorProposedActions: FC<{ id: number }> = ({ id }) => {
+  const signer = useStateObservable(bountyCuratorSigner$(id));
+  return (
+    <div>
+      <TransactionButton
+        signer={signer}
+        createTx={() =>
+          typedApi.tx.Bounties.accept_curator({
+            bounty_id: id,
+          })
+        }
+      >
+        Accept Curator Role
+      </TransactionButton>
+      <TransactionButton
+        signer={signer}
+        createTx={() =>
+          typedApi.tx.Bounties.unassign_curator({
+            bounty_id: id,
+          })
+        }
+      >
+        Reject Curator Role
+      </TransactionButton>
+    </div>
   );
 };
 

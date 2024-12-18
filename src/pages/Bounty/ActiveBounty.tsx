@@ -1,16 +1,36 @@
+import { typedApi } from "@/chain";
+import { selectedAccount$ } from "@/components/AccountSelector";
 import { DotValue } from "@/components/DotValue";
 import { IdentityLinks } from "@/components/IdentityLinks";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { Bounty } from "@/sdk/bounties-sdk";
-import { useStateObservable } from "@react-rxjs/core";
-import { FC } from "react";
+import { TransactionButton, TransactionDialog } from "@/Transactions";
+import { state, useStateObservable } from "@react-rxjs/core";
+import { Binary, Transaction } from "polkadot-api";
+import { FC, useRef, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { BlockDue } from "./BlockDue";
+import { defer, map } from "rxjs";
+import { BlockDue, getBlockTimeDiff, isBlockDue$ } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
-import { childBounties$, childBounty$ } from "./childBounties";
+import {
+  childBounties$,
+  childBounty$,
+  hasActiveChildBounties$,
+} from "./childBounties";
 import { ChildBounty } from "./ChildBounty";
+import { bountyCuratorSigner$ } from "./curatorSigner";
+import { AccountInput } from "@/components/AccountSelector/AccountInput";
+import { MultiAddress } from "@polkadot-api/descriptors";
 
 export const ActiveBounty: FC<{
   id: number;
@@ -32,6 +52,7 @@ export const ActiveBounty: FC<{
           </BountyDetail>
         </BountyDetailGroup>
       </BountyDetails>
+      <BountyActions id={id} />
       <Routes>
         <Route path=":childId/*" element={<ChildBounty />} />
         <Route
@@ -72,6 +93,93 @@ export const ActiveBounty: FC<{
   );
 };
 
+/**
+ * unassign_curator
+ *  => reject origin.
+ *  => curator voluntarily giving up the bounty.
+ *  => anyone if the due time has passed.
+ * extend_bounty_expiry
+ *  => curator
+ * award_bounty
+ *  => curator if there are no child bounties active
+ * close_bounty
+ *  => reject origin if no active child bounties
+ */
+const BountyActions: FC<{ id: number }> = ({ id }) => {
+  const selectedAccount = useStateObservable(selectedAccount$);
+  const curatorSigner = useStateObservable(bountyCuratorSigner$(id));
+  const isDue = useStateObservable(isBlockDue$(id)) || true;
+  const hasActiveChildBounties = useStateObservable(
+    hasActiveChildBounties$(id)
+  );
+
+  if (!(curatorSigner || isDue)) {
+    return null;
+  }
+
+  const renderUnassignCurator = () => {
+    const unassignTx = () =>
+      typedApi.tx.Bounties.unassign_curator({
+        bounty_id: id,
+      });
+    if (curatorSigner) {
+      return (
+        <TransactionButton
+          createTx={unassignTx}
+          signer={curatorSigner}
+          variant="secondary"
+        >
+          Give up curator role
+        </TransactionButton>
+      );
+    }
+    if (isDue) {
+      return (
+        <TransactionButton
+          signer={selectedAccount?.polkadotSigner ?? null}
+          createTx={unassignTx}
+          variant="destructive"
+        >
+          Unassign and slash curator
+        </TransactionButton>
+      );
+    }
+    return null;
+  };
+  const renderExtendExpiry = () =>
+    curatorSigner ? (
+      <TransactionDialog
+        signer={curatorSigner}
+        dialogContent={(onSubmit) => (
+          <ExtendExpiryDailog id={id} onSubmit={onSubmit} />
+        )}
+      >
+        Extend Expiry
+      </TransactionDialog>
+    ) : null;
+  const renderAwardBounty = () =>
+    curatorSigner && !hasActiveChildBounties ? (
+      <TransactionDialog
+        signer={curatorSigner}
+        dialogContent={(onSubmit) => (
+          <AwardBountyDialog id={id} onSubmit={onSubmit} />
+        )}
+      >
+        Award Bounty
+      </TransactionDialog>
+    ) : null;
+
+  return (
+    <div className="flex gap-2 border border-border rounded p-2">
+      <div className="flex-1 space-x-2">
+        {renderExtendExpiry()}
+        {renderAwardBounty()}
+      </div>
+      <div>{renderUnassignCurator()}</div>
+    </div>
+  );
+};
+
 const ChildRow: FC<{ id: number; parent: number }> = ({ id, parent }) => {
   const child = useStateObservable(childBounty$(parent, id));
   const navigate = useNavigate();
@@ -91,5 +199,89 @@ const ChildRow: FC<{ id: number; parent: number }> = ({ id, parent }) => {
         />
       </TableCell>
     </TableRow>
+  );
+};
+
+const nextUpdate$ = state(
+  defer(typedApi.constants.Bounties.BountyUpdatePeriod).pipe(
+    map((blocks) => new Date(Date.now() + getBlockTimeDiff(0, blocks)))
+  ),
+  null
+);
+const ExtendExpiryDailog: FC<{
+  id: number;
+  onSubmit: (tx: Transaction<any, any, any, any>) => void;
+}> = ({ id, onSubmit }) => {
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const nextUpdate = useStateObservable(nextUpdate$);
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Extend Expiry</DialogTitle>
+        <DialogDescription>Extend the due date of the bounty</DialogDescription>
+      </DialogHeader>
+      <div className="overflow-hidden px-1 space-y-4">
+        <div>
+          Bounty will be extended to:{" "}
+          {nextUpdate ? (
+            nextUpdate.toLocaleString()
+          ) : (
+            <span className="opacity-50">Calculating…</span>
+          )}
+        </div>
+        <label className="flex flex-col">
+          <span className="px-1">Remark</span>
+          <Textarea ref={textAreaRef} placeholder="(Optional)" />
+        </label>
+        <Button
+          onClick={() =>
+            onSubmit(
+              typedApi.tx.Bounties.extend_bounty_expiry({
+                bounty_id: id,
+                remark: Binary.fromText(textAreaRef.current!.value),
+              })
+            )
+          }
+        >
+          Submit
+        </Button>
+      </div>
+    </DialogContent>
+  );
+};
+
+const AwardBountyDialog: FC<{
+  id: number;
+  onSubmit: (tx: Transaction<any, any, any, any>) => void;
+}> = ({ id, onSubmit }) => {
+  const [value, setValue] = useState<string | null>(null);
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Award Bounty</DialogTitle>
+        <DialogDescription>Award the bounty to a beneficiary</DialogDescription>
+      </DialogHeader>
+      <div className="overflow-hidden px-1 space-y-4">
+        <label className="flex flex-col">
+          <span className="px-1">Beneficiary</span>
+          <AccountInput className="w-full" value={value} onChange={setValue} />
+        </label>
+        <Button
+          disabled={!value}
+          onClick={() =>
+            onSubmit(
+              typedApi.tx.Bounties.award_bounty({
+                bounty_id: id,
+                beneficiary: MultiAddress.Id(value!),
+              })
+            )
+          }
+        >
+          Submit
+        </Button>
+      </div>
+    </DialogContent>
   );
 };

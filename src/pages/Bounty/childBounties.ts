@@ -28,6 +28,19 @@ export const childBounties$ = state((parentId: number) => {
   );
 }, null);
 
+export const hasActiveChildBounties$ = state(
+  (parentId: number) =>
+    childBounties$(parentId).pipe(
+      map((v) =>
+        v
+          ? Object.values(v).find((child) => child.status.type === "Active") !=
+            null
+          : false
+      )
+    ),
+  false
+);
+
 export const childBounty$ = state(
   (parentId: number, id: number) =>
     combineLatest([

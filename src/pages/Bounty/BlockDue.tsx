@@ -1,23 +1,38 @@
 import { client } from "@/chain";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
-import { map } from "rxjs";
+import { map, filter } from "rxjs";
 
-const currentFinalized$ = state(
+export const currentFinalized$ = state(
   client.finalizedBlock$.pipe(map((v) => v.number)),
   null
 );
 const BLOCK_TIME = 6000;
+
+export const getBlockTimeDiff = (currentFinalized: number, block: number) => {
+  const blockDiff = block - currentFinalized;
+  const timeDiff = blockDiff * BLOCK_TIME;
+  return timeDiff;
+};
+export const isBlockDue$ = state(
+  (block: number) =>
+    currentFinalized$.pipe(
+      filter((v) => !!v),
+      map((currentFinalized) => getBlockTimeDiff(currentFinalized!, block) > 0)
+    ),
+  false
+);
+
 const MINUTE_MS = 60_000;
 export const BlockDue: FC<{ block: number }> = ({ block }) => {
   const currentFinalized = useStateObservable(currentFinalized$);
   if (!currentFinalized) return null;
 
-  const blockDiff = block - currentFinalized;
-  const timeDiff = blockDiff * BLOCK_TIME;
+  // Round to the minute
   const due = new Date(
-    // Round to the minute
-    Math.round((Date.now() + timeDiff) / MINUTE_MS) * MINUTE_MS
+    Math.round(
+      (Date.now() + getBlockTimeDiff(currentFinalized, block)) / MINUTE_MS
+    ) * MINUTE_MS
   );
 
   return (

@@ -159,6 +159,8 @@ export function getReferendaSdk(
 
     return typedApi.tx.Utility.batch_all({
       calls: [
+        // Expose the deposit required for the preimage
+        // maybe as part of fee + deposit
         typedApi.tx.Preimage.note_preimage({
           bytes: proposal,
         }).decodedCall,
@@ -180,13 +182,12 @@ export function getReferendaSdk(
   const createSpenderReferenda = (callData: Binary, value: bigint) =>
     wrapAsyncTx(async () => {
       const spenderTrack = getSpenderTrack(value);
-      const enactment = await spenderTrack.enactment();
 
       return createReferenda(
         spenderTrack.origin,
         {
           type: "After",
-          value: enactment,
+          value: 0,
         },
         callData
       );
