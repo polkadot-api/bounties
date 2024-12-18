@@ -142,7 +142,7 @@ const CuratorProposedBounty: FC<{
 const CuratorProposedActions: FC<{ id: number }> = ({ id }) => {
   const signer = useStateObservable(bountyCuratorSigner$(id));
   return (
-    <div>
+    <div className="flex justify-between">
       <TransactionButton
         signer={signer}
         createTx={() =>
@@ -154,6 +154,7 @@ const CuratorProposedActions: FC<{ id: number }> = ({ id }) => {
         Accept Curator Role
       </TransactionButton>
       <TransactionButton
+        variant="destructive"
         signer={signer}
         createTx={() =>
           typedApi.tx.Bounties.unassign_curator({

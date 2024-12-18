@@ -1,95 +1,78 @@
 import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
-import { DotValue } from "@/components/DotValue";
+import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Bounty } from "@/sdk/bounties-sdk";
 import { TransactionButton, TransactionDialog } from "@/Transactions";
+import { MultiAddress } from "@polkadot-api/descriptors";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Binary, Transaction } from "polkadot-api";
 import { FC, useRef, useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Link, Route, Routes } from "react-router-dom";
 import { defer, map } from "rxjs";
 import { BlockDue, getBlockTimeDiff, isBlockDue$ } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
-import {
-  childBounties$,
-  childBounty$,
-  hasActiveChildBounties$,
-} from "./childBounties";
-import { ChildBounty } from "./ChildBounty";
+import { ChildBounties } from "./ChildBounty/ChildBounties";
+import { hasActiveChildBounties$ } from "./ChildBounty/childBounties.state";
+import { ChildBounty } from "./ChildBounty/ChildBounty";
 import { bountyCuratorSigner$ } from "./curatorSigner";
-import { AccountInput } from "@/components/AccountSelector/AccountInput";
-import { MultiAddress } from "@polkadot-api/descriptors";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const ActiveBounty: FC<{
   id: number;
   bounty: Bounty;
   status: Bounty["status"] & { type: "Active" };
 }> = ({ id, bounty, status }) => {
-  const childBounties = useStateObservable(childBounties$(id));
-
   return (
-    <>
-      <BountyDetails id={id} bounty={bounty}>
-        <BountyDetailGroup>
-          <BountyDetail title="Status">Active</BountyDetail>
-          <BountyDetail title="Curator" className="items-start">
-            <IdentityLinks address={status.value.curator} />
-          </BountyDetail>
-          <BountyDetail title="Update due">
-            <BlockDue block={status.value.update_due} />
-          </BountyDetail>
-        </BountyDetailGroup>
-      </BountyDetails>
-      <BountyActions id={id} />
-      <Routes>
-        <Route path=":childId/*" element={<ChildBounty />} />
-        <Route
-          path="*"
-          element={
+    <Routes>
+      <Route
+        path=":childId/*"
+        element={
+          <>
             <Card>
               <CardHeader>
-                <CardTitle>Child Bounties</CardTitle>
+                <CardTitle>
+                  <Link to="..">
+                    <span className="text-card-foreground/75">{id}</span>
+                    <span className="ml-1">{bounty.description?.asText()}</span>
+                  </Link>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                {childBounties ? (
-                  Object.keys(childBounties).length ? (
-                    <Table className="flex flex-col gap-4">
-                      <TableBody>
-                        {Object.keys(childBounties)
-                          .reverse()
-                          .map((child) => (
-                            <ChildRow
-                              key={child}
-                              parent={id}
-                              id={Number(child)}
-                            />
-                          ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p>No child bounties found</p>
-                  )
-                ) : (
-                  <p>Loading…</p>
-                )}
-              </CardContent>
             </Card>
-          }
-        />
-      </Routes>
-    </>
+            <ChildBounty />
+          </>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <>
+            <BountyDetails id={id} bounty={bounty}>
+              <BountyDetailGroup>
+                <BountyDetail title="Status">Active</BountyDetail>
+                <BountyDetail title="Curator" className="items-start">
+                  <IdentityLinks address={status.value.curator} />
+                </BountyDetail>
+                <BountyDetail title="Update due">
+                  <BlockDue block={status.value.update_due} />
+                </BountyDetail>
+              </BountyDetailGroup>
+            </BountyDetails>
+            <BountyActions id={id} />
+            <ChildBounties id={id} />
+          </>
+        }
+      />
+    </Routes>
   );
 };
 
@@ -108,7 +91,7 @@ export const ActiveBounty: FC<{
 const BountyActions: FC<{ id: number }> = ({ id }) => {
   const selectedAccount = useStateObservable(selectedAccount$);
   const curatorSigner = useStateObservable(bountyCuratorSigner$(id));
-  const isDue = useStateObservable(isBlockDue$(id)) || true;
+  const isDue = useStateObservable(isBlockDue$(id));
   const hasActiveChildBounties = useStateObservable(
     hasActiveChildBounties$(id)
   );
@@ -177,28 +160,6 @@ const BountyActions: FC<{ id: number }> = ({ id }) => {
       </div>
       <div>{renderUnassignCurator()}</div>
     </div>
-  );
-};
-
-const ChildRow: FC<{ id: number; parent: number }> = ({ id, parent }) => {
-  const child = useStateObservable(childBounty$(parent, id));
-  const navigate = useNavigate();
-
-  if (!child) return null;
-
-  return (
-    <TableRow className="cursor-pointer" onClick={() => navigate(`${id}`)}>
-      <TableCell className="font-medium text-right">{id}</TableCell>
-      <TableCell className="w-full">{child.description?.asText()}</TableCell>
-      <TableCell>{child.status.type}</TableCell>
-      <TableCell className="text-right">
-        <DotValue
-          value={child.value}
-          className="tabular-nums"
-          fixedDecimals={2}
-        />
-      </TableCell>
-    </TableRow>
   );
 };
 
