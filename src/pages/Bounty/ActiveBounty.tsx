@@ -145,7 +145,16 @@ const BountyActions: FC<{ id: number }> = ({ id }) => {
       <TransactionDialog
         signer={curatorSigner}
         dialogContent={(onSubmit) => (
-          <AwardBountyDialog id={id} onSubmit={onSubmit} />
+          <AwardBountyDialog
+            onSubmit={(value) =>
+              onSubmit(
+                typedApi.tx.Bounties.award_bounty({
+                  bounty_id: id,
+                  beneficiary: MultiAddress.Id(value!),
+                })
+              )
+            }
+          />
         )}
       >
         Award Bounty
@@ -212,10 +221,9 @@ const ExtendExpiryDailog: FC<{
   );
 };
 
-const AwardBountyDialog: FC<{
-  id: number;
-  onSubmit: (tx: Transaction<any, any, any, any>) => void;
-}> = ({ id, onSubmit }) => {
+export const AwardBountyDialog: FC<{
+  onSubmit: (value: string) => void;
+}> = ({ onSubmit }) => {
   const [value, setValue] = useState<string | null>(null);
 
   return (
@@ -229,17 +237,7 @@ const AwardBountyDialog: FC<{
           <span className="px-1">Beneficiary</span>
           <AccountInput className="w-full" value={value} onChange={setValue} />
         </label>
-        <Button
-          disabled={!value}
-          onClick={() =>
-            onSubmit(
-              typedApi.tx.Bounties.award_bounty({
-                bounty_id: id,
-                beneficiary: MultiAddress.Id(value!),
-              })
-            )
-          }
-        >
+        <Button disabled={!value} onClick={() => onSubmit(value!)}>
           Submit
         </Button>
       </div>

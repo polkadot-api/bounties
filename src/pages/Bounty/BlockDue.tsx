@@ -18,7 +18,7 @@ export const isBlockDue$ = state(
   (block: number) =>
     currentFinalized$.pipe(
       filter((v) => !!v),
-      map((currentFinalized) => getBlockTimeDiff(currentFinalized!, block) > 0)
+      map((currentFinalized) => getBlockTimeDiff(currentFinalized!, block) < 0)
     ),
   false
 );

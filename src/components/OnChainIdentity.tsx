@@ -18,6 +18,7 @@ import { FC } from "react";
 import { catchError, map, of, tap } from "rxjs";
 import { PolkadotIdenticon } from "./PolkadotIdenticon";
 import { withLogsRecorder } from "polkadot-api/logs-provider";
+import { CopyText } from "./CopyText";
 
 const peopleChainSpec = import("polkadot-api/chains/polkadot_people");
 
@@ -91,11 +92,16 @@ export const OnChainIdentity: FC<{
 
   return (
     <div className={cn("flex items-center gap-1 overflow-hidden", className)}>
-      <PolkadotIdenticon
-        className="flex-shrink-0"
-        publicKey={getPublicKey(value)}
-        size={28}
-      />
+      <CopyText
+        text={value}
+        className="w-7 h-7 flex justify-center items-center"
+      >
+        <PolkadotIdenticon
+          className="flex-shrink-0"
+          publicKey={getPublicKey(value)}
+          size={28}
+        />
+      </CopyText>
       <div className="flex flex-col justify-center text-foreground leading-tight overflow-hidden">
         {name && (
           <span className="inline-flex items-center gap-1">
@@ -108,9 +114,11 @@ export const OnChainIdentity: FC<{
             )}
           </span>
         )}
-        <span className="text-foreground/80 text-ellipsis overflow-hidden">
-          {value}
-        </span>
+        {!name || !isVerified(identity) ? (
+          <span className="text-foreground/70 text-ellipsis overflow-hidden">
+            {value.slice(0, 16) + "…"}
+          </span>
+        ) : null}
       </div>
     </div>
   );

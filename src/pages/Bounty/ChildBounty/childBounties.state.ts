@@ -1,10 +1,12 @@
 import { typedApi } from "@/chain";
+import { getLinkedSigner$ } from "@/state/linkedSigners";
 import { state } from "@react-rxjs/core";
 import {
   combineLatest,
   filter,
   from,
   map,
+  of,
   skip,
   startWith,
   switchMap,
@@ -57,6 +59,18 @@ export const childBounty$ = state(
         ...bounty,
         description,
       }))
+    ),
+  null
+);
+
+export const childBountyCuratorSigner$ = state(
+  (parentId: number, id: number) =>
+    childBounty$(parentId, id).pipe(
+      switchMap((v) =>
+        v?.status.value && "curator" in v.status.value
+          ? getLinkedSigner$(v.status.value.curator)
+          : of(null)
+      )
     ),
   null
 );
