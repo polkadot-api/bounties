@@ -3,6 +3,7 @@ import { selectedAccount$ } from "@/components/AccountSelector";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DialogContent,
   DialogDescription,
@@ -25,13 +26,15 @@ import { ChildBounties } from "./ChildBounty/ChildBounties";
 import { hasActiveChildBounties$ } from "./ChildBounty/childBounties.state";
 import { ChildBounty } from "./ChildBounty/ChildBounty";
 import { bountyCuratorSigner$ } from "./curatorSigner";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 
 export const ActiveBounty: FC<{
   id: number;
   bounty: Bounty;
   status: Bounty["status"] & { type: "Active" };
 }> = ({ id, bounty, status }) => {
+  const curatorSigner = useStateObservable(bountyCuratorSigner$(id));
+
   return (
     <Routes>
       <Route
@@ -67,8 +70,20 @@ export const ActiveBounty: FC<{
                 </BountyDetail>
               </BountyDetailGroup>
             </BountyDetails>
-            <BountyActions id={id} />
+            <BountyActions id={id} updateDue={status.value.update_due} />
             <ChildBounties id={id} />
+            {curatorSigner ? (
+              <div>
+                <TransactionDialog
+                  signer={curatorSigner}
+                  dialogContent={(onSubmit) => (
+                    <AddChildDialog id={id} onSubmit={onSubmit} />
+                  )}
+                >
+                  Create Child Bounty
+                </TransactionDialog>
+              </div>
+            ) : null}
           </>
         }
       />
@@ -88,10 +103,13 @@ export const ActiveBounty: FC<{
  * close_bounty
  *  => reject origin if no active child bounties
  */
-const BountyActions: FC<{ id: number }> = ({ id }) => {
+const BountyActions: FC<{ id: number; updateDue: number }> = ({
+  id,
+  updateDue,
+}) => {
   const selectedAccount = useStateObservable(selectedAccount$);
   const curatorSigner = useStateObservable(bountyCuratorSigner$(id));
-  const isDue = useStateObservable(isBlockDue$(id));
+  const isDue = useStateObservable(isBlockDue$(updateDue));
   const hasActiveChildBounties = useStateObservable(
     hasActiveChildBounties$(id)
   );
@@ -238,6 +256,52 @@ export const AwardBountyDialog: FC<{
           <AccountInput className="w-full" value={value} onChange={setValue} />
         </label>
         <Button disabled={!value} onClick={() => onSubmit(value!)}>
+          Submit
+        </Button>
+      </div>
+    </DialogContent>
+  );
+};
+
+const AddChildDialog: FC<{
+  id: number;
+  onSubmit: (tx: Transaction<any, any, any, any>) => void;
+}> = ({ id, onSubmit }) => {
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [value, setValue] = useState<bigint | null>(null);
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Add Child Bounty</DialogTitle>
+        <DialogDescription>Create a child bounty</DialogDescription>
+      </DialogHeader>
+      <div className="overflow-hidden px-1 space-y-4">
+        <label className="flex flex-col">
+          <span className="px-1">Description</span>
+          <Textarea ref={textAreaRef} placeholder="(Optional)" />
+        </label>
+        <label className="flex flex-col">
+          <span className="px-1">Value</span>
+          <TokenInput
+            className="w-full"
+            token={DOT_TOKEN}
+            value={value}
+            onChange={setValue}
+          />
+        </label>
+        <Button
+          disabled={value == null}
+          onClick={() =>
+            onSubmit(
+              typedApi.tx.ChildBounties.add_child_bounty({
+                parent_bounty_id: id,
+                description: Binary.fromText(textAreaRef.current!.value),
+                value: value!,
+              })
+            )
+          }
+        >
           Submit
         </Button>
       </div>

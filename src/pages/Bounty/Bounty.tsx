@@ -1,4 +1,5 @@
 import { typedApi } from "@/chain";
+import { selectedAccount$ } from "@/components/AccountSelector";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
 import { Bounty as BountyPayload } from "@/sdk/bounties-sdk";
@@ -9,7 +10,7 @@ import { FC } from "react";
 import { useParams } from "react-router-dom";
 import { ApproveBountyButton } from "../CreateBounty/AproveBounty";
 import { ActiveBounty } from "./ActiveBounty";
-import { BlockDue } from "./BlockDue";
+import { BlockDue, isBlockDue$ } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
 import {
@@ -172,19 +173,36 @@ const PendingPayoutBounty: FC<{
   id: number;
   bounty: BountyPayload;
   status: BountyPayload["status"] & { type: "PendingPayout" };
-}> = ({ id, bounty, status }) => (
-  <BountyDetails id={id} bounty={bounty}>
-    <BountyDetailGroup>
-      <BountyDetail title="Status">Pending Payout</BountyDetail>
-      <BountyDetail title="Curator" className="items-start">
-        <IdentityLinks address={status.value.curator} />
-      </BountyDetail>
-      <BountyDetail title="Beneficiary">
-        <OnChainIdentity value={status.value.beneficiary} />
-      </BountyDetail>
-      <BountyDetail title="Unlock At">
-        <BlockDue block={status.value.unlock_at} />
-      </BountyDetail>
-    </BountyDetailGroup>
-  </BountyDetails>
-);
+}> = ({ id, bounty, status }) => {
+  const isDue = useStateObservable(isBlockDue$(status.value.unlock_at));
+  const selectedAccount = useStateObservable(selectedAccount$);
+
+  return (
+    <BountyDetails id={id} bounty={bounty}>
+      <BountyDetailGroup>
+        <BountyDetail title="Status">Pending Payout</BountyDetail>
+        <BountyDetail title="Curator" className="items-start">
+          <IdentityLinks address={status.value.curator} />
+        </BountyDetail>
+        <BountyDetail title="Beneficiary">
+          <OnChainIdentity value={status.value.beneficiary} />
+        </BountyDetail>
+        <BountyDetail title="Unlock At">
+          <BlockDue block={status.value.unlock_at} />
+        </BountyDetail>
+      </BountyDetailGroup>
+
+      <TransactionButton
+        disabled={!isDue}
+        createTx={() =>
+          typedApi.tx.Bounties.claim_bounty({
+            bounty_id: id,
+          })
+        }
+        signer={selectedAccount?.polkadotSigner ?? null}
+      >
+        Payout Beneficiary
+      </TransactionButton>
+    </BountyDetails>
+  );
+};

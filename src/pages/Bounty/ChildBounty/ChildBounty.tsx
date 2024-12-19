@@ -366,6 +366,9 @@ const ProposeCuratorDialog: FC<{
             value={fee}
             onChange={setFee}
           />
+        </label>
+        <label className="flex flex-col">
+          <span className="px-1">Curator</span>
           <AccountInput
             className="w-full"
             value={curator}
