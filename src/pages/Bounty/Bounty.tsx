@@ -191,18 +191,19 @@ const PendingPayoutBounty: FC<{
           <BlockDue block={status.value.unlock_at} />
         </BountyDetail>
       </BountyDetailGroup>
-
-      <TransactionButton
-        disabled={!isDue}
-        createTx={() =>
-          typedApi.tx.Bounties.claim_bounty({
-            bounty_id: id,
-          })
-        }
-        signer={selectedAccount?.polkadotSigner ?? null}
-      >
-        Payout Beneficiary
-      </TransactionButton>
+      <div>
+        <TransactionButton
+          disabled={!isDue}
+          createTx={() =>
+            typedApi.tx.Bounties.claim_bounty({
+              bounty_id: id,
+            })
+          }
+          signer={selectedAccount?.polkadotSigner ?? null}
+        >
+          Payout Beneficiary
+        </TransactionButton>
+      </div>
     </BountyDetails>
   );
 };

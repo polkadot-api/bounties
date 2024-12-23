@@ -13,6 +13,7 @@ import { lastValueFrom, Observable } from "rxjs";
 import { Button, ButtonProps } from "./components/ui/button";
 import { Dialog, DialogTrigger } from "./components/ui/dialog";
 
+// Error invalid fee keeps the toast open
 export function trackTransaction(tx$: Observable<TxEvent>) {
   const shared$ = tx$.pipe(shareLatest());
 

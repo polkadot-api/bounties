@@ -367,14 +367,6 @@ const ProposeCuratorDialog: FC<{
             onChange={setFee}
           />
         </label>
-        <label className="flex flex-col">
-          <span className="px-1">Curator</span>
-          <AccountInput
-            className="w-full"
-            value={curator}
-            onChange={setCurator}
-          />
-        </label>
         <Button
           disabled={!curator || fee == null}
           onClick={() => onSubmit(curator!, fee!)}

@@ -11,6 +11,9 @@ importers:
       '@acala-network/chopsticks':
         specifier: ^1.0.1
         version: 1.0.1
+      '@polkadot-api/substrate-bindings':
+        specifier: ^0.11.0
+        version: 0.11.0
       '@polkadot-labs/hdkd':
         specifier: ^0.0.10
         version: 0.0.10

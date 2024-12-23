@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@acala-network/chopsticks": "^1.0.1",
+    "@polkadot-api/substrate-bindings": "^0.11.0",
     "@polkadot-labs/hdkd": "^0.0.10",
     "@polkadot-labs/hdkd-helpers": "^0.0.10",
     "polkadot-api": "^1.8.1"

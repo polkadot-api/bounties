@@ -56,7 +56,6 @@ export const AccountInput: FC<{
   className?: string;
 }> = ({ value, onChange, className }) => {
   const accounts = useStateObservable(hintedAccounts$);
-  console.log(accounts);
 
   const [query, setQuery] = useState("");
   const queryInfo = getSs58AddressInfo(query);
@@ -93,7 +92,7 @@ export const AccountInput: FC<{
           )}
           forceSvgSize={false}
         >
-          {value !== null ? (
+          {value != null ? (
             <OnChainIdentity value={value} className="overflow-hidden" />
           ) : (
             <span className="opacity-80">Select…</span>
