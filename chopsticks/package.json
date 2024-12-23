@@ -1,0 +1,21 @@
+{
+  "name": "bounty-manager-chopsticks",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "scripts": {
+    "start": "bun run ./main.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "bun": "^1.1.42"
+  },
+  "dependencies": {
+    "@acala-network/chopsticks": "^1.0.1",
+    "@polkadot-labs/hdkd": "^0.0.10",
+    "@polkadot-labs/hdkd-helpers": "^0.0.10",
+    "polkadot-api": "^1.8.1"
+  }
+}

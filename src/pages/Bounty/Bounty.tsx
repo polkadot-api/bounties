@@ -108,7 +108,7 @@ const ProposedBounty: FC<{
  */
 const ProposedBountyActions: FC<{ id: number }> = ({ id }) => (
   <>
-    <ApproveBountyButton id={id} className="self-center" />
+    <ApproveBountyButton id={id} className="self-start" />
     <ApproveBountyReferendum id={id} />
   </>
 );

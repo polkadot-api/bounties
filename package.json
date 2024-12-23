@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev-local": "VITE_WITH_CHOPSTICKS=true vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "postinstall": "papi"
