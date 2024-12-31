@@ -5,12 +5,15 @@ import { getMultisigSigner, getProxySigner } from "@polkadot-api/meta-signers";
 import { toHex } from "@polkadot-api/utils";
 import { getSs58AddressInfo, PolkadotSigner } from "polkadot-api";
 import {
+  catchError,
   defaultIfEmpty,
+  EMPTY,
   filter,
   map,
   merge,
   Observable,
   of,
+  startWith,
   switchMap,
   take,
 } from "rxjs";
@@ -20,7 +23,7 @@ const linkedAccountsSdk = getLinkedAccountsSdk(typedApi);
 export const getNestedLinkedAccounts$ =
   linkedAccountsSdk.getNestedLinkedAccounts$;
 
-export const getLinkedSigner$ = (address: string) =>
+export const getLinkedSigner$ = (topAddress: string) =>
   selectedAccount$.pipe(
     switchMap((account) => {
       if (!account) return of(null);
@@ -66,6 +69,12 @@ export const getLinkedSigner$ = (address: string) =>
           })
         );
       };
-      return getMatchingSigner$(address);
+      return getMatchingSigner$(topAddress).pipe(
+        catchError((ex) => {
+          console.error(ex);
+          return EMPTY;
+        }),
+        startWith(null)
+      );
     })
   );
