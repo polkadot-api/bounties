@@ -2,11 +2,14 @@ import { typedApi } from "@/chain";
 import { getBountiesSdk } from "@/sdk/bounties-sdk";
 import { state } from "@react-rxjs/core";
 import { ongoingReferenda$ } from "./referenda";
-import { switchMap } from "rxjs";
+import { map, switchMap } from "rxjs";
 
 export const bountiesSdk = getBountiesSdk(typedApi);
 
-export const bountyIds$ = state(bountiesSdk.bountyIds$, null);
+export const bountyIds$ = state(
+  bountiesSdk.bountyIds$.pipe(map((v) => v.reverse())),
+  null
+);
 
 export const bounty$ = state(bountiesSdk.getBountyById$, null);
 

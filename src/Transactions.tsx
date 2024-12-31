@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { lastValueFrom, Observable } from "rxjs";
 import { Button, ButtonProps } from "./components/ui/button";
 import { Dialog, DialogTrigger } from "./components/ui/dialog";
+import { typedApi } from "./chain";
 
 // Error invalid fee keeps the toast open
 export function trackTransaction(tx$: Observable<TxEvent>) {
@@ -43,16 +44,39 @@ export function trackTransaction(tx$: Observable<TxEvent>) {
       } else if (res.type === "finalized") {
         // Can't toast.update the type of toast :(
         toast.dismiss(id);
-        id = toast[res.ok ? "success" : "error"](
-          res.ok
-            ? "Transaction succeeded!"
-            : "Transaction failed: " + JSON.stringify(res.dispatchError),
-          res.ok
-            ? {}
-            : {
-                autoClose: false,
-              }
+
+        if (!res.ok) {
+          id = toast.error(
+            "Transaction failed: " + JSON.stringify(res.dispatchError),
+            {
+              autoClose: false,
+            }
+          );
+          return;
+        }
+
+        const newMultisigEvt = typedApi.event.Multisig.NewMultisig.filter(
+          res.events
         );
+        const approveMultisigEvt =
+          typedApi.event.Multisig.MultisigApproval.filter(res.events);
+        if (newMultisigEvt.length || approveMultisigEvt.length) {
+          id = toast.success("Multisig signature submitted");
+          return;
+        }
+
+        const multisigExecuted =
+          typedApi.event.Multisig.MultisigExecuted.filter(res.events)[0];
+        if (multisigExecuted && !multisigExecuted.result.success) {
+          id = toast.error(
+            "Multisig call failed: " +
+              JSON.stringify(multisigExecuted.result.value),
+            { autoClose: false }
+          );
+          return;
+        }
+
+        id = toast.success("Transaction succeeded!");
       }
     },
     error: (error) => {

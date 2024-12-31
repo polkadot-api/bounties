@@ -46,15 +46,19 @@ export const Bounty = () => {
         return (
           <PendingPayoutBounty id={id} bounty={bounty} status={bounty.status} />
         );
+      case "Approved":
+        return (
+          <BountyDetails id={id} bounty={bounty}>
+            <BountyDetailGroup>
+              <BountyDetail title="Status">{bounty.status.type}</BountyDetail>
+              <p className="text-muted-foreground">
+                The referendum has been approved by the treasury, it will become
+                funded after the next spend period
+              </p>
+            </BountyDetailGroup>
+          </BountyDetails>
+        );
     }
-
-    return (
-      <BountyDetails id={id} bounty={bounty}>
-        <BountyDetailGroup>
-          <BountyDetail title="Status">{bounty.status.type}</BountyDetail>
-        </BountyDetailGroup>
-      </BountyDetails>
-    );
   };
 
   return <div className="flex flex-col gap-2 p-2">{getContent()}</div>;

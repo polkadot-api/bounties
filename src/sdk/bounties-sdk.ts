@@ -33,7 +33,7 @@ export function getBountiesSdk(typedApi: BountiesSdkTypedApi) {
       skip(1),
       startWith(null),
       switchMap(() => typedApi.query.Bounties.Bounties.getEntries()),
-      mergeMap((v) => v.sort((a, b) => b.keyArgs[0] - a.keyArgs[0]))
+      mergeMap((v) => v.sort((a, b) => a.keyArgs[0] - b.keyArgs[0]))
     ),
     (res) => res.keyArgs[0],
     (group$, id) =>

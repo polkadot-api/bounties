@@ -143,7 +143,21 @@ try {
           console.log("Submitting referendum transaction as root");
           await api.tx.Sudo.sudo({
             call: decodedCall,
-          }).signAndSubmit(aliceSigner);
+          })
+            .signAndSubmit(aliceSigner)
+            .then(
+              (res) => {
+                console.log(res.events);
+                if (res.ok) {
+                  console.log("Success");
+                } else {
+                  console.log("Failed", res.dispatchError);
+                }
+              },
+              (err) => {
+                console.log("Errored", err);
+              }
+            );
           break;
         }
         case "nb":
