@@ -2,6 +2,7 @@ import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { IdentityLinks } from "@/components/IdentityLinks";
+import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,9 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Bounty } from "@/sdk/bounties-sdk";
 import { TransactionButton, TransactionDialog } from "@/Transactions";
-import { MultiAddress } from "@polkadot-api/descriptors";
+import { ActiveBounty as SdkActiveBounty } from "@polkadot-api/sdk-governance";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Binary, Transaction } from "polkadot-api";
 import { FC, useRef, useState } from "react";
@@ -24,16 +24,13 @@ import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
 import { ChildBounties } from "./ChildBounty/ChildBounties";
 import { hasActiveChildBounties$ } from "./ChildBounty/childBounties.state";
-import { ChildBounty } from "./ChildBounty/ChildBounty";
+import { ChildBounty as SdkChildBounty } from "./ChildBounty/ChildBounty";
 import { bountyCuratorSigner$ } from "./curatorSigner";
-import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 
 export const ActiveBounty: FC<{
-  id: number;
-  bounty: Bounty;
-  status: Bounty["status"] & { type: "Active" };
-}> = ({ id, bounty, status }) => {
-  const curatorSigner = useStateObservable(bountyCuratorSigner$(id));
+  bounty: SdkActiveBounty;
+}> = ({ bounty }) => {
+  const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id));
 
   return (
     <Routes>
@@ -45,13 +42,13 @@ export const ActiveBounty: FC<{
               <CardHeader>
                 <CardTitle>
                   <Link to="..">
-                    <span className="text-card-foreground/75">{id}</span>
-                    <span className="ml-1">{bounty.description?.asText()}</span>
+                    <span className="text-card-foreground/75">{bounty.id}</span>
+                    <span className="ml-1">{bounty.description}</span>
                   </Link>
                 </CardTitle>
               </CardHeader>
             </Card>
-            <ChildBounty />
+            <SdkChildBounty />
           </>
         }
       />
@@ -59,25 +56,25 @@ export const ActiveBounty: FC<{
         path="*"
         element={
           <>
-            <BountyDetails id={id} bounty={bounty}>
+            <BountyDetails bounty={bounty}>
               <BountyDetailGroup>
                 <BountyDetail title="Status">Active</BountyDetail>
                 <BountyDetail title="Curator" className="items-start">
-                  <IdentityLinks address={status.value.curator} />
+                  <IdentityLinks address={bounty.curator} />
                 </BountyDetail>
                 <BountyDetail title="Update due">
-                  <BlockDue block={status.value.update_due} />
+                  <BlockDue block={bounty.updateDue} />
                 </BountyDetail>
               </BountyDetailGroup>
             </BountyDetails>
-            <BountyActions id={id} updateDue={status.value.update_due} />
-            <ChildBounties id={id} />
+            <BountyActions bounty={bounty} />
+            <ChildBounties id={bounty.id} />
             {curatorSigner ? (
               <div>
                 <TransactionDialog
                   signer={curatorSigner}
                   dialogContent={(onSubmit) => (
-                    <AddChildDialog id={id} onSubmit={onSubmit} />
+                    <AddChildDialog id={bounty.id} onSubmit={onSubmit} />
                   )}
                 >
                   Create Child Bounty
@@ -103,15 +100,12 @@ export const ActiveBounty: FC<{
  * close_bounty
  *  => reject origin if no active child bounties
  */
-const BountyActions: FC<{ id: number; updateDue: number }> = ({
-  id,
-  updateDue,
-}) => {
+const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
   const selectedAccount = useStateObservable(selectedAccount$);
-  const curatorSigner = useStateObservable(bountyCuratorSigner$(id));
-  const isDue = useStateObservable(isBlockDue$(updateDue));
+  const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id));
+  const isDue = useStateObservable(isBlockDue$(bounty.updateDue));
   const hasActiveChildBounties = useStateObservable(
-    hasActiveChildBounties$(id)
+    hasActiveChildBounties$(bounty.id)
   );
 
   if (!(curatorSigner || isDue)) {
@@ -119,14 +113,10 @@ const BountyActions: FC<{ id: number; updateDue: number }> = ({
   }
 
   const renderUnassignCurator = () => {
-    const unassignTx = () =>
-      typedApi.tx.Bounties.unassign_curator({
-        bounty_id: id,
-      });
     if (curatorSigner) {
       return (
         <TransactionButton
-          createTx={unassignTx}
+          createTx={bounty.unassignCurator}
           signer={curatorSigner}
           variant="secondary"
         >
@@ -138,7 +128,7 @@ const BountyActions: FC<{ id: number; updateDue: number }> = ({
       return (
         <TransactionButton
           signer={selectedAccount?.polkadotSigner ?? null}
-          createTx={unassignTx}
+          createTx={bounty.unassignCurator}
           variant="destructive"
         >
           Unassign and slash curator
@@ -152,7 +142,7 @@ const BountyActions: FC<{ id: number; updateDue: number }> = ({
       <TransactionDialog
         signer={curatorSigner}
         dialogContent={(onSubmit) => (
-          <ExtendExpiryDailog id={id} onSubmit={onSubmit} />
+          <ExtendExpiryDailog bounty={bounty} onSubmit={onSubmit} />
         )}
       >
         Extend Expiry
@@ -164,14 +154,7 @@ const BountyActions: FC<{ id: number; updateDue: number }> = ({
         signer={curatorSigner}
         dialogContent={(onSubmit) => (
           <AwardBountyDialog
-            onSubmit={(value) =>
-              onSubmit(
-                typedApi.tx.Bounties.award_bounty({
-                  bounty_id: id,
-                  beneficiary: MultiAddress.Id(value!),
-                })
-              )
-            }
+            onSubmit={(value) => onSubmit(bounty.award(value))}
           />
         )}
       >
@@ -197,9 +180,9 @@ const nextUpdate$ = state(
   null
 );
 const ExtendExpiryDailog: FC<{
-  id: number;
+  bounty: SdkActiveBounty;
   onSubmit: (tx: Transaction<any, any, any, any>) => void;
-}> = ({ id, onSubmit }) => {
+}> = ({ bounty, onSubmit }) => {
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const nextUpdate = useStateObservable(nextUpdate$);
 
@@ -224,12 +207,7 @@ const ExtendExpiryDailog: FC<{
         </label>
         <Button
           onClick={() =>
-            onSubmit(
-              typedApi.tx.Bounties.extend_bounty_expiry({
-                bounty_id: id,
-                remark: Binary.fromText(textAreaRef.current!.value),
-              })
-            )
+            onSubmit(bounty.extendExpiry(textAreaRef.current!.value))
           }
         >
           Submit

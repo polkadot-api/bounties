@@ -1,15 +1,15 @@
 import { DotValue } from "@/components/DotValue";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { usePromise } from "@/lib/usePromise";
-import { OngoingReferendum } from "@/sdk/referenda-sdk";
 import {
-  bountiesSdk,
+  bounty$,
   bountyApprovingReferenda$,
   bountyProposingCuratorReferenda$,
 } from "@/state/bounties";
+import { OngoingReferendum } from "@polkadot-api/sdk-governance";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { FC, PropsWithChildren } from "react";
-import { from } from "rxjs";
+import { switchMap } from "rxjs";
 
 export const ApproveBountyReferendum: FC<{ id: number }> = ({ id }) => {
   const referenda = useStateObservable(bountyApprovingReferenda$(id));
@@ -61,12 +61,17 @@ export const ProposeBountyReferendum: FC<{ id: number }> = ({ id }) => {
   );
 };
 
-const scheudledProposeResult$ = state(
-  (id: number) => from(bountiesSdk.scheduledChanges.curatorProposed(id)),
+const scheduledProposeResult$ = state(
+  (id: number) =>
+    bounty$(id).pipe(
+      switchMap((bounty) =>
+        bounty?.type === "Funded" ? bounty.getScheduledProposals() : []
+      )
+    ),
   null
 );
 const ScheduledProposeResult: FC<{ id: number }> = ({ id }) => {
-  const scheduled = useStateObservable(scheudledProposeResult$(id));
+  const scheduled = useStateObservable(scheduledProposeResult$(id));
 
   if (!scheduled) return <span>Looking for scheduled change…</span>;
 

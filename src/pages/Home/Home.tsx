@@ -46,8 +46,8 @@ const BountyRow: FC<{ id: number }> = ({ id }) => {
       onClick={() => navigate(`/bounty/${id}`)}
     >
       <TableCell className="font-medium text-right">{id}</TableCell>
-      <TableCell className="w-full">{bounty.description?.asText()}</TableCell>
-      <TableCell>{bounty.status.type}</TableCell>
+      <TableCell className="w-full">{bounty.description}</TableCell>
+      <TableCell>{bounty.type}</TableCell>
       <TableCell className="text-right">
         <DotValue
           value={bounty.value}

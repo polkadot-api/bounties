@@ -1,8 +1,8 @@
 import { typedApi } from "@/chain";
-import { getReferendaSdk } from "@/sdk/referenda-sdk";
+import { createReferendaSdk } from "@polkadot-api/sdk-governance";
 import { state } from "@react-rxjs/core";
 import { defer } from "rxjs";
 
-export const referendaSdk = getReferendaSdk(typedApi);
+export const referendaSdk = createReferendaSdk(typedApi);
 
 export const ongoingReferenda$ = state(defer(referendaSdk.getOngoingReferenda));

@@ -1,5 +1,4 @@
 import { TransactionButton, TransactionDialog } from "@/Transactions";
-import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { DotValue } from "@/components/DotValue";
@@ -13,7 +12,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ChildBountyStatus, MultiAddress } from "@polkadot-api/descriptors";
+import { MultiAddress } from "@polkadot-api/descriptors";
+import {
+  ActiveChildBounty,
+  AddedChildBounty,
+  CuratorProposedChildBounty,
+  PendingPayoutChildBounty,
+  ChildBounty as SdkChildBounty,
+} from "@polkadot-api/sdk-governance";
 import { useStateObservable } from "@react-rxjs/core";
 import { PolkadotSigner } from "polkadot-api";
 import { FC, PropsWithChildren, useState } from "react";
@@ -36,7 +42,7 @@ export const ChildBounty: FC = () => {
       <CardHeader>
         <CardTitle>
           <span className="text-card-foreground/75">Child {id}</span>
-          <span className="ml-1">{childBounty.description?.asText()}</span>
+          <span className="ml-1">{childBounty.description}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
@@ -51,22 +57,14 @@ export const ChildBounty: FC = () => {
             <DotValue value={childBounty.fee} />
           </BountyDetail>
         </div>
-        {childBounty.status.type === "Active" ? (
-          <Active parentId={parent} id={id} status={childBounty.status} />
-        ) : childBounty.status.type === "Added" ? (
-          <Added parentId={parent} id={id} />
-        ) : childBounty.status.type === "CuratorProposed" ? (
-          <CuratorProposed
-            parentId={parent}
-            id={id}
-            status={childBounty.status}
-          />
-        ) : childBounty.status.type === "PendingPayout" ? (
-          <PendingPayout
-            parentId={parent}
-            id={id}
-            status={childBounty.status}
-          />
+        {childBounty.type === "Active" ? (
+          <Active bounty={childBounty} />
+        ) : childBounty.type === "Added" ? (
+          <Added bounty={childBounty} />
+        ) : childBounty.type === "CuratorProposed" ? (
+          <CuratorProposed bounty={childBounty} />
+        ) : childBounty.type === "PendingPayout" ? (
+          <PendingPayout bounty={childBounty} />
         ) : null}
       </CardContent>
     </Card>
@@ -80,10 +78,12 @@ const ChildBountyDetails: FC<PropsWithChildren> = ({ children }) => (
 );
 
 const Added: FC<{
-  parentId: number;
-  id: number;
-}> = ({ parentId, id }) => {
-  const parentSigner = useStateObservable(bountyCuratorSigner$(parentId));
+  bounty: AddedChildBounty;
+}> = ({ bounty }) => {
+  const parentSigner = useStateObservable(
+    // TODO standarize camelCase
+    bountyCuratorSigner$(bounty.parent_bounty)
+  );
 
   return (
     <>
@@ -97,12 +97,8 @@ const Added: FC<{
             <ProposeCuratorDialog
               onSubmit={(curator, fee) =>
                 onSubmit(
-                  typedApi.tx.ChildBounties.propose_curator({
-                    parent_bounty_id: parentId,
-                    child_bounty_id: id,
-                    curator: MultiAddress.Id(curator),
-                    fee,
-                  })
+                  // TODO standarize MultiAddress between bounties and childBounties
+                  bounty.proposeCurator(MultiAddress.Id(curator), fee)
                 )
               }
             />
@@ -110,49 +106,34 @@ const Added: FC<{
         >
           Propose Curator
         </TransactionDialog>
-        <CloseBountyButton
-          parentId={parentId}
-          id={id}
-          parentSigner={parentSigner}
-        />
+        <CloseBountyButton bounty={bounty} parentSigner={parentSigner} />
       </div>
     </>
   );
 };
 
 const CuratorProposed: FC<{
-  parentId: number;
-  id: number;
-  status: ChildBountyStatus & { type: "CuratorProposed" };
-}> = ({ status, parentId, id }) => {
-  const parentSigner = useStateObservable(bountyCuratorSigner$(parentId));
-  const childSigner = useStateObservable(
-    childBountyCuratorSigner$(parentId, id)
+  bounty: CuratorProposedChildBounty;
+}> = ({ bounty }) => {
+  const parentSigner = useStateObservable(
+    bountyCuratorSigner$(bounty.parent_bounty)
   );
-
-  const unassignTx = () =>
-    typedApi.tx.ChildBounties.unassign_curator({
-      parent_bounty_id: parentId,
-      child_bounty_id: id,
-    });
+  const childSigner = useStateObservable(
+    childBountyCuratorSigner$(bounty.parent_bounty, bounty.id)
+  );
 
   return (
     <>
       <ChildBountyDetails>
         <BountyDetail title="Status">Curator Proposed</BountyDetail>
         <BountyDetail title="Curator" className="items-start">
-          <IdentityLinks address={status.value.curator} />
+          <IdentityLinks address={bounty.curator} />
         </BountyDetail>
       </ChildBountyDetails>
 
       <div className="flex justify-between">
         <TransactionButton
-          createTx={() =>
-            typedApi.tx.ChildBounties.accept_curator({
-              parent_bounty_id: parentId,
-              child_bounty_id: id,
-            })
-          }
+          createTx={bounty.acceptCuratorRole}
           signer={childSigner}
         >
           Accept Curator Role
@@ -160,7 +141,7 @@ const CuratorProposed: FC<{
         <div className="space-x-2">
           {childSigner ? (
             <TransactionButton
-              createTx={unassignTx}
+              createTx={bounty.unassignCurator}
               signer={childSigner}
               variant="secondary"
             >
@@ -168,7 +149,7 @@ const CuratorProposed: FC<{
             </TransactionButton>
           ) : parentSigner ? (
             <TransactionButton
-              createTx={unassignTx}
+              createTx={bounty.unassignCurator}
               signer={childSigner}
               variant="destructive"
             >
@@ -176,11 +157,7 @@ const CuratorProposed: FC<{
             </TransactionButton>
           ) : null}
           {parentSigner && (
-            <CloseBountyButton
-              parentId={parentId}
-              id={id}
-              parentSigner={parentSigner}
-            />
+            <CloseBountyButton bounty={bounty} parentSigner={parentSigner} />
           )}
         </div>
       </div>
@@ -189,27 +166,21 @@ const CuratorProposed: FC<{
 };
 
 const Active: FC<{
-  parentId: number;
-  id: number;
-  status: ChildBountyStatus & { type: "Active" };
-}> = ({ status, parentId, id }) => {
-  const parentSigner = useStateObservable(bountyCuratorSigner$(parentId));
-  const childSigner = useStateObservable(
-    childBountyCuratorSigner$(parentId, id)
+  bounty: ActiveChildBounty;
+}> = ({ bounty }) => {
+  const parentSigner = useStateObservable(
+    bountyCuratorSigner$(bounty.parent_bounty)
   );
-
-  const unassignTx = () =>
-    typedApi.tx.ChildBounties.unassign_curator({
-      parent_bounty_id: parentId,
-      child_bounty_id: id,
-    });
+  const childSigner = useStateObservable(
+    childBountyCuratorSigner$(bounty.parent_bounty, bounty.id)
+  );
 
   return (
     <>
       <ChildBountyDetails>
         <BountyDetail title="Status">Active</BountyDetail>
         <BountyDetail title="Curator">
-          <IdentityLinks address={status.value.curator} />
+          <IdentityLinks address={bounty.curator} />
         </BountyDetail>
       </ChildBountyDetails>
       <div className="flex justify-between">
@@ -217,15 +188,7 @@ const Active: FC<{
           signer={childSigner ?? parentSigner}
           dialogContent={(onSubmit) => (
             <AwardBountyDialog
-              onSubmit={(value) =>
-                onSubmit(
-                  typedApi.tx.ChildBounties.award_child_bounty({
-                    parent_bounty_id: parentId,
-                    child_bounty_id: id,
-                    beneficiary: MultiAddress.Id(value!),
-                  })
-                )
-              }
+              onSubmit={(value) => onSubmit(bounty.award(value))}
             />
           )}
         >
@@ -234,7 +197,7 @@ const Active: FC<{
         <div className="space-x-2">
           {childSigner ? (
             <TransactionButton
-              createTx={unassignTx}
+              createTx={bounty.unassignCurator}
               signer={childSigner}
               variant="secondary"
             >
@@ -242,18 +205,14 @@ const Active: FC<{
             </TransactionButton>
           ) : parentSigner ? (
             <TransactionButton
-              createTx={unassignTx}
+              createTx={bounty.unassignCurator}
               signer={childSigner}
               variant="destructive"
             >
               Unassign and slash curator
             </TransactionButton>
           ) : null}
-          <CloseBountyButton
-            parentId={parentId}
-            id={id}
-            parentSigner={parentSigner}
-          />
+          <CloseBountyButton bounty={bounty} parentSigner={parentSigner} />
         </div>
       </div>
     </>
@@ -261,31 +220,26 @@ const Active: FC<{
 };
 
 const CloseBountyButton: FC<{
-  id: number;
-  parentId: number;
+  bounty: SdkChildBounty;
   parentSigner: PolkadotSigner | null;
-}> = ({ id, parentId, parentSigner }) => (
-  <TransactionButton
-    createTx={() =>
-      typedApi.tx.ChildBounties.close_child_bounty({
-        parent_bounty_id: parentId,
-        child_bounty_id: id,
-      })
-    }
-    signer={parentSigner}
-    variant="destructive"
-  >
-    Close Bounty
-  </TransactionButton>
-);
+}> = ({ bounty, parentSigner }) =>
+  "close" in bounty ? (
+    <TransactionButton
+      createTx={bounty.close}
+      signer={parentSigner}
+      variant="destructive"
+    >
+      Close Bounty
+    </TransactionButton>
+  ) : null;
 
 const PendingPayout: FC<{
-  parentId: number;
-  id: number;
-  status: ChildBountyStatus & { type: "PendingPayout" };
-}> = ({ status, parentId, id }) => {
-  const parentSigner = useStateObservable(bountyCuratorSigner$(parentId));
-  const isDue = useStateObservable(isBlockDue$(status.value.unlock_at));
+  bounty: PendingPayoutChildBounty;
+}> = ({ bounty }) => {
+  const parentSigner = useStateObservable(
+    bountyCuratorSigner$(bounty.parent_bounty)
+  );
+  const isDue = useStateObservable(isBlockDue$(bounty.unlockAt));
   const selectedAccount = useStateObservable(selectedAccount$);
 
   return (
@@ -293,36 +247,26 @@ const PendingPayout: FC<{
       <ChildBountyDetails>
         <BountyDetail title="Status">Pending Payout</BountyDetail>
         <BountyDetail title="Curator" className="items-start">
-          <IdentityLinks address={status.value.curator} />
+          <IdentityLinks address={bounty.curator} />
         </BountyDetail>
         <BountyDetail title="Beneficiary" className="items-start">
-          <IdentityLinks address={status.value.beneficiary} />
+          <IdentityLinks address={bounty.beneficiary} />
         </BountyDetail>
         <BountyDetail title="Unlock At">
-          <BlockDue block={status.value.unlock_at} />
+          <BlockDue block={bounty.unlockAt} />
         </BountyDetail>
       </ChildBountyDetails>
       <div className="flex justify-between">
         <TransactionButton
           disabled={!isDue}
-          createTx={() =>
-            typedApi.tx.ChildBounties.claim_child_bounty({
-              parent_bounty_id: parentId,
-              child_bounty_id: id,
-            })
-          }
+          createTx={bounty.claim}
           signer={selectedAccount?.polkadotSigner ?? null}
         >
           Payout Beneficiary
         </TransactionButton>
         {parentSigner ? (
           <TransactionButton
-            createTx={() =>
-              typedApi.tx.ChildBounties.unassign_curator({
-                parent_bounty_id: parentId,
-                child_bounty_id: id,
-              })
-            }
+            createTx={bounty.unassignCurator}
             signer={parentSigner}
             variant="destructive"
           >

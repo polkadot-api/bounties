@@ -1,17 +1,18 @@
 import { DotValue } from "@/components/DotValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bounty } from "@/sdk/bounties-sdk";
+import { Bounty } from "@polkadot-api/sdk-governance";
 import { FC, PropsWithChildren } from "react";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 
-export const BountyDetails: FC<
-  PropsWithChildren<{ id: number; bounty: Bounty }>
-> = ({ id, bounty, children }) => (
+export const BountyDetails: FC<PropsWithChildren<{ bounty: Bounty }>> = ({
+  bounty,
+  children,
+}) => (
   <Card>
     <CardHeader>
       <CardTitle>
-        <span className="text-card-foreground/75">{id}</span>
-        <span className="ml-1">{bounty.description?.asText()}</span>
+        <span className="text-card-foreground/75">{bounty.id}</span>
+        <span className="ml-1">{bounty.description}</span>
       </CardTitle>
     </CardHeader>
     <CardContent className="flex flex-col gap-2">

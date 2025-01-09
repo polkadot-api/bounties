@@ -1,10 +1,14 @@
-import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
-import { Bounty as BountyPayload } from "@/sdk/bounties-sdk";
 import { bounty$ } from "@/state/bounties";
 import { TransactionButton } from "@/Transactions";
+import type {
+  CuratorProposedBounty,
+  FundedBounty,
+  PendingPayoutBounty,
+  ProposedBounty,
+} from "@polkadot-api/sdk-governance";
 import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { useParams } from "react-router-dom";
@@ -27,30 +31,22 @@ export const Bounty = () => {
   if (!bounty) return null;
 
   const getContent = () => {
-    switch (bounty.status.type) {
+    switch (bounty.type) {
       case "Proposed":
-        return <ProposedBounty id={id} bounty={bounty} />;
+        return <ProposedBounty bounty={bounty} />;
       case "Funded":
-        return <FundedBounty id={id} bounty={bounty} />;
+        return <FundedBounty bounty={bounty} />;
       case "Active":
-        return <ActiveBounty id={id} bounty={bounty} status={bounty.status} />;
+        return <ActiveBounty bounty={bounty} />;
       case "CuratorProposed":
-        return (
-          <CuratorProposedBounty
-            id={id}
-            bounty={bounty}
-            status={bounty.status}
-          />
-        );
+        return <CuratorProposedBounty bounty={bounty} />;
       case "PendingPayout":
-        return (
-          <PendingPayoutBounty id={id} bounty={bounty} status={bounty.status} />
-        );
+        return <PendingPayoutBounty bounty={bounty} />;
       case "Approved":
         return (
-          <BountyDetails id={id} bounty={bounty}>
+          <BountyDetails bounty={bounty}>
             <BountyDetailGroup>
-              <BountyDetail title="Status">{bounty.status.type}</BountyDetail>
+              <BountyDetail title="Status">{bounty.type}</BountyDetail>
               <p className="text-muted-foreground">
                 The referendum has been approved by the treasury, it will become
                 funded after the next spend period
@@ -65,107 +61,68 @@ export const Bounty = () => {
 };
 
 const FundedBounty: FC<{
-  id: number;
-  bounty: BountyPayload;
-}> = ({ id, bounty }) => (
-  <BountyDetails id={id} bounty={bounty}>
+  bounty: FundedBounty;
+}> = ({ bounty }) => (
+  <BountyDetails bounty={bounty}>
     <BountyDetailGroup>
       <BountyDetail title="Status">Funded</BountyDetail>
     </BountyDetailGroup>
-    <FundedBountyActions id={id} />
-    <ProposeBountyReferendum id={id} />
+    <FundedBountyActions bounty={bounty} />
+    <ProposeBountyReferendum id={bounty.id} />
   </BountyDetails>
 );
 
-/**
- * propose_curator
- *  => spend origin
- * unassign_curator
- *  => reject origin
- *  => proposed curator
- * close_bounty
- *  => reject origin if no active child bounties
- */
-const FundedBountyActions: FC<{ id: number }> = ({ id }) => (
-  <ProposeCurator id={id} />
+const FundedBountyActions: FC<{ bounty: FundedBounty }> = ({ bounty }) => (
+  <ProposeCurator id={bounty.id} />
 );
 
 const ProposedBounty: FC<{
-  id: number;
-  bounty: BountyPayload;
-}> = ({ id, bounty }) => (
-  <BountyDetails id={id} bounty={bounty}>
+  bounty: ProposedBounty;
+}> = ({ bounty }) => (
+  <BountyDetails bounty={bounty}>
     <BountyDetailGroup>
       <BountyDetail title="Status">Proposed</BountyDetail>
     </BountyDetailGroup>
-    <ProposedBountyActions id={id} />
+    <ProposedBountyActions bounty={bounty} />
   </BountyDetails>
 );
 
-/**
- * approve_bounty
- *  => spend origin
- * approve_bounty_with_curator (2412+)
- *  => spend origin
- * close_bounty
- *  => reject origin
- */
-const ProposedBountyActions: FC<{ id: number }> = ({ id }) => (
+const ProposedBountyActions: FC<{ bounty: ProposedBounty }> = ({ bounty }) => (
   <>
-    <ApproveBountyButton id={id} className="self-start" />
-    <ApproveBountyReferendum id={id} />
+    <ApproveBountyButton id={bounty.id} className="self-start" />
+    <ApproveBountyReferendum id={bounty.id} />
   </>
 );
 
 const CuratorProposedBounty: FC<{
-  id: number;
-  bounty: BountyPayload;
-  status: BountyPayload["status"] & { type: "CuratorProposed" };
-}> = ({ id, bounty, status }) => {
+  bounty: CuratorProposedBounty;
+}> = ({ bounty }) => {
   return (
-    <BountyDetails id={id} bounty={bounty}>
+    <BountyDetails bounty={bounty}>
       <BountyDetailGroup>
         <BountyDetail title="Status">Curator Proposed</BountyDetail>
         <BountyDetail title="Curator" className="items-start">
-          <IdentityLinks address={status.value.curator} />
+          <IdentityLinks address={bounty.curator} />
         </BountyDetail>
       </BountyDetailGroup>
-      <CuratorProposedActions id={id} />
+      <CuratorProposedActions bounty={bounty} />
     </BountyDetails>
   );
 };
 
-/**
- * accept_curator
- *  => proposed curator
- * unassign_curator
- *  => reject origin
- *  => proposed curator
- * close_bounty
- *  => reject origin if no active child bounties
- */
-const CuratorProposedActions: FC<{ id: number }> = ({ id }) => {
-  const signer = useStateObservable(bountyCuratorSigner$(id));
+const CuratorProposedActions: FC<{ bounty: CuratorProposedBounty }> = ({
+  bounty,
+}) => {
+  const signer = useStateObservable(bountyCuratorSigner$(bounty.id));
   return (
     <div className="flex justify-between">
-      <TransactionButton
-        signer={signer}
-        createTx={() =>
-          typedApi.tx.Bounties.accept_curator({
-            bounty_id: id,
-          })
-        }
-      >
+      <TransactionButton signer={signer} createTx={bounty.acceptCuratorRole}>
         Accept Curator Role
       </TransactionButton>
       <TransactionButton
         variant="destructive"
         signer={signer}
-        createTx={() =>
-          typedApi.tx.Bounties.unassign_curator({
-            bounty_id: id,
-          })
-        }
+        createTx={bounty.unassignCurator}
       >
         Reject Curator Role
       </TransactionButton>
@@ -174,35 +131,29 @@ const CuratorProposedActions: FC<{ id: number }> = ({ id }) => {
 };
 
 const PendingPayoutBounty: FC<{
-  id: number;
-  bounty: BountyPayload;
-  status: BountyPayload["status"] & { type: "PendingPayout" };
-}> = ({ id, bounty, status }) => {
-  const isDue = useStateObservable(isBlockDue$(status.value.unlock_at));
+  bounty: PendingPayoutBounty;
+}> = ({ bounty }) => {
+  const isDue = useStateObservable(isBlockDue$(bounty.unlockAt));
   const selectedAccount = useStateObservable(selectedAccount$);
 
   return (
-    <BountyDetails id={id} bounty={bounty}>
+    <BountyDetails bounty={bounty}>
       <BountyDetailGroup>
         <BountyDetail title="Status">Pending Payout</BountyDetail>
         <BountyDetail title="Curator" className="items-start">
-          <IdentityLinks address={status.value.curator} />
+          <IdentityLinks address={bounty.curator} />
         </BountyDetail>
         <BountyDetail title="Beneficiary">
-          <OnChainIdentity value={status.value.beneficiary} />
+          <OnChainIdentity value={bounty.beneficiary} />
         </BountyDetail>
         <BountyDetail title="Unlock At">
-          <BlockDue block={status.value.unlock_at} />
+          <BlockDue block={bounty.unlockAt} />
         </BountyDetail>
       </BountyDetailGroup>
       <div>
         <TransactionButton
           disabled={!isDue}
-          createTx={() =>
-            typedApi.tx.Bounties.claim_bounty({
-              bounty_id: id,
-            })
-          }
+          createTx={bounty.claim}
           signer={selectedAccount?.polkadotSigner ?? null}
         >
           Payout Beneficiary

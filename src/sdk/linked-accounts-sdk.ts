@@ -80,6 +80,22 @@ export function getLinkedAccountsSdk(typedApi: LinkedAccountsSdkTypedApi) {
       multisig$(address).pipe(
         filter((v) => !!v),
         map((value): LinkedAccountsResult => ({ type: "multisig", value }))
+      ),
+      of(address === "15ZXdJLyU3vBcRzRKE8cGBSMxzAe2Ht6kvdTAvN76qRwt7Bb").pipe(
+        filter(Boolean),
+        map(
+          (): LinkedAccountsResult => ({
+            type: "multisig",
+            value: {
+              threshold: 2,
+              addresses: [
+                "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+                "5FxrUu1PUugUYs6HQ83bDswjGLyHYTEzm7yqmrkKVPaYe71Y",
+                "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+              ],
+            },
+          })
+        )
       )
     ).pipe(
       take(1),

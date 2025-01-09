@@ -1,41 +1,27 @@
 import { typedApi } from "@/chain";
 import { getLinkedSigner$ } from "@/state/linkedSigners";
+import { createChildBountiesSdk } from "@polkadot-api/sdk-governance";
 import { state } from "@react-rxjs/core";
-import {
-  combineLatest,
-  filter,
-  from,
-  map,
-  of,
-  skip,
-  startWith,
-  switchMap,
-} from "rxjs";
+import { filter, map, of, switchMap } from "rxjs";
 
-export const childBounties$ = state((parentId: number) => {
-  // TODO watchEntries
-  return typedApi.query.ChildBounties.ParentChildBounties.watchValue(
-    parentId
-  ).pipe(
-    skip(1),
-    startWith(null),
-    switchMap(() =>
-      typedApi.query.ChildBounties.ChildBounties.getEntries(parentId)
-    ),
-    map((entries) =>
-      Object.fromEntries(
-        entries.map(({ keyArgs, value }) => [keyArgs[1], value] as const)
-      )
-    )
-  );
-}, null);
+export const childBountiesSdk = createChildBountiesSdk(typedApi);
+
+const watch$ = state((parentId: number) =>
+  of(childBountiesSdk.watchChildBounties(parentId))
+);
+
+export const childBountyKeys$ = state(
+  (parentId: number) => watch$(parentId).pipe(switchMap((w) => w.bountyIds$)),
+  null
+);
 
 export const hasActiveChildBounties$ = state(
   (parentId: number) =>
-    childBounties$(parentId).pipe(
+    watch$(parentId).pipe(
+      switchMap((v) => v.bounties$),
       map((v) =>
         v
-          ? Object.values(v).find((child) => child.status.type === "Active") !=
+          ? Array.from(v.values()).find((child) => child.type === "Active") !=
             null
           : false
       )
@@ -45,20 +31,9 @@ export const hasActiveChildBounties$ = state(
 
 export const childBounty$ = state(
   (parentId: number, id: number) =>
-    combineLatest([
-      childBounties$(parentId).pipe(
-        filter((v) => !!v),
-        map((v) => v[id]),
-        filter((v) => !!v)
-      ),
-      from(
-        typedApi.query.ChildBounties.ChildBountyDescriptions.getValue(id)
-      ).pipe(startWith(null)),
-    ]).pipe(
-      map(([bounty, description]) => ({
-        ...bounty,
-        description,
-      }))
+    watch$(parentId).pipe(
+      switchMap((w) => w.getBountyById$(id)),
+      filter((v) => !!v)
     ),
   null
 );

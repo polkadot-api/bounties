@@ -26,6 +26,9 @@ importers:
       '@polkadot-api/polkadot-signer':
         specifier: ^0.1.6
         version: 0.1.6
+      '@polkadot-api/sdk-governance':
+        specifier: 0.0.1-local.0
+        version: 0.0.1-local.0(@noble/hashes@1.6.1)(@react-rxjs/core@0.10.7(react@18.3.1)(rxjs@7.8.1))(polkadot-api@1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(react@18.3.1)(rxjs@7.8.1)
       '@polkadot-api/substrate-bindings':
         specifier: ^0.11.0
         version: 0.11.0
@@ -447,6 +450,12 @@ packages:
   '@polkadot-api/codegen@0.12.12':
     resolution: {integrity: sha512-0jurC0ziMs0CEmHCZ8o2b4kE2pJz0rb/7LzeX/r0ngx60IJV14KSAFoAfipEMgmui3uTsP9goT/q4RmgnZ/2CQ==}
 
+  '@polkadot-api/common-sdk-utils@0.0.1':
+    resolution: {integrity: sha512-PLQeHmOva+hohgko7U3DburM/SFmeEMglqZxgcbddd02gbgBlY9LDgfvRD8bhSeM3cPRPwR/LqaBkC5cMZPHjg==}
+    peerDependencies:
+      polkadot-api: '>=1.7.4'
+      rxjs: '>=7.8.1'
+
   '@polkadot-api/descriptors@file:.papi/descriptors':
     resolution: {directory: .papi/descriptors, type: directory}
     peerDependencies:
@@ -490,6 +499,13 @@ packages:
 
   '@polkadot-api/polkadot-signer@0.1.6':
     resolution: {integrity: sha512-X7ghAa4r7doETtjAPTb50IpfGtrBmy3BJM5WCfNKa1saK04VFY9w+vDn+hwEcM4p0PcDHt66Ts74hzvHq54d9A==}
+
+  '@polkadot-api/sdk-governance@0.0.1-local.0':
+    resolution: {integrity: sha512-3eQlKTWRx8oRrL7v19jz7qSoXfuXfO28WUDzlLkWt3x0JsB3arm2QW/RiJnWYKFCzOX35V1TFh/V5tzU40WaDg==}
+    peerDependencies:
+      '@noble/hashes': '>=1.6.1'
+      polkadot-api: '>=1.8.1'
+      rxjs: '>=7.8.0'
 
   '@polkadot-api/signer@0.1.13':
     resolution: {integrity: sha512-QFBeupXDoK/XVno9RdnUoh5HiPC8YC+HtbL0Jz61WrfnBRo77Trv5b0w7pUngpqjQzRY1w68TbETNTqRPtZOFA==}
@@ -2369,6 +2385,11 @@ snapshots:
       '@polkadot-api/substrate-bindings': 0.11.0
       '@polkadot-api/utils': 0.1.2
 
+  '@polkadot-api/common-sdk-utils@0.0.1(polkadot-api@1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(rxjs@7.8.1)':
+    dependencies:
+      polkadot-api: 1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1)
+      rxjs: 7.8.1
+
   '@polkadot-api/descriptors@file:.papi/descriptors(polkadot-api@1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))':
     dependencies:
       polkadot-api: 1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1)
@@ -2429,6 +2450,17 @@ snapshots:
       '@polkadot-api/json-rpc-provider': 0.0.4
 
   '@polkadot-api/polkadot-signer@0.1.6': {}
+
+  '@polkadot-api/sdk-governance@0.0.1-local.0(@noble/hashes@1.6.1)(@react-rxjs/core@0.10.7(react@18.3.1)(rxjs@7.8.1))(polkadot-api@1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(react@18.3.1)(rxjs@7.8.1)':
+    dependencies:
+      '@noble/hashes': 1.6.1
+      '@polkadot-api/common-sdk-utils': 0.0.1(polkadot-api@1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(rxjs@7.8.1)
+      '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.7(react@18.3.1)(rxjs@7.8.1))(react@18.3.1)(rxjs@7.8.1)
+      polkadot-api: 1.8.0(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1)
+      rxjs: 7.8.1
+    transitivePeerDependencies:
+      - '@react-rxjs/core'
+      - react
 
   '@polkadot-api/signer@0.1.13':
     dependencies:
