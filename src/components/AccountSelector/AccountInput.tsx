@@ -124,7 +124,7 @@ export const AccountInput: FC<{
               </div>
             </CommandEmpty>
             <CommandGroup>
-              {valueIsNew && (
+              {valueIsNew && value && (
                 <AccountOption
                   account={value}
                   selected={true}
