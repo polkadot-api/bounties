@@ -180,7 +180,7 @@ const ProposeBountyForm: FC<{ id: number }> = ({ id }) => {
             bountyId: id,
           })
         )}
-        className="space-y-4 overflow-hidden"
+        className="space-y-4"
       >
         <FormField
           control={form.control}

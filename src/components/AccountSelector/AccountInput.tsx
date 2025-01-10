@@ -31,8 +31,11 @@ const hintedAccounts$ = accountsByExtension$.pipeState(
       new Set(
         Array.from(accountsByExtension.values()).flatMap((accounts) =>
           accounts
-            .map((acc) => acc.address)
-            .filter((acc) => !acc.startsWith("0x"))
+            .map((acc) => ({
+              name: acc.name,
+              address: acc.address,
+            }))
+            .filter((acc) => !acc.address.startsWith("0x"))
         )
       )
   ),
@@ -66,10 +69,13 @@ export const AccountInput: FC<{
     setQuery("");
   };
 
-  const valueIsNew = value && !accounts.find((acc) => SS58Eq(acc, value));
+  const hintedValue = value
+    ? accounts.find((acc) => SS58Eq(acc.address, value))
+    : null;
+  const valueIsNew = hintedValue == null;
   if (value !== null) {
-    accounts.sort(([, a], [, b]) =>
-      SS58Eq(a, value) ? -1 : SS58Eq(b, value) ? 1 : 0
+    accounts.sort((a, b) =>
+      SS58Eq(a.address, value) ? -1 : SS58Eq(b.address, value) ? 1 : 0
     );
   }
 
@@ -93,7 +99,11 @@ export const AccountInput: FC<{
           forceSvgSize={false}
         >
           {value != null ? (
-            <OnChainIdentity value={value} className="overflow-hidden" />
+            <OnChainIdentity
+              value={value}
+              name={hintedValue?.name}
+              className="overflow-hidden"
+            />
           ) : (
             <span className="opacity-80">Select…</span>
           )}
@@ -103,7 +113,7 @@ export const AccountInput: FC<{
       <PopoverContent className="w-96 p-0">
         <Command>
           <CommandInput
-            placeholder="Filter…"
+            placeholder="Filter or insert…"
             value={query}
             onValueChange={setQuery}
           />
@@ -123,11 +133,12 @@ export const AccountInput: FC<{
               )}
               {accounts.map((account) => (
                 <AccountOption
-                  key={account}
-                  account={account}
-                  selected={value ? SS58Eq(value, account) : false}
+                  key={account.address}
+                  account={account.address}
+                  name={account.name}
+                  selected={value ? SS58Eq(value, account.address) : false}
                   onSelect={() => {
-                    onChange(account);
+                    onChange(account.address);
                     setOpen(false);
                   }}
                 />
@@ -153,15 +164,17 @@ export const AccountInput: FC<{
 const AccountOption: FC<{
   account: string;
   selected: boolean;
+  name?: string;
   onSelect: () => void;
-}> = ({ account, selected, onSelect }) => (
+}> = ({ account, name, selected, onSelect }) => (
   <CommandItem
+    keywords={name ? [name] : undefined}
     value={account}
     onSelect={onSelect}
     className="flex flex-row items-center gap-2 p-1"
     forceSvgSize={false}
   >
-    <OnChainIdentity value={account} className="overflow-hidden" />
+    <OnChainIdentity value={account} name={name} className="overflow-hidden" />
     <Check
       size={12}
       className={twMerge(
