@@ -1,7 +1,10 @@
 import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
-import { getLinkedAccountsSdk } from "@/sdk/linked-accounts-sdk";
 import { getMultisigSigner, getProxySigner } from "@polkadot-api/meta-signers";
+import {
+  createLinkedAccountsSdk,
+  novasamaProvider,
+} from "@polkadot-api/sdk-accounts";
 import { toHex } from "@polkadot-api/utils";
 import { getSs58AddressInfo, PolkadotSigner } from "polkadot-api";
 import {
@@ -18,7 +21,7 @@ import {
   take,
 } from "rxjs";
 
-const linkedAccountsSdk = getLinkedAccountsSdk(typedApi);
+const linkedAccountsSdk = createLinkedAccountsSdk(typedApi, novasamaProvider);
 
 export const getNestedLinkedAccounts$ =
   linkedAccountsSdk.getNestedLinkedAccounts$;

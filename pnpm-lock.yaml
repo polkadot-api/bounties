@@ -26,6 +26,9 @@ importers:
       '@polkadot-api/polkadot-signer':
         specifier: ^0.1.6
         version: 0.1.6
+      '@polkadot-api/sdk-accounts':
+        specifier: 0.0.1-0
+        version: 0.0.1-0(@noble/hashes@1.7.0)(@react-rxjs/core@0.10.7(react@19.0.0)(rxjs@7.8.1))(polkadot-api@1.8.1(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(react@19.0.0)(rxjs@7.8.1)
       '@polkadot-api/sdk-governance':
         specifier: 0.0.1-0
         version: 0.0.1-0(@noble/hashes@1.7.0)(@react-rxjs/core@0.10.7(react@19.0.0)(rxjs@7.8.1))(polkadot-api@1.8.1(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(react@19.0.0)(rxjs@7.8.1)
@@ -649,6 +652,13 @@ packages:
 
   '@polkadot-api/polkadot-signer@0.1.6':
     resolution: {integrity: sha512-X7ghAa4r7doETtjAPTb50IpfGtrBmy3BJM5WCfNKa1saK04VFY9w+vDn+hwEcM4p0PcDHt66Ts74hzvHq54d9A==}
+
+  '@polkadot-api/sdk-accounts@0.0.1-0':
+    resolution: {integrity: sha512-zGx/E/GbSAsXVBw5sjhPcTIX2RF++f3E8j6w30hS3fIQe37DEEdtvXHbdzhs2ShKhJc8QHLsEY74eAHAOVMi+A==}
+    peerDependencies:
+      '@noble/hashes': '>=1.6.1'
+      polkadot-api: '>=1.8.1'
+      rxjs: '>=7.8.0'
 
   '@polkadot-api/sdk-governance@0.0.1-0':
     resolution: {integrity: sha512-edKH93tMyUkyUXEIc9MJtTNmnDvrzyxxhRs8oGT6VlN6v7tR7eNi1SI2+P2pan8sS2YI22RL8bI/Wr/09HHABw==}
@@ -2773,6 +2783,17 @@ snapshots:
       '@polkadot-api/json-rpc-provider': 0.0.4
 
   '@polkadot-api/polkadot-signer@0.1.6': {}
+
+  '@polkadot-api/sdk-accounts@0.0.1-0(@noble/hashes@1.7.0)(@react-rxjs/core@0.10.7(react@19.0.0)(rxjs@7.8.1))(polkadot-api@1.8.1(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(react@19.0.0)(rxjs@7.8.1)':
+    dependencies:
+      '@noble/hashes': 1.7.0
+      '@polkadot-api/common-sdk-utils': 0.0.1-0(polkadot-api@1.8.1(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(rxjs@7.8.1)
+      '@react-rxjs/utils': 0.9.7(@react-rxjs/core@0.10.7(react@19.0.0)(rxjs@7.8.1))(react@19.0.0)(rxjs@7.8.1)
+      polkadot-api: 1.8.1(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1)
+      rxjs: 7.8.1
+    transitivePeerDependencies:
+      - '@react-rxjs/core'
+      - react
 
   '@polkadot-api/sdk-governance@0.0.1-0(@noble/hashes@1.7.0)(@react-rxjs/core@0.10.7(react@19.0.0)(rxjs@7.8.1))(polkadot-api@1.8.1(jiti@1.21.7)(postcss@8.4.49)(rxjs@7.8.1)(yaml@2.6.1))(react@19.0.0)(rxjs@7.8.1)':
     dependencies:
