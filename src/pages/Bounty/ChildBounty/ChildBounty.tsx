@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MultiAddress } from "@polkadot-api/descriptors";
 import {
   ActiveChildBounty,
   AddedChildBounty,
@@ -96,10 +95,7 @@ const Added: FC<{
           dialogContent={(onSubmit) => (
             <ProposeCuratorDialog
               onSubmit={(curator, fee) =>
-                onSubmit(
-                  // TODO standarize MultiAddress between bounties and childBounties
-                  bounty.proposeCurator(MultiAddress.Id(curator), fee)
-                )
+                onSubmit(bounty.proposeCurator(curator, fee))
               }
             />
           )}

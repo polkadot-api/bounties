@@ -32,14 +32,12 @@ export const approveBountyDetails$ = state(
 
         return Promise.all([
           spenderTrack.origin,
-          spenderTrack.enactment(),
           proposal,
           approveBountyReferenda,
         ] as const);
       }),
-      map(([origin, enactment, proposalCall, referendaCall]) => ({
+      map(([origin, proposalCall, referendaCall]) => ({
         origin,
-        enactment,
         proposalCall,
         referendaCall,
       }))

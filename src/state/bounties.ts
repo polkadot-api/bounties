@@ -3,6 +3,7 @@ import { createBountiesSdk } from "@polkadot-api/sdk-governance";
 import { state } from "@react-rxjs/core";
 import { combineLatest, filter, map, mergeMap } from "rxjs";
 import { ongoingReferenda$ } from "./referenda";
+import { combineKeys } from "@react-rxjs/utils";
 
 export const bountiesSdk = createBountiesSdk(typedApi);
 const bountyWatch = bountiesSdk.watchBounties();
@@ -14,7 +15,10 @@ export const bountyIds$ = state(
 
 export const bounty$ = state(bountyWatch.getBountyById$, null);
 
-export const bountiesState$ = bountyIds$;
+export const bountiesState$ = combineKeys(
+  bountyIds$.pipe(filter(Boolean)),
+  bountyWatch.getBountyById$
+);
 
 export const bountyApprovingReferenda$ = state(
   (bountyId: number) =>

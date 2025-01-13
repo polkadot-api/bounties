@@ -5,9 +5,11 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 import "./index.css";
 import { bountiesState$ } from "./state/bounties.ts";
+import { merge } from "rxjs";
+import { ongoingReferenda$ } from "./state/referenda.ts";
 
 createRoot(document.getElementById("root")!).render(
-  <Subscribe source$={bountiesState$}>
+  <Subscribe source$={merge(bountiesState$, ongoingReferenda$)}>
     <StrictMode>
       <BrowserRouter>
         <App />
