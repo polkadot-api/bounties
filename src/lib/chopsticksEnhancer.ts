@@ -9,16 +9,46 @@ export const withChopsticksEnhancer =
   (parent: JsonRpcProvider): JsonRpcProvider =>
   (onMessage) => {
     // if it's chopsticks, we can assume there's immediate finality, and there are no forks or reorgs
-    const numbers: Record<string, DeferredPromise> = {};
+    let previousNumber: number | null = null;
+    let ongoingPromise: DeferredPromise | null = null;
 
     const inner = parent(async (msg) => {
       const parsed = JSON.parse(msg);
 
       if (parsed.id?.startsWith("chopsticks-header-")) {
-        const blockHash = parsed.id.replace("chopsticks-header-", "");
         const decodedHeader = blockHeader.dec(parsed.result);
+        const currentNumber = decodedHeader.number;
 
-        numbers[blockHash]?.resolve(decodedHeader.number);
+        console.log([previousNumber, currentNumber]);
+        if (previousNumber !== null && currentNumber > previousNumber + 1) {
+          onMessage(
+            JSON.stringify({
+              ...parsed,
+              params: {
+                ...parsed.params,
+                result: {
+                  event: "stop",
+                },
+              },
+            })
+          );
+          previousNumber = null;
+          ongoingPromise?.reject("");
+          ongoingPromise = null;
+          return;
+        }
+        previousNumber = currentNumber;
+        ongoingPromise?.resolve(currentNumber);
+        ongoingPromise = null;
+        return;
+      }
+
+      try {
+        while (ongoingPromise) {
+          await ongoingPromise.promise;
+        }
+      } catch (_) {
+        // A jump was detected, abort
         return;
       }
 
@@ -26,8 +56,8 @@ export const withChopsticksEnhancer =
         parsed.method === "chainHead_v1_followEvent" &&
         parsed.params?.result?.event === "newBlock"
       ) {
-        const { blockHash, parentBlockHash } = parsed.params.result;
-        numbers[blockHash] = defer();
+        const { blockHash } = parsed.params.result;
+        ongoingPromise = defer();
 
         inner.send(
           JSON.stringify({
@@ -38,29 +68,13 @@ export const withChopsticksEnhancer =
           })
         );
 
-        if (numbers[parentBlockHash]) {
-          const [currentNumber, parentNumber] = await Promise.all([
-            numbers[blockHash].promise,
-            numbers[parentBlockHash].promise,
-          ]);
-          console.log([currentNumber, parentNumber]);
-
-          delete numbers[parentBlockHash];
-
-          if (currentNumber > parentNumber + 1) {
-            onMessage(
-              JSON.stringify({
-                ...parsed,
-                params: {
-                  ...parsed.params,
-                  result: {
-                    event: "stop",
-                  },
-                },
-              })
-            );
-            return;
+        try {
+          while (ongoingPromise) {
+            await ongoingPromise.promise;
           }
+        } catch (_) {
+          // A jump was detected, abort
+          return;
         }
       }
 
