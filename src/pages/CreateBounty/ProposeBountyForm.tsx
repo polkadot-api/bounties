@@ -1,5 +1,4 @@
 import { typedApi } from "@/chain";
-import { CopyText } from "@/components/CopyText";
 import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 import { format } from "@/components/token-formatter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -17,10 +16,9 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { Binary } from "polkadot-api";
 import { FC } from "react";
-import { useForm, useFormState, useWatch } from "react-hook-form";
-import { combineLatest, from, map } from "rxjs";
+import { useForm, useWatch } from "react-hook-form";
+import { combineLatest, map } from "rxjs";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 import { isTxInProgress, TxProgress } from "./TxProgress";
@@ -98,7 +96,6 @@ export const ProposeBountyForm: FC<{ className?: string }> = ({
           )}
         />
         <div className="space-y-2">
-          <CallData />
           <BondCost />
         </div>
         <ErrorBox />
@@ -155,44 +152,6 @@ const BondCost = () => {
     <div className="text-sm">
       You will need to bond {deposit} as a deposit to create this bounty. This
       will be returned when the bounty is approved and funded by the treasury.
-    </div>
-  );
-};
-
-const compatibilityToken$ = state(from(typedApi.compatibilityToken));
-const CallData = () => {
-  const state = useFormState();
-  const values = useWatch();
-  const token = useStateObservable(compatibilityToken$);
-
-  const callData = (() => {
-    if (!state.isValid) return null;
-    try {
-      return typedApi.tx.Bounties.propose_bounty({
-        description: Binary.fromText(values.description),
-        value: values.value,
-      })
-        .getEncodedData(token)
-        .asHex();
-    } catch (_) {
-      console.error(_);
-      return null;
-    }
-  })();
-
-  return (
-    <div className="text-sm flex flex-col overflow-hidden">
-      <div>Call data</div>
-      {state.isValid && callData ? (
-        <div className="flex items-center gap-1">
-          <CopyText text={callData} binary />
-          <div className="overflow-hidden text-ellipsis text-foreground/80">
-            {callData}
-          </div>
-        </div>
-      ) : (
-        <div className="text-foreground/50">N/A</div>
-      )}
     </div>
   );
 };
