@@ -1,7 +1,6 @@
 import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
-import { CopyText } from "@/components/CopyText";
 import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -30,13 +29,12 @@ import { createSignal } from "@react-rxjs/utils";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { SS58String } from "polkadot-api";
 import { FC } from "react";
-import { useForm, useFormState, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
   catchError,
   defer,
   exhaustMap,
   filter,
-  from,
   map,
   of,
   startWith,
@@ -222,7 +220,6 @@ const ProposeBountyForm: FC<{ id: number }> = ({ id }) => {
             </FormItem>
           )}
         />
-        <CallData id={id} />
         <ErrorBox />
         <SubmitButton />
       </form>
@@ -254,44 +251,5 @@ const SubmitButton = () => {
       Sign and Submit
       {isLoading && <Loader2 className="animate-spin" />}
     </Button>
-  );
-};
-
-const compatibilityToken$ = state(from(typedApi.compatibilityToken));
-const CallData: FC<{ id: number }> = ({ id }) => {
-  const state = useFormState();
-  const values = useWatch();
-  const token = useStateObservable(compatibilityToken$);
-
-  const callData = (() => {
-    if (!state.isValid) return null;
-    try {
-      return typedApi.tx.Bounties.propose_curator({
-        bounty_id: id,
-        curator: MultiAddress.Id(values.curator),
-        fee: values.fee,
-      })
-        .getEncodedData(token)
-        .asHex();
-    } catch (_) {
-      console.error(_);
-      return null;
-    }
-  })();
-
-  return (
-    <div className="text-sm flex flex-col overflow-hidden">
-      <div>Call data</div>
-      {state.isValid && callData ? (
-        <div className="flex items-center gap-1">
-          <CopyText text={callData} binary />
-          <div className="overflow-hidden text-ellipsis text-foreground/80">
-            {callData}
-          </div>
-        </div>
-      ) : (
-        <div className="text-foreground/50">N/A</div>
-      )}
-    </div>
   );
 };

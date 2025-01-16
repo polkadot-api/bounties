@@ -68,6 +68,7 @@ const SelectAccountButton = () => {
           <OnChainIdentity
             value={selectedAccount.address}
             name={selectedAccount.name}
+            copyable={false}
           />
         ) : (
           "Select account"

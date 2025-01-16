@@ -85,23 +85,31 @@ export const OnChainIdentity: FC<{
   value: SS58String;
   name?: string;
   className?: string;
-}> = ({ value, name: inputName, className }) => {
+  copyable?: boolean;
+}> = ({ value, name: inputName, className, copyable = true }) => {
   const identity = useStateObservable(identity$(value));
 
   const name = identity?.displayName ?? inputName;
 
+  const identicon = (
+    <PolkadotIdenticon
+      className="flex-shrink-0"
+      publicKey={getPublicKey(value)}
+      size={28}
+    />
+  );
   return (
     <div className={cn("flex items-center gap-1 overflow-hidden", className)}>
-      <CopyText
-        text={value}
-        className="w-7 h-7 flex justify-center items-center"
-      >
-        <PolkadotIdenticon
-          className="flex-shrink-0"
-          publicKey={getPublicKey(value)}
-          size={28}
-        />
-      </CopyText>
+      {copyable ? (
+        <CopyText
+          text={value}
+          className="w-7 h-7 flex justify-center items-center"
+        >
+          {identicon}
+        </CopyText>
+      ) : (
+        identicon
+      )}
       <div className="flex flex-col justify-center text-foreground leading-tight overflow-hidden">
         {name && (
           <span className="inline-flex items-center gap-1">

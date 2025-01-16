@@ -56,7 +56,6 @@ export const SubmitReferendumForm: FC<{
   }
 
   const proposal = details.proposalCall.asHex();
-  const callData = details.referendaCall.asHex();
 
   return (
     <div className={twMerge(className, "space-y-2")}>
@@ -90,13 +89,6 @@ export const SubmitReferendumForm: FC<{
               />{" "}
               {proposal})
             </span>
-          </div>
-        </div>
-        <div>
-          <Label>Call Data</Label>
-          <div className="pl-2 text-foreground/80 flex items-center gap-1">
-            <CopyText text={callData} binary />
-            <div className="overflow-hidden text-ellipsis">{callData}</div>
           </div>
         </div>
       </div>
