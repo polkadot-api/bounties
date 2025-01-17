@@ -113,6 +113,96 @@ try {
     await api.runtimeToken;
   };
 
+  const approveReferendum = async (id: number) => {
+    console.log(`Loading referendum ${id} status`);
+    const referendumInfo = await api.query.Referenda.ReferendumInfoFor.getValue(
+      id
+    );
+    if (!referendumInfo) {
+      console.log("Referendum not found");
+      return;
+    }
+    if (referendumInfo?.type !== "Ongoing") {
+      console.log("Referendum ended");
+      // TODO try unlock funds
+      return;
+    }
+
+    if (!referendumInfo.value.decision_deposit) {
+      console.log("Placing decision deposit");
+      await api.tx.Referenda.place_decision_deposit({
+        index: id,
+      }).signAndSubmit(aliceSigner);
+      return approveReferendum(id);
+    }
+    if (!referendumInfo.value.deciding) {
+      console.log("Jump to start deciding phase");
+      await jumpBlocks(referendumInfo.value.alarm![0]);
+      return approveReferendum(id);
+    }
+    if (
+      !referendumInfo.value.tally.support ||
+      referendumInfo.value.tally.nays >= referendumInfo.value.tally.ayes
+    ) {
+      console.log("Voting aye");
+      await api.tx.ConvictionVoting.vote({
+        poll_index: id,
+        vote: {
+          type: "Standard",
+          value: {
+            vote: 0b1000_0000,
+            balance: 5_000_0000000000n,
+          },
+        },
+      }).signAndSubmit(aliceSigner);
+      return approveReferendum(id);
+    }
+    if (!referendumInfo.value.deciding.confirming) {
+      console.log("Jump to confirm phase");
+      await jumpBlocks(referendumInfo.value.alarm![0]);
+      return approveReferendum(id);
+    }
+
+    console.log("Jump to end confirm phase");
+    await jumpBlocks(referendumInfo.value.alarm![0]);
+
+    const currentFinalized = await client.getFinalizedBlock();
+    const period = (await api.constants.Referenda.Tracks()).find(
+      ([id]) => id === referendumInfo.value.track
+    )![1].min_enactment_period;
+    console.log("Wait one block");
+    await client._request("dev_newBlock", []);
+
+    console.log("Jump to enactment", currentFinalized.number + period);
+    await jumpBlocks(currentFinalized.number + period);
+
+    console.log("unlock funds");
+    const result = await api.tx.Utility.batch_all({
+      calls: [
+        api.tx.ConvictionVoting.remove_vote({
+          index: id,
+          class: referendumInfo.value.track,
+        }).decodedCall,
+        api.tx.ConvictionVoting.unlock({
+          class: referendumInfo.value.track,
+          target: {
+            type: "Id",
+            value: ALICE,
+          },
+        }).decodedCall,
+        api.tx.Referenda.refund_decision_deposit({
+          index: id,
+        }).decodedCall,
+      ],
+    }).signAndSubmit(aliceSigner);
+
+    if (result.ok) {
+      console.log("Success");
+    } else {
+      console.log("Couldn't unlock, probably something went wrong");
+    }
+  };
+
   for await (const line of rl) {
     try {
       const [command, ...args] = line.split(" ");
@@ -163,6 +253,12 @@ try {
                 console.log("Errored", err);
               }
             );
+          break;
+        }
+        case "ar":
+        case "approve_referendum": {
+          const id = Number(args[0]);
+          approveReferendum(id);
           break;
         }
         case "nb":
