@@ -1,1 +1,1 @@
-# bounty-manager
+# Polkadot Bounties
