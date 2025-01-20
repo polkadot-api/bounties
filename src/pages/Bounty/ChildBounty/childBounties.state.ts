@@ -2,39 +2,35 @@ import { typedApi } from "@/chain";
 import { getLinkedSigner$ } from "@/state/linkedSigners";
 import { createChildBountiesSdk } from "@polkadot-api/sdk-governance";
 import { state } from "@react-rxjs/core";
-import { filter, map, of, switchMap } from "rxjs";
+import { map, of, switchMap, tap } from "rxjs";
 
 export const childBountiesSdk = createChildBountiesSdk(typedApi);
 
-const watch$ = state((parentId: number) =>
-  of(childBountiesSdk.watchChildBounties(parentId))
-);
-
 export const childBountyKeys$ = state(
-  (parentId: number) => watch$(parentId).pipe(switchMap((w) => w.bountyIds$)),
+  (parentId: number) =>
+    childBountiesSdk
+      .watch(parentId)
+      .bountyIds$.pipe(tap((v) => console.log("child bounty keys", v))),
   null
 );
 
 export const hasActiveChildBounties$ = state(
   (parentId: number) =>
-    watch$(parentId).pipe(
-      switchMap((v) => v.bounties$),
-      map((v) =>
-        v
-          ? Array.from(v.values()).find((child) => child.type === "Active") !=
+    childBountiesSdk
+      .watch(parentId)
+      .bounties$.pipe(
+        map(
+          (v) =>
+            Array.from(v.values()).find((child) => child.type === "Active") !=
             null
-          : false
-      )
-    ),
+        )
+      ),
   false
 );
 
 export const childBounty$ = state(
   (parentId: number, id: number) =>
-    watch$(parentId).pipe(
-      switchMap((w) => w.getBountyById$(id)),
-      filter((v) => !!v)
-    ),
+    childBountiesSdk.watch(parentId).getBountyById$(id),
   null
 );
 

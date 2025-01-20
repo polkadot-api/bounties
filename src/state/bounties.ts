@@ -6,18 +6,17 @@ import { ongoingReferenda$ } from "./referenda";
 import { combineKeys } from "@react-rxjs/utils";
 
 export const bountiesSdk = createBountiesSdk(typedApi);
-const bountyWatch = bountiesSdk.watchBounties();
 
 export const bountyIds$ = state(
-  bountyWatch.bountyIds$.pipe(map((v) => v.reverse())),
+  bountiesSdk.watch.bountyIds$.pipe(map((v) => v.reverse())),
   null
 );
 
-export const bounty$ = state(bountyWatch.getBountyById$, null);
+export const bounty$ = state(bountiesSdk.watch.getBountyById$, null);
 
 export const bountiesState$ = combineKeys(
   bountyIds$.pipe(filter(Boolean)),
-  bountyWatch.getBountyById$
+  bountiesSdk.watch.getBountyById$
 );
 
 export const bountyApprovingReferenda$ = state(

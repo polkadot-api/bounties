@@ -25,6 +25,7 @@ const aliceSigner = getPolkadotSigner(alice.publicKey, "Sr25519", alice.sign);
 
 const ALICE = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const BOB = "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3";
+const MULTISIG = "15ZXdJLyU3vBcRzRKE8cGBSMxzAe2Ht6kvdTAvN76qRwt7Bb";
 
 const ENDPOINT = "wss://rpc.ibp.network/paseo";
 const PORT = 8132;
@@ -74,6 +75,10 @@ try {
             { providers: 1, data: { free: accountsBalance.toString() } },
           ],
           [[BOB], { providers: 1, data: { free: accountsBalance.toString() } }],
+          [
+            [MULTISIG],
+            { providers: 1, data: { free: accountsBalance.toString() } },
+          ],
           [
             [treasuryAddress],
             { providers: 1, data: { free: treasuryBalance.toString() } },
@@ -168,7 +173,7 @@ try {
         }
         case "jb":
         case "jump_block": {
-          const height = Number(args[1]);
+          const height = Number(args[0]);
           console.log(`Jumping to block ${height}`);
           await jumpBlocks(height);
           break;

@@ -16,14 +16,17 @@ import { TransactionButton, TransactionDialog } from "@/Transactions";
 import { ActiveBounty as SdkActiveBounty } from "@polkadot-api/sdk-governance";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Binary, Transaction } from "polkadot-api";
-import { FC, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { defer, map } from "rxjs";
 import { BlockDue, getBlockTimeDiff, isBlockDue$ } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
 import { ChildBounties } from "./ChildBounty/ChildBounties";
-import { hasActiveChildBounties$ } from "./ChildBounty/childBounties.state";
+import {
+  childBountyKeys$,
+  hasActiveChildBounties$,
+} from "./ChildBounty/childBounties.state";
 import { ChildBounty as SdkChildBounty } from "./ChildBounty/ChildBounty";
 import { bountyCuratorSigner$ } from "./curatorSigner";
 
@@ -31,6 +34,11 @@ export const ActiveBounty: FC<{
   bounty: SdkActiveBounty;
 }> = ({ bounty }) => {
   const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id));
+
+  useEffect(() => {
+    const sub = childBountyKeys$(bounty.id).subscribe();
+    return () => sub.unsubscribe();
+  }, []);
 
   return (
     <Routes>
@@ -257,7 +265,7 @@ const AddChildDialog: FC<{
       <div className="overflow-hidden px-1 space-y-4">
         <label className="flex flex-col">
           <span className="px-1">Description</span>
-          <Textarea ref={textAreaRef} placeholder="(Optional)" />
+          <Textarea ref={textAreaRef} />
         </label>
         <label className="flex flex-col">
           <span className="px-1">Value</span>
