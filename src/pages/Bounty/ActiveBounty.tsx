@@ -77,18 +77,16 @@ export const ActiveBounty: FC<{
             </BountyDetails>
             <BountyActions bounty={bounty} />
             <ChildBounties id={bounty.id} />
-            {curatorSigner ? (
-              <div>
-                <TransactionDialog
-                  signer={curatorSigner}
-                  dialogContent={(onSubmit) => (
-                    <AddChildDialog id={bounty.id} onSubmit={onSubmit} />
-                  )}
-                >
-                  Create Child Bounty
-                </TransactionDialog>
-              </div>
-            ) : null}
+            <div>
+              <TransactionDialog
+                signer={curatorSigner}
+                dialogContent={(onSubmit) => (
+                  <AddChildDialog id={bounty.id} onSubmit={onSubmit} />
+                )}
+              >
+                Create Child Bounty
+              </TransactionDialog>
+            </div>
           </>
         }
       />
@@ -116,10 +114,6 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
     hasActiveChildBounties$(bounty.id)
   );
 
-  if (!(curatorSigner || isDue)) {
-    return null;
-  }
-
   const renderUnassignCurator = () => {
     if (curatorSigner) {
       return (
@@ -138,6 +132,7 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
           signer={selectedAccount?.polkadotSigner ?? null}
           createTx={bounty.unassignCurator}
           variant="destructive"
+          disabled={!isDue}
         >
           Unassign and slash curator
         </TransactionButton>
@@ -145,19 +140,18 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
     }
     return null;
   };
-  const renderExtendExpiry = () =>
-    curatorSigner ? (
-      <TransactionDialog
-        signer={curatorSigner}
-        dialogContent={(onSubmit) => (
-          <ExtendExpiryDailog bounty={bounty} onSubmit={onSubmit} />
-        )}
-      >
-        Extend Expiry
-      </TransactionDialog>
-    ) : null;
+  const renderExtendExpiry = () => (
+    <TransactionDialog
+      signer={curatorSigner}
+      dialogContent={(onSubmit) => (
+        <ExtendExpiryDailog bounty={bounty} onSubmit={onSubmit} />
+      )}
+    >
+      Extend Expiry
+    </TransactionDialog>
+  );
   const renderAwardBounty = () =>
-    curatorSigner && !hasActiveChildBounties ? (
+    !hasActiveChildBounties ? (
       <TransactionDialog
         signer={curatorSigner}
         dialogContent={(onSubmit) => (

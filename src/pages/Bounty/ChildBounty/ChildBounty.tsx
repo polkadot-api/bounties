@@ -202,7 +202,7 @@ const Active: FC<{
           ) : parentSigner ? (
             <TransactionButton
               createTx={bounty.unassignCurator}
-              signer={childSigner}
+              signer={parentSigner}
               variant="destructive"
             >
               Unassign and slash curator
