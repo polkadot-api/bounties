@@ -21,6 +21,7 @@ import {
   NEVER,
   Observable,
   of,
+  retry,
   scan,
   startWith,
   switchMap,
@@ -80,7 +81,19 @@ const extension$ = (name: string) => {
     // Wait for the extension to be available
     filter((extensions) => extensions.includes(name)),
     take(1),
-    switchMap(() => connectInjectedExtension(name)),
+    switchMap(() =>
+      defer(() => connectInjectedExtension(name)).pipe(
+        // PolkadotJS rejects the promise straight away instead of waiting for user input
+        retry({
+          delay(error) {
+            if (error?.message.includes("pending authorization request")) {
+              return timer(1000);
+            }
+            throw error;
+          },
+        })
+      )
+    ),
     map((extension) => ({
       type: ConnectStatus.Connected as const,
       extension,
