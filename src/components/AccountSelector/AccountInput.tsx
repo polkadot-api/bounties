@@ -93,7 +93,7 @@ export const AccountInput: FC<{
           role="combobox"
           aria-expanded={open}
           className={twMerge(
-            "flex w-64 justify-between overflow-hidden px-2 border border-border bg-input",
+            "flex w-64 justify-between overflow-hidden px-2 border border-border bg-background",
             className
           )}
           forceSvgSize={false}
@@ -103,6 +103,7 @@ export const AccountInput: FC<{
               value={value}
               name={hintedValue?.name}
               className="overflow-hidden"
+              copyable={false}
             />
           ) : (
             <span className="opacity-80">Select…</span>

@@ -19,9 +19,10 @@ export const TokenInput = forwardRef<
       symbol: string;
       decimals: number;
     };
+    placeholder?: string;
     className?: string;
   }
->(({ value: value, onChange, token, className }, outerRef) => {
+>(({ value, placeholder, onChange, token, className }, outerRef) => {
   const ref = useRef<HTMLInputElement>(null as unknown as HTMLInputElement);
 
   useEffect(() => {
@@ -72,18 +73,19 @@ export const TokenInput = forwardRef<
     <div
       ref={outerRef}
       className={twMerge(
-        "flex gap-2 py-1 px-2 border rounded items-center",
+        "flex overflow-hidden h-10 gap-2 py-1 px-2 border rounded-md items-center ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
         className
       )}
     >
       <input
-        className="outline-none flex-1"
+        className="outline-none flex-1 flex-shrink block min-w-0"
         ref={ref}
         type="text"
+        placeholder={placeholder}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />
-      <div className="text-slate-600">{token.symbol}</div>
+      <div className="text-slate-600 flex-shrink-0">{token.symbol}</div>
     </div>
   );
 });

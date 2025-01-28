@@ -2,15 +2,12 @@ import { typedApi } from "@/chain";
 import { getLinkedSigner$ } from "@/state/linkedSigners";
 import { createChildBountiesSdk } from "@polkadot-api/sdk-governance";
 import { state } from "@react-rxjs/core";
-import { map, of, switchMap, tap } from "rxjs";
+import { map, of, switchMap } from "rxjs";
 
 export const childBountiesSdk = createChildBountiesSdk(typedApi);
 
 export const childBountyKeys$ = state(
-  (parentId: number) =>
-    childBountiesSdk
-      .watch(parentId)
-      .bountyIds$.pipe(tap((v) => console.log("child bounty keys", v))),
+  (parentId: number) => childBountiesSdk.watch(parentId).bountyIds$,
   null
 );
 

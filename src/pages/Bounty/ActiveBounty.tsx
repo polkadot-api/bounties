@@ -29,6 +29,7 @@ import {
 } from "./ChildBounty/childBounties.state";
 import { ChildBounty as SdkChildBounty } from "./ChildBounty/ChildBounty";
 import { bountyCuratorSigner$ } from "./curatorSigner";
+import { BatchChildBounties } from "./BatchChildBounties";
 
 export const ActiveBounty: FC<{
   bounty: SdkActiveBounty;
@@ -77,7 +78,7 @@ export const ActiveBounty: FC<{
             </BountyDetails>
             <BountyActions bounty={bounty} />
             <ChildBounties id={bounty.id} />
-            <div>
+            <div className="flex justify-between">
               <TransactionDialog
                 signer={curatorSigner}
                 dialogContent={(onSubmit) => (
@@ -85,6 +86,18 @@ export const ActiveBounty: FC<{
                 )}
               >
                 Create Child Bounty
+              </TransactionDialog>
+              <TransactionDialog
+                signer={curatorSigner}
+                dialogContent={(onSubmit) => (
+                  <BatchChildBounties
+                    curator={bounty.curator}
+                    id={bounty.id}
+                    onSubmit={onSubmit}
+                  />
+                )}
+              >
+                Batch Child Bounties
               </TransactionDialog>
             </div>
           </>

@@ -35,7 +35,6 @@ export function trackTransaction(tx$: Observable<TxEvent>) {
                 render: "Waiting for confirmation…",
               }
             : {
-                type: "warning",
                 render:
                   "Transaction included in a block but is failing: " +
                   JSON.stringify(res.dispatchError),
