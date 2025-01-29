@@ -32,6 +32,7 @@ export const CopyText: React.FC<
       className={twMerge(className, disabled ? "opacity-50" : "")}
       type="button"
       onClick={copy}
+      tabIndex={-1}
     >
       {copied ? (
         <CheckCircle size={16} className="text-green-500 dark:text-green-300" />
