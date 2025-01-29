@@ -1,6 +1,6 @@
 import { client, typedApi } from "@/chain";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
-import { formatValue } from "@/components/token-formatter";
+import { format, formatValue } from "@/components/token-formatter";
 import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
 import {
@@ -146,6 +146,10 @@ const BatchChildBountiesForm: FC<BatchChildBountiesProps> = ({
       );
     });
 
+  const total = rows
+    .map((v) => v.amount)
+    .reduce((acc, v) => (acc == null || v == null ? null : acc + v), 0n);
+
   return (
     <div className="overflow-auto px-1 space-y-4">
       <table>
@@ -198,20 +202,17 @@ const BatchChildBountiesForm: FC<BatchChildBountiesProps> = ({
               </td>
             </tr>
           ))}
-          <tr>
-            <td></td>
-            <td></td>
-            <td className="text-sm text-muted-foreground text-center">
-              (min value:{" "}
-              {minimumValue != null
-                ? formatValue(minimumValue, DOT_TOKEN.decimals, true)
-                : "…"}
-              )
-            </td>
-            <td></td>
-          </tr>
         </tbody>
       </table>
+      <div className="flex justify-between">
+        <div className="text-sm text-muted-foreground">
+          Min amount per row:{" "}
+          {minimumValue != null ? format(minimumValue, DOT_TOKEN) : "…"}
+        </div>
+        <div>
+          Total payout: {total != null ? format(total, DOT_TOKEN) : "…"}
+        </div>
+      </div>
       <div className="flex justify-between items-start gap-2">
         <div className="text-sm text-muted-foreground">
           Note: This transaction will only work for the current child bounty
