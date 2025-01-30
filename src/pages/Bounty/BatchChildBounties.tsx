@@ -1,6 +1,6 @@
 import { client, typedApi } from "@/chain";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
-import { format, formatValue } from "@/components/token-formatter";
+import { format } from "@/components/token-formatter";
 import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import { MultiAddress } from "@polkadot-api/descriptors";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Trash2 } from "lucide-react";
 import { Binary, SS58String, Transaction } from "polkadot-api";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { catchError } from "rxjs";
 import { twMerge } from "tailwind-merge";
 
@@ -49,24 +49,30 @@ interface BatchChildBountiesProps {
 }
 
 export const BatchChildBounties: FC<BatchChildBountiesProps> = (props) => {
+  const [hasValue, setHasValue] = useState(false);
+
   return (
-    <DialogContent className="max-w-screen-md max-h-full overflow-hidden flex flex-col">
+    <DialogContent
+      className="max-w-screen-md max-h-full overflow-hidden flex flex-col"
+      onEscapeKeyDown={(evt) => hasValue && evt.preventDefault()}
+      onPointerDownOutside={(evt) => hasValue && evt.preventDefault()}
+    >
       <DialogHeader>
         <DialogTitle>Batch Child Bounties</DialogTitle>
         <DialogDescription>
           Create direct payouts for this bounty using child bounties
         </DialogDescription>
       </DialogHeader>
-      <BatchChildBountiesForm {...props} />
+      <BatchChildBountiesForm {...props} onValue={setHasValue} />
     </DialogContent>
   );
 };
 
-const BatchChildBountiesForm: FC<BatchChildBountiesProps> = ({
-  id,
-  curator,
-  onSubmit,
-}) => {
+const BatchChildBountiesForm: FC<
+  BatchChildBountiesProps & {
+    onValue: (value: boolean) => void;
+  }
+> = ({ id, curator, onSubmit, onValue }) => {
   const [rows, setRows] = useState<ChildRow[]>([]);
   const childId = useStateObservable(nextChildId$(id));
   const minimumValue = usePromise(
@@ -85,42 +91,42 @@ const BatchChildBountiesForm: FC<BatchChildBountiesProps> = ({
   const submit = () => {
     if (!isValid) return null;
 
-    const calls = [
+    const txs = [
       typedApi.tx.System.remark({
         remark: Binary.fromText(
           "Transaction created with https://bounties.usepapi.app/"
         ),
-      }).decodedCall,
+      }),
       ...rows.flatMap((row, i) => [
         typedApi.tx.ChildBounties.add_child_bounty({
           description: Binary.fromText(row.name),
           parent_bounty_id: id,
           value: row.amount!,
-        }).decodedCall,
+        }),
         typedApi.tx.ChildBounties.propose_curator({
           parent_bounty_id: id,
           child_bounty_id: childId + i,
           curator: MultiAddress.Id(curator),
           fee: 0n,
-        }).decodedCall,
+        }),
         typedApi.tx.ChildBounties.accept_curator({
           parent_bounty_id: id,
           child_bounty_id: childId + i,
-        }).decodedCall,
+        }),
         typedApi.tx.ChildBounties.award_child_bounty({
           parent_bounty_id: id,
           child_bounty_id: childId + i,
           beneficiary: MultiAddress.Id(row.recipient),
-        }).decodedCall,
+        }),
         typedApi.tx.ChildBounties.claim_child_bounty({
           parent_bounty_id: id,
           child_bounty_id: childId + i,
-        }).decodedCall,
+        }),
       ]),
     ];
 
     const tx = typedApi.tx.Utility.batch_all({
-      calls,
+      calls: txs.map((c) => c.decodedCall),
     });
     onSubmit(tx);
   };
@@ -149,6 +155,8 @@ const BatchChildBountiesForm: FC<BatchChildBountiesProps> = ({
   const total = rows
     .map((v) => v.amount)
     .reduce((acc, v) => (acc == null || v == null ? null : acc + v), 0n);
+
+  useEffect(() => onValue(rows.length > 0), [rows]);
 
   return (
     <div className="overflow-auto px-1 space-y-4">

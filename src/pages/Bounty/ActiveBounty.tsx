@@ -1,5 +1,4 @@
 import { typedApi } from "@/chain";
-import { selectedAccount$ } from "@/components/AccountSelector";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
@@ -12,14 +11,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { TransactionButton, TransactionDialog } from "@/Transactions";
+import { TransactionDialog } from "@/Transactions";
 import { ActiveBounty as SdkActiveBounty } from "@polkadot-api/sdk-governance";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Binary, Transaction } from "polkadot-api";
 import { FC, useEffect, useRef, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { defer, map } from "rxjs";
-import { BlockDue, getBlockTimeDiff, isBlockDue$ } from "./BlockDue";
+import { BatchChildBounties } from "./BatchChildBounties";
+import { BlockDue, getBlockTimeDiff } from "./BlockDue";
 import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
 import { BountyDetails } from "./BountyDetails";
 import { ChildBounties } from "./ChildBounty/ChildBounties";
@@ -29,7 +29,6 @@ import {
 } from "./ChildBounty/childBounties.state";
 import { ChildBounty as SdkChildBounty } from "./ChildBounty/ChildBounty";
 import { bountyCuratorSigner$ } from "./curatorSigner";
-import { BatchChildBounties } from "./BatchChildBounties";
 
 export const ActiveBounty: FC<{
   bounty: SdkActiveBounty;
@@ -120,39 +119,11 @@ export const ActiveBounty: FC<{
  *  => reject origin if no active child bounties
  */
 const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
-  const selectedAccount = useStateObservable(selectedAccount$);
   const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id));
-  const isDue = useStateObservable(isBlockDue$(bounty.updateDue));
   const hasActiveChildBounties = useStateObservable(
     hasActiveChildBounties$(bounty.id)
   );
 
-  const renderUnassignCurator = () => {
-    if (curatorSigner) {
-      return (
-        <TransactionButton
-          createTx={bounty.unassignCurator}
-          signer={curatorSigner}
-          variant="secondary"
-        >
-          Give up curator role
-        </TransactionButton>
-      );
-    }
-    if (isDue) {
-      return (
-        <TransactionButton
-          signer={selectedAccount?.polkadotSigner ?? null}
-          createTx={bounty.unassignCurator}
-          variant="destructive"
-          disabled={!isDue}
-        >
-          Unassign and slash curator
-        </TransactionButton>
-      );
-    }
-    return null;
-  };
   const renderExtendExpiry = () => (
     <TransactionDialog
       signer={curatorSigner}
@@ -183,7 +154,6 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
         {renderExtendExpiry()}
         {renderAwardBounty()}
       </div>
-      <div>{renderUnassignCurator()}</div>
     </div>
   );
 };
@@ -241,13 +211,20 @@ export const AwardBountyDialog: FC<{
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Award Bounty</DialogTitle>
-        <DialogDescription>Award the bounty to a beneficiary</DialogDescription>
+        <DialogDescription>
+          Award the complete value of the bounty to a beneficiary
+        </DialogDescription>
       </DialogHeader>
       <div className="overflow-hidden px-1 space-y-4">
         <label className="flex flex-col">
           <span className="px-1">Beneficiary</span>
           <AccountInput className="w-full" value={value} onChange={setValue} />
         </label>
+        <div className="text-sm text-destructive">
+          This will move the bounty to the <b>Pending Payout</b> state, which{" "}
+          <b>will award all of the funds</b> of the bounty{" "}
+          <b>to the selected beneficiary</b>.
+        </div>
         <Button disabled={!value} onClick={() => onSubmit(value!)}>
           Submit
         </Button>

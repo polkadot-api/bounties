@@ -31,7 +31,8 @@ export const TokenInput = forwardRef<
     const currentValue = parseValue(ref.current.value, token.decimals).value;
     if (value === currentValue) return;
 
-    ref.current.value = value == null ? "" : formatValue(value, token.decimals);
+    ref.current.value =
+      value == null ? "" : formatValue(value, token.decimals, false);
   }, [value, token.decimals]);
 
   const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +41,6 @@ export const TokenInput = forwardRef<
       token.decimals,
       evt.target.selectionStart ?? 0
     );
-    // console.log({ original: evt.target.selectionStart, cursor });
     evt.target.value = cleaned;
     evt.target.setSelectionRange(cursor, cursor);
     onChange?.(value);
@@ -49,14 +49,22 @@ export const TokenInput = forwardRef<
   const handleKeyDown = (evt: React.KeyboardEvent<HTMLInputElement>) => {
     if (evt.key.length > 1 || evt.ctrlKey || evt.metaKey) return;
 
-    const singletonKeys = [fractionalSeparator, "-", "+"];
+    const singletonKeys = ["-", "+"];
     if (
       singletonKeys.some((v) => v === evt.key) &&
       evt.currentTarget.value.includes(evt.key)
     ) {
       evt.preventDefault();
     }
-    if (evt.key === fractionalSeparator) return;
+    if (evt.key === fractionalSeparator || evt.key === thousandsSeparator) {
+      if (
+        evt.currentTarget.value.includes(fractionalSeparator) ||
+        evt.currentTarget.value.includes(thousandsSeparator)
+      ) {
+        evt.preventDefault();
+      }
+      return;
+    }
 
     const cursor = evt.currentTarget.selectionStart ?? 0;
     if (cursor > 0 && (evt.key === "-" || evt.key === "+")) {
@@ -95,6 +103,8 @@ function parseValue(
   decimals: number,
   cursor: number = 0
 ): { value: bigint | null; cleaned: string; cursor: number } {
+  strValue = strValue.replaceAll(thousandsSeparator, fractionalSeparator);
+
   const parts = strValue.split(fractionalSeparator);
   if (parts.length > 2 || strValue === "") {
     return {
@@ -104,9 +114,7 @@ function parseValue(
     };
   }
 
-  const originalInteger = parts[0];
-  parts[0] = parts[0].replaceAll(thousandsSeparator, "");
-  parts[1] = parts[1]?.replaceAll(thousandsSeparator, "")?.slice(0, decimals);
+  parts[1] = parts[1]?.slice(0, decimals);
 
   // eslint-disable-next-line prefer-const
   let [integer, fractional] = parts;
@@ -121,8 +129,8 @@ function parseValue(
       cursor,
     };
   }
-  const cleaned = rejoin(integer, fractional);
-  cursor = getCursorPosition(cursor, originalInteger);
+  const cleaned =
+    integer + (fractional == null ? "" : fractionalSeparator + fractional);
 
   const firstChar = integer[0];
   const sign = firstChar === "-" ? -1n : 1n;
@@ -139,35 +147,4 @@ function parseValue(
     cleaned,
     cursor,
   };
-}
-
-function rejoin(integer: string, fractional: string | undefined) {
-  const headLength = integer.length % 3;
-  const head = integer.slice(0, headLength);
-  const parts = head ? [head] : [];
-  for (let i = headLength; i < integer.length; i += 3) {
-    parts.push(integer.slice(i, i + 3));
-  }
-  return (
-    parts.join(thousandsSeparator) +
-    (fractional == null ? "" : fractionalSeparator + fractional)
-  );
-}
-
-function getCursorPosition(cursor: number, integer: string): number {
-  const originalOccurrences =
-    integer.match(new RegExp(thousandsSeparator, "g"))?.length ?? 0;
-
-  if (cursor > integer.length) {
-    const newThousands = Math.floor((integer.length - originalOccurrences) / 3);
-
-    return cursor - (originalOccurrences - newThousands);
-  }
-
-  const integerToCursor = integer.slice(0, cursor);
-  const occurrences =
-    integerToCursor.match(new RegExp(thousandsSeparator, "g"))?.length ?? 0;
-  cursor = cursor - occurrences;
-  const cursorMod = (integer.length - originalOccurrences - cursor) % 3;
-  return cursor + Math.max(0, Math.ceil((cursor + cursorMod) / 3) - 1);
 }
