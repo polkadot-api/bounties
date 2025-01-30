@@ -154,9 +154,11 @@ function rejoin(integer: string, fractional: string | undefined) {
   );
 }
 
+const thousandsSeparatorRegex =
+  thousandsSeparator === "." ? /\./g : new RegExp(thousandsSeparator, "g");
 function getCursorPosition(cursor: number, integer: string): number {
   const originalOccurrences =
-    integer.match(new RegExp(thousandsSeparator, "g"))?.length ?? 0;
+    integer.match(thousandsSeparatorRegex)?.length ?? 0;
 
   if (cursor > integer.length) {
     const newThousands = Math.floor((integer.length - originalOccurrences) / 3);
@@ -166,7 +168,7 @@ function getCursorPosition(cursor: number, integer: string): number {
 
   const integerToCursor = integer.slice(0, cursor);
   const occurrences =
-    integerToCursor.match(new RegExp(thousandsSeparator, "g"))?.length ?? 0;
+    integerToCursor.match(thousandsSeparatorRegex)?.length ?? 0;
   cursor = cursor - occurrences;
   const cursorMod = (integer.length - originalOccurrences - cursor) % 3;
   return cursor + Math.max(0, Math.ceil((cursor + cursorMod) / 3) - 1);
