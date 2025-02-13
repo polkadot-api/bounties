@@ -29,6 +29,7 @@ import {
 } from "./ChildBounty/childBounties.state";
 import { ChildBounty as SdkChildBounty } from "./ChildBounty/ChildBounty";
 import { bountyCuratorSigner$ } from "./curatorSigner";
+import { remark } from "./remark";
 
 export const ActiveBounty: FC<{
   bounty: SdkActiveBounty;
@@ -140,7 +141,7 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
         signer={curatorSigner}
         dialogContent={(onSubmit) => (
           <AwardBountyDialog
-            onSubmit={(value) => onSubmit(bounty.award(value))}
+            onSubmit={(value) => onSubmit(remark(bounty.award(value)))}
           />
         )}
       >

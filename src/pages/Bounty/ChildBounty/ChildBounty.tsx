@@ -27,6 +27,7 @@ import { AwardBountyDialog } from "../ActiveBounty";
 import { BlockDue, isBlockDue$ } from "../BlockDue";
 import { BountyDetail } from "../BountyDetail";
 import { bountyCuratorSigner$ } from "../curatorSigner";
+import { remark } from "../remark";
 import { childBounty$, childBountyCuratorSigner$ } from "./childBounties.state";
 
 export const ChildBounty: FC = () => {
@@ -184,7 +185,7 @@ const Active: FC<{
           signer={childSigner ?? parentSigner}
           dialogContent={(onSubmit) => (
             <AwardBountyDialog
-              onSubmit={(value) => onSubmit(bounty.award(value))}
+              onSubmit={(value) => onSubmit(remark(bounty.award(value)))}
             />
           )}
         >

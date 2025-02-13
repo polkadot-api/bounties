@@ -92,7 +92,7 @@ const BatchChildBountiesForm: FC<
     if (!isValid) return null;
 
     const txs = [
-      typedApi.tx.System.remark({
+      typedApi.tx.System.remark_with_event({
         remark: Binary.fromText(
           "Transaction created with https://bounties.usepapi.app/"
         ),
