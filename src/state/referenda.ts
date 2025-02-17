@@ -6,11 +6,13 @@ import { map, MonoTypeOperatorFunction, Observable } from "rxjs";
 export const referendaSdk = createReferendaSdk(typedApi);
 
 const sharedOngoingReferenda$ = state(
-  referendaSdk.watch.ongoingReferenda$.pipe(map((v) => Array.from(v.values())))
+  referendaSdk.watch.referenda$.pipe(
+    map((v) => Array.from(v.values()).filter((ref) => ref.type === "Ongoing")),
+  ),
 );
 
 export const ongoingReferenda$ = sharedOngoingReferenda$.pipe(
-  delayUnsubscription(60 * 1000)
+  delayUnsubscription(60 * 1000),
 );
 
 function delayUnsubscription<T>(ms: number): MonoTypeOperatorFunction<T> {
