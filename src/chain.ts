@@ -1,10 +1,12 @@
 import { polkadot } from "@polkadot-api/descriptors";
+import { state } from "@react-rxjs/core";
 import { createClient } from "polkadot-api";
 import { withLogsRecorder } from "polkadot-api/logs-provider";
 import { getSmProvider } from "polkadot-api/sm-provider";
 import { startFromWorker } from "polkadot-api/smoldot/from-worker";
 import SmWorker from "polkadot-api/smoldot/worker?worker";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
+import { map, take } from "rxjs";
 import { withChopsticksEnhancer } from "./lib/chopsticksEnhancer";
 
 const USE_CHOPSTICKS = import.meta.env.VITE_WITH_CHOPSTICKS;
@@ -33,3 +35,11 @@ export const client = createClient(
 );
 
 export const typedApi = client.getTypedApi(polkadot);
+
+export const hasConnected$ = state(
+  client.finalizedBlock$.pipe(
+    map(() => true),
+    take(1)
+  ),
+  false
+);

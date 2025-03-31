@@ -1,4 +1,5 @@
 import { DotValue } from "@/components/DotValue";
+import { Loading } from "@/components/Loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { bounty$, bountyIds$ } from "@/state/bounties";
@@ -18,7 +19,7 @@ export const HomePage = () => {
           <CreateBountyButton />
         </CardHeader>
         <CardContent>
-          {bounties ? (
+          {bounties?.length ? (
             <Table>
               <TableBody>
                 {bounties.map((id) => (
@@ -27,7 +28,7 @@ export const HomePage = () => {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-center">Loading…</p>
+            <Loading>Fetching bounties</Loading>
           )}
         </CardContent>
       </Card>

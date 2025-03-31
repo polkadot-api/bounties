@@ -10,6 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { usePromise } from "@/lib/usePromise";
 import { MultiAddress } from "@polkadot-api/descriptors";
 import { state, useStateObservable } from "@react-rxjs/core";
@@ -73,6 +75,7 @@ const BatchChildBountiesForm: FC<
     onValue: (value: boolean) => void;
   }
 > = ({ id, curator, onSubmit, onValue }) => {
+  const [extendExpiry, setExtendExpiry] = useState(true);
   const [rows, setRows] = useState<ChildRow[]>([]);
   const childId = useStateObservable(nextChildId$(id));
   const minimumValue = usePromise(
@@ -97,6 +100,14 @@ const BatchChildBountiesForm: FC<
           "Transaction created with https://bounties.usepapi.app/"
         ),
       }),
+      ...(extendExpiry
+        ? [
+            typedApi.tx.Bounties.extend_bounty_expiry({
+              bounty_id: id,
+              remark: Binary.fromText("Bounty is still active"),
+            }),
+          ]
+        : []),
       ...rows.flatMap((row, i) => [
         typedApi.tx.ChildBounties.add_child_bounty({
           description: Binary.fromText(row.name),
@@ -220,6 +231,17 @@ const BatchChildBountiesForm: FC<
         <div>
           Total payout: {total != null ? format(total, DOT_TOKEN) : "…"}
         </div>
+      </div>
+      <div>
+        <Label
+          className={twMerge(
+            "flex items-center gap-1",
+            !extendExpiry && "text-muted-foreground"
+          )}
+        >
+          <Switch checked={extendExpiry} onCheckedChange={setExtendExpiry} />
+          Also extend bounty expiration date
+        </Label>
       </div>
       <div className="flex justify-between items-start gap-2">
         <div className="text-sm text-muted-foreground">

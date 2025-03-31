@@ -23,12 +23,13 @@ import {
 } from "./BountyReferendum";
 import { bountyCuratorSigner$ } from "./curatorSigner";
 import { ProposeCurator } from "./ProposeCurator";
+import { Loading } from "@/components/Loading";
 
 export const Bounty = () => {
   const id = Number(useParams().id);
   const bounty = useStateObservable(bounty$(id));
 
-  if (!bounty) return null;
+  if (!bounty) return <Loading className="p-2">Loading bounty…</Loading>;
 
   const getContent = () => {
     switch (bounty.type) {
