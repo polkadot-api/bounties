@@ -1,5 +1,5 @@
-import { hasConnected$ } from "@/chain";
 import { DotValue } from "@/components/DotValue";
+import { Loading } from "@/components/Loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { bounty$, bountyIds$ } from "@/state/bounties";
@@ -7,11 +7,9 @@ import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreateBountyButton } from "../CreateBounty";
-import { Spinner } from "@/components/Icons";
 
 export const HomePage = () => {
   const bounties = useStateObservable(bountyIds$);
-  const hasConnected = useStateObservable(hasConnected$);
 
   return (
     <div className="p-2">
@@ -30,10 +28,7 @@ export const HomePage = () => {
               </TableBody>
             </Table>
           ) : (
-            <div className="flex items-center justify-center gap-2 text-muted-foreground">
-              <Spinner />
-              {hasConnected ? "Fetching bounties" : "Connecting"}
-            </div>
+            <Loading>Fetching bounties</Loading>
           )}
         </CardContent>
       </Card>
