@@ -1,3 +1,4 @@
+import { hasConnected$ } from "@/chain";
 import { DotValue } from "@/components/DotValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -6,9 +7,11 @@ import { useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreateBountyButton } from "../CreateBounty";
+import { Spinner } from "@/components/Icons";
 
 export const HomePage = () => {
   const bounties = useStateObservable(bountyIds$);
+  const hasConnected = useStateObservable(hasConnected$);
 
   return (
     <div className="p-2">
@@ -18,7 +21,7 @@ export const HomePage = () => {
           <CreateBountyButton />
         </CardHeader>
         <CardContent>
-          {bounties ? (
+          {bounties?.length ? (
             <Table>
               <TableBody>
                 {bounties.map((id) => (
@@ -27,7 +30,10 @@ export const HomePage = () => {
               </TableBody>
             </Table>
           ) : (
-            <p className="text-center">Loading…</p>
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <Spinner />
+              {hasConnected ? "Fetching bounties" : "Connecting"}
+            </div>
           )}
         </CardContent>
       </Card>
