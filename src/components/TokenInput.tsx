@@ -86,14 +86,14 @@ export const TokenInput = forwardRef<
       )}
     >
       <input
-        className="outline-none flex-1 flex-shrink block min-w-0"
+        className="outline-hidden flex-1 shrink block min-w-0"
         ref={ref}
         type="text"
         placeholder={placeholder}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />
-      <div className="text-slate-600 flex-shrink-0">{token.symbol}</div>
+      <div className="text-slate-600 shrink-0">{token.symbol}</div>
     </div>
   );
 });

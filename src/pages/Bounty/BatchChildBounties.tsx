@@ -55,7 +55,7 @@ export const BatchChildBounties: FC<BatchChildBountiesProps> = (props) => {
 
   return (
     <DialogContent
-      className="max-w-screen-md max-h-full overflow-hidden flex flex-col"
+      className="max-w-3xl max-h-full overflow-hidden flex flex-col"
       onEscapeKeyDown={(evt) => hasValue && evt.preventDefault()}
       onPointerDownOutside={(evt) => hasValue && evt.preventDefault()}
     >
