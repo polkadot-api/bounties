@@ -93,7 +93,7 @@ export const OnChainIdentity: FC<{
 
   const identicon = (
     <PolkadotIdenticon
-      className="flex-shrink-0"
+      className="shrink-0"
       publicKey={getPublicKey(value)}
       size={28}
     />
