@@ -1,5 +1,6 @@
 import { client, typedApi } from "@/chain";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
+import { ExternalLink } from "@/components/ExternalLink";
 import { format } from "@/components/token-formatter";
 import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { usePromise } from "@/lib/usePromise";
+import { getNestedLinkedAccounts$ } from "@/state/linkedSigners";
 import { MultiAddress } from "@polkadot-api/descriptors";
+import { NestedLinkedAccountsResult } from "@polkadot-api/sdk-accounts";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Trash2 } from "lucide-react";
 import { Binary, SS58String, Transaction } from "polkadot-api";
-import { FC, useEffect, useState } from "react";
-import { catchError } from "rxjs";
+import { FC, useEffect, useMemo, useState } from "react";
+import { catchError, combineLatest, map, takeLast } from "rxjs";
 import { twMerge } from "tailwind-merge";
 
 interface ChildRow {
@@ -40,6 +43,65 @@ const nextChildId$ = state(
       catchError(() =>
         typedApi.query.ChildBounties.ChildBountyCount.watchValue()
       )
+    ),
+  null
+);
+
+const curatorMultisigUrl$ = state(
+  (curator: SS58String) =>
+    combineLatest([
+      getNestedLinkedAccounts$(curator),
+      typedApi.compatibilityToken,
+    ]).pipe(
+      takeLast(1),
+      map(([result, token]) => {
+        let txWrapper = (tx: Transaction<any, any, any, any>) => tx;
+
+        let currentResult: NestedLinkedAccountsResult | null = result;
+        let addr = curator;
+        while (currentResult) {
+          switch (currentResult.type) {
+            case "root":
+              return null;
+            case "proxy": {
+              const proxyAddr = addr;
+              addr = currentResult.value.accounts[0].address;
+              currentResult = currentResult.value.accounts[0].linkedAccounts;
+
+              const prevWrapper = txWrapper;
+              txWrapper = (tx) =>
+                typedApi.tx.Proxy.proxy({
+                  real: MultiAddress.Id(proxyAddr),
+                  call: prevWrapper(tx).decodedCall,
+                  force_proxy_type: undefined,
+                });
+              break;
+            }
+            case "multisig": {
+              const multisigInfo = {
+                addresses: currentResult.value.accounts.map((v) => v.address),
+                threshold: currentResult.value.threshold,
+              };
+              return {
+                generateUrl: (tx: Transaction<any, any, any, any> | null) => {
+                  const callData = tx
+                    ? txWrapper(tx).getEncodedData(token).asHex()
+                    : null;
+
+                  const params = new URLSearchParams();
+                  params.set("chain", "sm-polkadot");
+                  callData != null && params.set("calldata", callData);
+                  params.set("signatories", multisigInfo.addresses.join("_"));
+                  params.set("threshold", String(multisigInfo.threshold));
+                  return `https://multisig.usepapi.app/#${params.toString()}`;
+                },
+              };
+            }
+          }
+        }
+
+        return null;
+      })
     ),
   null
 );
@@ -77,6 +139,7 @@ const BatchChildBountiesForm: FC<
 > = ({ id, curator, onSubmit, onValue }) => {
   const [extendExpiry, setExtendExpiry] = useState(true);
   const [rows, setRows] = useState<ChildRow[]>([]);
+  const multisigUrl = useStateObservable(curatorMultisigUrl$(curator));
   const childId = useStateObservable(nextChildId$(id));
   const minimumValue = usePromise(
     async () => typedApi.constants.ChildBounties.ChildBountyValueMinimum(),
@@ -85,61 +148,25 @@ const BatchChildBountiesForm: FC<
 
   const isValid =
     childId != null &&
-    rows.length &&
+    rows.length > 0 &&
     minimumValue != null &&
     rows.every(
       (r) => r.amount != null && r.amount >= minimumValue && r.recipient
     );
 
+  const batchTx = useMemo(
+    () =>
+      isValid ? createBatchTx(id, childId, rows, curator, extendExpiry) : null,
+    [isValid, childId, rows, curator, extendExpiry]
+  );
+  const url = useMemo(
+    () => (multisigUrl ? multisigUrl.generateUrl(batchTx) : null),
+    [multisigUrl, batchTx]
+  );
   const submit = () => {
-    if (!isValid) return null;
+    if (!batchTx) return null;
 
-    const txs = [
-      typedApi.tx.System.remark_with_event({
-        remark: Binary.fromText(
-          "Transaction created with https://bounties.usepapi.app/"
-        ),
-      }),
-      ...(extendExpiry
-        ? [
-            typedApi.tx.Bounties.extend_bounty_expiry({
-              bounty_id: id,
-              remark: Binary.fromText("Bounty is still active"),
-            }),
-          ]
-        : []),
-      ...rows.flatMap((row, i) => [
-        typedApi.tx.ChildBounties.add_child_bounty({
-          description: Binary.fromText(row.name),
-          parent_bounty_id: id,
-          value: row.amount!,
-        }),
-        typedApi.tx.ChildBounties.propose_curator({
-          parent_bounty_id: id,
-          child_bounty_id: childId + i,
-          curator: MultiAddress.Id(curator),
-          fee: 0n,
-        }),
-        typedApi.tx.ChildBounties.accept_curator({
-          parent_bounty_id: id,
-          child_bounty_id: childId + i,
-        }),
-        typedApi.tx.ChildBounties.award_child_bounty({
-          parent_bounty_id: id,
-          child_bounty_id: childId + i,
-          beneficiary: MultiAddress.Id(row.recipient),
-        }),
-        typedApi.tx.ChildBounties.claim_child_bounty({
-          parent_bounty_id: id,
-          child_bounty_id: childId + i,
-        }),
-      ]),
-    ];
-
-    const tx = typedApi.tx.Utility.batch_all({
-      calls: txs.map((c) => c.decodedCall),
-    });
-    onSubmit(tx);
+    onSubmit(batchTx);
   };
 
   const rowUpdater = (index: number, prop: keyof ChildRow) => (value: any) =>
@@ -253,6 +280,79 @@ const BatchChildBountiesForm: FC<
           Submit
         </Button>
       </div>
+      {url ? (
+        <div className="text-muted-foreground space-y-2">
+          <p>
+            Submitting will create a multisig call, pending to be approved by
+            others members of the team. They will have to go to tools like{" "}
+            <ExternalLink href="https://multix.cloud/?network=polkadot">
+              Multix
+            </ExternalLink>{" "}
+            to submit their approval.
+          </p>
+          <p>
+            Alternatively, you can use a{" "}
+            <ExternalLink href={url}>Multisig call link</ExternalLink>, share it
+            with other members of the team, and submit it from there. This
+            alternative process doesn't rely on any indexer, for a truly
+            decentralized experience.
+          </p>
+        </div>
+      ) : null}
     </div>
   );
+};
+
+const createBatchTx = (
+  id: number,
+  childId: number,
+  rows: ChildRow[],
+  curator: SS58String,
+  extendExpiry: boolean
+) => {
+  const txs = [
+    typedApi.tx.System.remark_with_event({
+      remark: Binary.fromText(
+        "Transaction created with https://bounties.usepapi.app/"
+      ),
+    }),
+    ...(extendExpiry
+      ? [
+          typedApi.tx.Bounties.extend_bounty_expiry({
+            bounty_id: id,
+            remark: Binary.fromText("Bounty is still active"),
+          }),
+        ]
+      : []),
+    ...rows.flatMap((row, i) => [
+      typedApi.tx.ChildBounties.add_child_bounty({
+        description: Binary.fromText(row.name),
+        parent_bounty_id: id,
+        value: row.amount!,
+      }),
+      typedApi.tx.ChildBounties.propose_curator({
+        parent_bounty_id: id,
+        child_bounty_id: childId + i,
+        curator: MultiAddress.Id(curator),
+        fee: 0n,
+      }),
+      typedApi.tx.ChildBounties.accept_curator({
+        parent_bounty_id: id,
+        child_bounty_id: childId + i,
+      }),
+      typedApi.tx.ChildBounties.award_child_bounty({
+        parent_bounty_id: id,
+        child_bounty_id: childId + i,
+        beneficiary: MultiAddress.Id(row.recipient),
+      }),
+      typedApi.tx.ChildBounties.claim_child_bounty({
+        parent_bounty_id: id,
+        child_bounty_id: childId + i,
+      }),
+    ]),
+  ];
+
+  return typedApi.tx.Utility.batch_all({
+    calls: txs.map((c) => c.decodedCall),
+  });
 };

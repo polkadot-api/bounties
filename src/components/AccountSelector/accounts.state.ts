@@ -60,7 +60,7 @@ export type ExtensionState =
 const SELECTED_EXTENSIONS_KEY = "selected-extensions";
 const getPreselectedExtensions = () => {
   try {
-    const res = ["polkadot-js"]; // JSON.parse(localStorage.getItem(SELECTED_EXTENSIONS_KEY)!);
+    const res = JSON.parse(localStorage.getItem(SELECTED_EXTENSIONS_KEY)!);
     if (Array.isArray(res)) return res;
     // eslint-disable-next-line no-empty
   } catch (_) {}

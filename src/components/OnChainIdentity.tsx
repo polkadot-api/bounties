@@ -15,7 +15,7 @@ import {
 } from "polkadot-api";
 import { getSmProvider } from "polkadot-api/sm-provider";
 import { FC } from "react";
-import { catchError, map, of, tap } from "rxjs";
+import { catchError, from, map, of, tap } from "rxjs";
 import { PolkadotIdenticon } from "./PolkadotIdenticon";
 import { withLogsRecorder } from "polkadot-api/logs-provider";
 import { CopyText } from "./CopyText";
@@ -55,7 +55,7 @@ export const isVerified = (identity: Identity | null) =>
 
 const identity$ = state(
   (address: SS58String) =>
-    typedApi.query.Identity.IdentityOf.watchValue(address).pipe(
+    from(typedApi.query.Identity.IdentityOf.getValue(address)).pipe(
       map((res): Identity | null => {
         const displayName = res && readIdentityData(res[0].info.display);
         return displayName
