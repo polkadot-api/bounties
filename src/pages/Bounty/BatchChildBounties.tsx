@@ -93,7 +93,7 @@ const curatorMultisigUrl$ = state(
                   callData != null && params.set("calldata", callData);
                   params.set("signatories", multisigInfo.addresses.join("_"));
                   params.set("threshold", String(multisigInfo.threshold));
-                  return `https://multisig.usepapi.app/#${params.toString()}`;
+                  return `https://multisig.usepapi.app/?${params.toString()}`;
                 },
               };
             }
