@@ -5,11 +5,20 @@ import {
   fractionalSeparator,
   thousandsSeparator,
 } from "./token-formatter";
+import { KnownChains, matchedChain } from "@/chainRoute";
 
-export const DOT_TOKEN = {
-  decimals: 10,
-  symbol: "DOT",
+const chainTokens: Record<KnownChains, { decimals: number; symbol: string }> = {
+  polkadot: {
+    decimals: 10,
+    symbol: "DOT",
+  },
+  kusama: {
+    decimals: 12,
+    symbol: "KSM",
+  },
 };
+
+export const SELECTED_TOKEN = chainTokens[matchedChain];
 export const TokenInput = forwardRef<
   HTMLDivElement,
   {

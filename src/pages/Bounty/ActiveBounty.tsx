@@ -1,7 +1,7 @@
 import { typedApi } from "@/chain";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { IdentityLinks } from "@/components/IdentityLinks";
-import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -256,7 +256,7 @@ const AddChildDialog: FC<{
           <span className="px-1">Value</span>
           <TokenInput
             className="w-full"
-            token={DOT_TOKEN}
+            token={SELECTED_TOKEN}
             value={value}
             onChange={setValue}
           />

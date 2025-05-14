@@ -1,7 +1,7 @@
 import { typedApi } from "@/chain";
 import { selectedAccount$ } from "@/components/AccountSelector";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
-import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -211,7 +211,7 @@ const ProposeBountyForm: FC<{ id: number }> = ({ id }) => {
             <FormItem>
               <FormLabel>Curator Fee</FormLabel>
               <FormControl>
-                <TokenInput {...field} token={DOT_TOKEN} />
+                <TokenInput {...field} token={SELECTED_TOKEN} />
               </FormControl>
               <FormDescription>
                 Amount of tokens awarded to the curator for this bounty

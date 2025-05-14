@@ -1,5 +1,5 @@
 import { typedApi } from "@/chain";
-import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
 import { format } from "@/components/token-formatter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ const getProposeBountySchema = ({
       .bigint({
         invalid_type_error: "Value is required",
       })
-      .min(minValue, `Must be at least ${format(minValue, DOT_TOKEN)}`),
+      .min(minValue, `Must be at least ${format(minValue, SELECTED_TOKEN)}`),
     description: z.string().max(maxLength),
   });
 };
@@ -86,7 +86,7 @@ export const ProposeBountyForm: FC<{ className?: string }> = ({
             <FormItem>
               <FormLabel>Value</FormLabel>
               <FormControl>
-                <TokenInput {...field} token={DOT_TOKEN} />
+                <TokenInput {...field} token={SELECTED_TOKEN} />
               </FormControl>
               <FormDescription>
                 Amount of tokens awarded by this bounty
@@ -145,7 +145,7 @@ const BondCost = () => {
   const deposit = format(
     bondConstants.base +
       BigInt(values.description.length) * bondConstants.perByte,
-    DOT_TOKEN
+    SELECTED_TOKEN
   );
 
   return (
