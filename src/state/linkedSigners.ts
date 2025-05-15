@@ -1,4 +1,5 @@
 import { typedApi } from "@/chain";
+import { matchedChain } from "@/chainRoute";
 import { selectedAccount$ } from "@/components/AccountSelector";
 import { getMultisigSigner, getProxySigner } from "@polkadot-api/meta-signers";
 import {
@@ -21,7 +22,10 @@ import {
   take,
 } from "rxjs";
 
-const linkedAccountsSdk = createLinkedAccountsSdk(typedApi, novasamaProvider);
+const linkedAccountsSdk = createLinkedAccountsSdk(
+  typedApi,
+  novasamaProvider(matchedChain)
+);
 
 export const getNestedLinkedAccounts$ =
   linkedAccountsSdk.getNestedLinkedAccounts$;

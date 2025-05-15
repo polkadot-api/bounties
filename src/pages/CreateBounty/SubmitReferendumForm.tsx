@@ -73,7 +73,7 @@ export const SubmitReferendumForm: FC<{
         <div>
           <Label>Track</Label>
           <div className="pl-2 text-foreground/80">
-            {getTrackName(details.origin)}
+            {getTrackName(details.origin as PolkadotRuntimeOriginCaller)}
           </div>
         </div>
         <div>
