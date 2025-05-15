@@ -1,8 +1,9 @@
 import { client, typedApi } from "@/chain";
+import { matchedChain } from "@/chainRoute";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { ExternalLink } from "@/components/ExternalLink";
 import { format } from "@/components/token-formatter";
-import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -89,7 +90,7 @@ const curatorMultisigUrl$ = state(
                     : null;
 
                   const params = new URLSearchParams();
-                  params.set("chain", "sm-polkadot");
+                  params.set("chain", "sm-" + matchedChain);
                   callData != null && params.set("calldata", callData);
                   params.set("signatories", multisigInfo.addresses.join("_"));
                   params.set("threshold", String(multisigInfo.threshold));
@@ -235,7 +236,7 @@ const BatchChildBountiesForm: FC<
                 <TokenInput
                   className="w-40"
                   placeholder="0.00"
-                  token={DOT_TOKEN}
+                  token={SELECTED_TOKEN}
                   value={row.amount}
                   onChange={rowUpdater(i, "amount")}
                 />
@@ -253,10 +254,10 @@ const BatchChildBountiesForm: FC<
       <div className="flex justify-between">
         <div className="text-sm text-muted-foreground">
           Min amount per row:{" "}
-          {minimumValue != null ? format(minimumValue, DOT_TOKEN) : "…"}
+          {minimumValue != null ? format(minimumValue, SELECTED_TOKEN) : "…"}
         </div>
         <div>
-          Total payout: {total != null ? format(total, DOT_TOKEN) : "…"}
+          Total payout: {total != null ? format(total, SELECTED_TOKEN) : "…"}
         </div>
       </div>
       <div>

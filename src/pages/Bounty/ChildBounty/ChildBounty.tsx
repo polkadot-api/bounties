@@ -3,7 +3,7 @@ import { selectedAccount$ } from "@/components/AccountSelector";
 import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { DotValue } from "@/components/DotValue";
 import { IdentityLinks } from "@/components/IdentityLinks";
-import { DOT_TOKEN, TokenInput } from "@/components/TokenInput";
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -303,7 +303,7 @@ const ProposeCuratorDialog: FC<{
           <span className="px-1">Fee</span>
           <TokenInput
             className="w-full"
-            token={DOT_TOKEN}
+            token={SELECTED_TOKEN}
             value={fee}
             onChange={setFee}
           />
