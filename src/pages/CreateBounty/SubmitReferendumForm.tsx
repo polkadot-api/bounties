@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { bounty$ } from "@/state/bounties";
 import { referendaSdk } from "@/state/referenda";
-import { PolkadotRuntimeOriginCaller } from "@polkadot-api/descriptors";
+import { PolkadotRuntimeOriginCallerOriginal } from "@polkadot-api/sdk-governance";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Loader2 } from "lucide-react";
 import { FC, ReactNode } from "react";
@@ -73,7 +73,9 @@ export const SubmitReferendumForm: FC<{
         <div>
           <Label>Track</Label>
           <div className="pl-2 text-foreground/80">
-            {getTrackName(details.origin as PolkadotRuntimeOriginCaller)}
+            {getTrackName(
+              details.origin as PolkadotRuntimeOriginCallerOriginal
+            )}
           </div>
         </div>
         <div>
@@ -109,7 +111,7 @@ const SubmitButton: FC<{ onClick: () => void }> = ({ onClick }) => {
   );
 };
 
-const getTrackName = (origin: PolkadotRuntimeOriginCaller) => {
+const getTrackName = (origin: PolkadotRuntimeOriginCallerOriginal) => {
   if (origin.type !== "Origins") return "Root";
   const spenderOrigin = origin.value;
   switch (spenderOrigin.type) {

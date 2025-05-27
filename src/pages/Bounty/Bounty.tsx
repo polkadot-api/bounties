@@ -44,6 +44,7 @@ export const Bounty = () => {
       case "PendingPayout":
         return <PendingPayoutBounty bounty={bounty} />;
       case "Approved":
+      case "ApprovedWithCurator":
         return (
           <BountyDetails bounty={bounty}>
             <BountyDetailGroup>

@@ -57,11 +57,11 @@ const identity$ = state(
   (address: SS58String) =>
     from(typedApi.query.Identity.IdentityOf.getValue(address)).pipe(
       map((res): Identity | null => {
-        const displayName = res && readIdentityData(res[0].info.display);
+        const displayName = res && readIdentityData(res.info.display);
         return displayName
           ? {
               displayName: displayName.asText(),
-              judgments: res[0].judgements.map(([registrar, judgement]) => ({
+              judgments: res.judgements.map(([registrar, judgement]) => ({
                 registrar,
                 judgement: judgement.type,
               })),

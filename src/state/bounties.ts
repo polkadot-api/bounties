@@ -29,7 +29,8 @@ export const bountyApprovingReferenda$ = state(
         bounty.type === "Proposed"
           ? bounty.filterApprovingReferenda(referenda)
           : [[]]
-      )
+      ),
+      map((v) => v.map((v) => v.referendum))
     ),
   null
 );
