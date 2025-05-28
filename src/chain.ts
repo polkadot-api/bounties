@@ -42,7 +42,7 @@ export const client = createClient(
     (...v) => console.debug("relayChain", ...v),
     USE_CHOPSTICKS
       ? withChopsticksEnhancer(getWsProvider("ws://localhost:8132"))
-      : getWsProvider("wss://kusama-rpc.dwellir.com")
+      : getSmProvider(clientChain)
   )
 );
 
