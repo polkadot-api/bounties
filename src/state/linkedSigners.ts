@@ -4,8 +4,10 @@ import { selectedAccount$ } from "@/components/AccountSelector";
 import { getMultisigSigner, getProxySigner } from "@polkadot-api/meta-signers";
 import {
   createLinkedAccountsSdk,
-  MultisigProvider,
+  fallbackMultisigProviders,
   novasamaProvider,
+  subscanProvider,
+  throttleMultisigProvider,
 } from "@polkadot-api/sdk-accounts";
 import { toHex } from "@polkadot-api/utils";
 import { getSs58AddressInfo, PolkadotSigner } from "polkadot-api";
@@ -24,11 +26,14 @@ import {
 } from "rxjs";
 
 const linkedAccountsSdk = createLinkedAccountsSdk(
-  typedApi as any,
-  fallbackMultisigProviders([
+  typedApi,
+  fallbackMultisigProviders(
     novasamaProvider(matchedChain),
-    subscanProvider(matchedChain),
-  ])
+    throttleMultisigProvider(
+      subscanProvider(matchedChain, import.meta.env.VITE_SUBSCAN_API_KEY),
+      2
+    )
+  )
 );
 
 export const getNestedLinkedAccounts$ =
@@ -89,52 +94,3 @@ export const getLinkedSigner$ = (topAddress: string) =>
       );
     })
   );
-
-// Fallback to subscan
-// Limit to 2 concurrent requests
-let ongoingSubscanReq = 0;
-function subscanProvider(chain: string): MultisigProvider {
-  return async (address) => {
-    if (ongoingSubscanReq >= 2) return null;
-    ongoingSubscanReq++;
-    try {
-      const result = await fetch(
-        `https://${chain}.api.subscan.io/api/v2/scan/search`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            key: address,
-          }),
-          headers: {
-            "x-api-key": import.meta.env.VITE_SUBSCAN_API_KEY,
-          },
-        }
-      ).then((r) => r.json());
-
-      const multisig = result.data?.account?.multisig;
-      if (!multisig) return null;
-
-      return {
-        addresses: multisig.multi_account_member.map((v: any) => v.address),
-        threshold: multisig.threshold,
-      };
-    } catch (ex) {
-      console.error(ex);
-      return null;
-    } finally {
-      ongoingSubscanReq--;
-    }
-  };
-}
-
-function fallbackMultisigProviders(
-  providers: MultisigProvider[]
-): MultisigProvider {
-  return async (address) => {
-    for (const provider of providers) {
-      const result = await provider(address);
-      if (result) return result;
-    }
-    return null;
-  };
-}
