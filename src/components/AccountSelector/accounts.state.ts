@@ -48,7 +48,7 @@ export const availableExtensions$ = state(
       filter((v) => v.length > 0),
       take(1)
     ),
-    interval(2000).pipe(switchMap(() => from(getExtensionsWithMimir())))
+    interval(2000).pipe(switchMap(() => from(getInjectedExtensions())))
   ),
   []
 );
