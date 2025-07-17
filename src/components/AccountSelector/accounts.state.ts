@@ -15,6 +15,7 @@ import {
   concat,
   defer,
   filter,
+  from,
   interval,
   map,
   merge,
@@ -29,15 +30,25 @@ import {
   tap,
   timer,
 } from "rxjs";
+import { initializeMimir } from "../../lib/mimir";
+
+// Function to initialize Mimir and get available extensions
+const getExtensionsWithMimir = async (): Promise<string[]> => {
+  // Initialize Mimir first
+  await initializeMimir();
+
+  // Then get available extensions
+  return getInjectedExtensions();
+};
 
 export const availableExtensions$ = state(
   concat(
     timer(0, 100).pipe(
-      map(getInjectedExtensions),
+      switchMap(() => from(getExtensionsWithMimir())),
       filter((v) => v.length > 0),
       take(1)
     ),
-    interval(2000).pipe(map(getInjectedExtensions))
+    interval(2000).pipe(switchMap(() => from(getExtensionsWithMimir())))
   ),
   []
 );
