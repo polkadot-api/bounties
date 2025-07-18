@@ -11,6 +11,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.1.1
         version: 5.1.1(react-hook-form@7.60.0(react@19.1.0))
+      '@mimirdev/apps-inject':
+        specifier: ^3.2.0
+        version: 3.2.0
       '@noble/hashes':
         specifier: ^1.8.0
         version: 1.8.0
@@ -585,6 +588,12 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.28':
     resolution: {integrity: sha512-KNNHHwW3EIp4EDYOvYFGyIFfx36R2dNJYH4knnZlF8T5jdbD5Wx8xmSaQ2gP9URkJ04LGEtlcCtwArKcmFcwKw==}
+
+  '@mimirdev/apps-inject@3.2.0':
+    resolution: {integrity: sha512-yKWFaZsUgxaPIU/xM8OFvWRsNld6x8iCeqbQbt/LyUsikLGlkrHOZl29MwMfSQiYAWrYNqwhFpCU07sS2DTOLQ==}
+
+  '@mimirdev/apps-sdk@3.1.0':
+    resolution: {integrity: sha512-EevWZhaaP9gKcIJeEbokAugx5X0sd8jRae1CX1Uzg5KsVxODjeLLaAE1D90Lj6//JE1NPaEq3QKi9PliSMLVNg==}
 
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
@@ -1637,6 +1646,9 @@ packages:
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
+
+  eventemitter3@5.0.1:
+    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
 
   execa@9.6.0:
     resolution: {integrity: sha512-jpWzZ1ZhwUmeWRhS7Qv3mhpOhLfwI+uAX4e5fOcXqwMR7EcJ0pj2kV1CVzHVMX/LphnKWD3LObjZCoJ71lKpHw==}
@@ -2762,6 +2774,14 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.3
 
+  '@mimirdev/apps-inject@3.2.0':
+    dependencies:
+      '@mimirdev/apps-sdk': 3.1.0
+
+  '@mimirdev/apps-sdk@3.1.0':
+    dependencies:
+      eventemitter3: 5.0.1
+
   '@noble/hashes@1.8.0': {}
 
   '@pkgjs/parseargs@0.11.0':
@@ -3800,6 +3820,8 @@ snapshots:
       '@esbuild/win32-x64': 0.25.6
 
   escalade@3.2.0: {}
+
+  eventemitter3@5.0.1: {}
 
   execa@9.6.0:
     dependencies:

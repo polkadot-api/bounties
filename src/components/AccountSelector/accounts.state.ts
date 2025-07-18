@@ -14,6 +14,7 @@ import {
   catchError,
   concat,
   defer,
+  EMPTY,
   filter,
   interval,
   map,
@@ -29,9 +30,16 @@ import {
   tap,
   timer,
 } from "rxjs";
+import { initializeMimir } from "../../lib/mimir";
 
 export const availableExtensions$ = state(
   concat(
+    defer(() => {
+      // initialize Mimir and get available extensions
+      initializeMimir();
+
+      return EMPTY;
+    }),
     timer(0, 100).pipe(
       map(getInjectedExtensions),
       filter((v) => v.length > 0),
