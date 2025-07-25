@@ -14,7 +14,7 @@ export const ChildBounties: FC<{
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Child Bounties</CardTitle>
+        <CardTitle>Current Child Bounties</CardTitle>
       </CardHeader>
       <CardContent>
         {childBounties ? (
