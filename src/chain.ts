@@ -2,12 +2,14 @@ import { polkadot } from "@polkadot-api/descriptors";
 import { state } from "@react-rxjs/core";
 import { createClient } from "polkadot-api";
 import { withLogsRecorder } from "polkadot-api/logs-provider";
+import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
 import { getSmProvider } from "polkadot-api/sm-provider";
 import { startFromWorker } from "polkadot-api/smoldot/from-worker";
 import SmWorker from "polkadot-api/smoldot/worker?worker";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
 import { map, take } from "rxjs";
 import { matchedChain } from "./chainRoute";
+import { chainRpcs } from "./chainRpcs";
 import { withChopsticksEnhancer } from "./lib/chopsticksEnhancer";
 
 const USE_CHOPSTICKS = import.meta.env.VITE_WITH_CHOPSTICKS;
@@ -35,15 +37,24 @@ const knownChains = {
       })
     ),
 };
-const clientChain = knownChains[matchedChain]();
+
+export const useLightClient =
+  new URLSearchParams(location.search).get("smoldot") === "true";
+function getProvider() {
+  if (USE_CHOPSTICKS) {
+    return withChopsticksEnhancer(getWsProvider("ws://localhost:8132"));
+  }
+
+  if (useLightClient) {
+    return getSmProvider(knownChains[matchedChain]());
+  }
+
+  const urls = Object.values(chainRpcs[matchedChain]);
+  return withPolkadotSdkCompat(getWsProvider(shuffleArray(urls)));
+}
 
 export const client = createClient(
-  withLogsRecorder(
-    (...v) => console.debug("relayChain", ...v),
-    USE_CHOPSTICKS
-      ? withChopsticksEnhancer(getWsProvider("ws://localhost:8132"))
-      : getSmProvider(clientChain)
-  )
+  withLogsRecorder((...v) => console.debug("relayChain", ...v), getProvider())
 );
 
 export const typedApi = client.getTypedApi(polkadot);
@@ -55,3 +66,13 @@ export const hasConnected$ = state(
   ),
   false
 );
+
+function shuffleArray<T>(array: T[]): T[] {
+  return array
+    .map((v) => ({
+      v,
+      p: Math.random(),
+    }))
+    .sort((a, b) => a.p - b.p)
+    .map(({ v }) => v);
+}
