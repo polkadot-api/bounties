@@ -16,7 +16,7 @@
 */
 // https://github.com/polkadot-api/papi-console/blob/64003b1a0468f43bf04d53843ede3cfa3d1ff0a9/src/components/PolkadotIdenticon.tsx
 
-import { blake2b } from "@noble/hashes/blake2b";
+import { blake2b } from "@noble/hashes/blake2";
 import { FC, SVGAttributes } from "react";
 
 export const PolkadotIdenticon: FC<
