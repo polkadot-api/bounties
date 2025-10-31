@@ -5,6 +5,7 @@ import {
   IdentityJudgement,
   polkadot_people,
 } from "@polkadot-api/descriptors";
+import { PolkadotIdenticon } from "@polkadot-api/react-components";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { CheckCircle } from "lucide-react";
 import {
@@ -13,11 +14,10 @@ import {
   getSs58AddressInfo,
   SS58String,
 } from "polkadot-api";
+import { withLogsRecorder } from "polkadot-api/logs-provider";
 import { getSmProvider } from "polkadot-api/sm-provider";
 import { FC } from "react";
 import { catchError, from, map, of, tap } from "rxjs";
-import { PolkadotIdenticon } from "./PolkadotIdenticon";
-import { withLogsRecorder } from "polkadot-api/logs-provider";
 import { CopyText } from "./CopyText";
 
 const peopleChainSpec = import("polkadot-api/chains/polkadot_people");
