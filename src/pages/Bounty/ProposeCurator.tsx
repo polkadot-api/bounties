@@ -1,6 +1,4 @@
 import { typedApi } from "@/chain";
-import { selectedAccount$ } from "@/components/AccountSelector";
-import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { selectedAccount$ } from "@/state/account";
 import { bounty$ } from "@/state/bounties";
 import { referendaSdk } from "@/state/referenda";
 import { MultiAddress } from "@polkadot-api/descriptors";
@@ -28,6 +27,7 @@ import { state, Subscribe, useStateObservable } from "@react-rxjs/core";
 import { createSignal } from "@react-rxjs/utils";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { SS58String } from "polkadot-api";
+import { AddressInput } from "polkahub";
 import { FC } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -107,7 +107,7 @@ export const proposeCuratorState$ = state(
 
         return referendaSdk
           .createSpenderReferenda(proposeCuratorTx, proposal.fee)
-          .signSubmitAndWatch(selectedAccount.polkadotSigner)
+          .signSubmitAndWatch(selectedAccount.signer!)
           .pipe(
             startWith({
               type: "signing",
@@ -190,7 +190,7 @@ const ProposeBountyForm: FC<{ id: number }> = ({ id }) => {
             <FormItem>
               <FormLabel>Curator</FormLabel>
               <FormControl>
-                <AccountInput className="w-full" {...field} />
+                <AddressInput className="w-full" {...field} />
               </FormControl>
               <FormDescription>Curator to propose</FormDescription>
               <FormMessage />

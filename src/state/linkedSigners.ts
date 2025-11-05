@@ -1,6 +1,5 @@
 import { typedApi } from "@/chain";
 import { matchedChain } from "@/chainRoute";
-import { selectedAccount$ } from "@/components/AccountSelector";
 import { getMultisigSigner, getProxySigner } from "@polkadot-api/meta-signers";
 import {
   createLinkedAccountsSdk,
@@ -24,6 +23,7 @@ import {
   switchMap,
   take,
 } from "rxjs";
+import { selectedAccount$ } from "./account";
 
 const linkedAccountsSdk = createLinkedAccountsSdk(
   typedApi,
@@ -42,15 +42,16 @@ export const getNestedLinkedAccounts$ =
 export const getLinkedSigner$ = (topAddress: string) =>
   selectedAccount$.pipe(
     switchMap((account) => {
-      if (!account) return of(null);
+      const signer = account?.signer;
+      if (!signer) return of(null);
 
       const getMatchingSigner$ = (
         address: string
       ): Observable<PolkadotSigner | null> => {
         const info = getSs58AddressInfo(address);
         if (!info.isValid) return of(null);
-        if (toHex(info.publicKey) === toHex(account.polkadotSigner.publicKey))
-          return of(account.polkadotSigner);
+        if (toHex(info.publicKey) === toHex(signer.publicKey))
+          return of(signer);
 
         return linkedAccountsSdk.getLinkedAccounts$(address).pipe(
           switchMap((result) => {

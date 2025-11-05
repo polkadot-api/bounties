@@ -1,7 +1,7 @@
 import { KnownChains, matchedChain } from "@/chainRoute";
-import { AccountSelector } from "@/components/AccountSelector";
 import { ChainSelector } from "@/components/ChainSelector/ChainSelector";
 import { Link } from "react-router-dom";
+import { AccountSelector } from "./AccountSelector";
 
 const chainNames: Record<KnownChains, string> = {
   kusama: "Kusama",

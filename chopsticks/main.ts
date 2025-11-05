@@ -27,7 +27,7 @@ const ALICE = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const BOB = "14E5nqKAp3oAJcmzgZhUD2RcptBeUBScxKHgJKU4HPNcKVf3";
 const MULTISIG = "15ZXdJLyU3vBcRzRKE8cGBSMxzAe2Ht6kvdTAvN76qRwt7Bb";
 
-const ENDPOINT = "wss://rpc.ibp.network/paseo";
+const ENDPOINT = "wss://sys.ibp.network/asset-hub-paseo";
 const PORT = 8132;
 
 const logStream = createWriteStream("./chopsticks.log");

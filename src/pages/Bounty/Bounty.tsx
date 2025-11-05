@@ -1,6 +1,7 @@
-import { selectedAccount$ } from "@/components/AccountSelector";
 import { IdentityLinks } from "@/components/IdentityLinks";
+import { Loading } from "@/components/Loading";
 import { OnChainIdentity } from "@/components/OnChainIdentity";
+import { selectedAccount$ } from "@/state/account";
 import { bounty$ } from "@/state/bounties";
 import { TransactionButton } from "@/Transactions";
 import type {
@@ -23,7 +24,6 @@ import {
 } from "./BountyReferendum";
 import { bountyCuratorSigner$ } from "./curatorSigner";
 import { ProposeCurator } from "./ProposeCurator";
-import { Loading } from "@/components/Loading";
 
 export const Bounty = () => {
   const id = Number(useParams().id);
@@ -156,7 +156,7 @@ const PendingPayoutBounty: FC<{
         <TransactionButton
           disabled={!isDue}
           createTx={bounty.claim}
-          signer={selectedAccount?.polkadotSigner ?? null}
+          signer={selectedAccount?.signer ?? null}
         >
           Payout Beneficiary
         </TransactionButton>

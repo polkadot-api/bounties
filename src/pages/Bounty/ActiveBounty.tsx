@@ -1,5 +1,4 @@
 import { typedApi } from "@/chain";
-import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { TransactionDialog } from "@/Transactions";
 import { ActiveBounty as SdkActiveBounty } from "@polkadot-api/sdk-governance";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Binary, Transaction } from "polkadot-api";
+import { AddressInput } from "polkahub";
 import { FC, useEffect, useRef, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { defer, map } from "rxjs";
@@ -219,7 +219,7 @@ export const AwardBountyDialog: FC<{
       <div className="overflow-hidden px-1 space-y-4">
         <label className="flex flex-col">
           <span className="px-1">Beneficiary</span>
-          <AccountInput className="w-full" value={value} onChange={setValue} />
+          <AddressInput className="w-full" value={value} onChange={setValue} />
         </label>
         <div className="text-sm text-destructive">
           This will move the bounty to the <b>Pending Payout</b> state, which{" "}

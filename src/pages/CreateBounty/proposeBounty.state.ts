@@ -1,5 +1,5 @@
 import { typedApi } from "@/chain";
-import { selectedAccount$ } from "@/components/AccountSelector";
+import { selectedAccount$ } from "@/state/account";
 import { state } from "@react-rxjs/core";
 import { createSignal } from "@react-rxjs/utils";
 import { Binary } from "polkadot-api";
@@ -35,7 +35,7 @@ export const proposeBountyState$ = state(
           description: Binary.fromText(bounty.description),
           value: bounty.value,
         })
-          .signSubmitAndWatch(account.polkadotSigner)
+          .signSubmitAndWatch(account.signer!)
           .pipe(
             startWith({
               type: "signing",

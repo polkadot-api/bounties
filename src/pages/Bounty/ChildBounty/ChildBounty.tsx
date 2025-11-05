@@ -1,6 +1,4 @@
 import { TransactionButton, TransactionDialog } from "@/Transactions";
-import { selectedAccount$ } from "@/components/AccountSelector";
-import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { DotValue } from "@/components/DotValue";
 import { IdentityLinks } from "@/components/IdentityLinks";
 import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
@@ -12,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { selectedAccount$ } from "@/state/account";
 import {
   ActiveChildBounty,
   AddedChildBounty,
@@ -21,6 +20,7 @@ import {
 } from "@polkadot-api/sdk-governance";
 import { useStateObservable } from "@react-rxjs/core";
 import { PolkadotSigner } from "polkadot-api";
+import { AddressInput } from "polkahub";
 import { FC, PropsWithChildren, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AwardBountyDialog } from "../ActiveBounty";
@@ -257,7 +257,7 @@ const PendingPayout: FC<{
         <TransactionButton
           disabled={!isDue}
           createTx={bounty.claim}
-          signer={selectedAccount?.polkadotSigner ?? null}
+          signer={selectedAccount?.signer ?? null}
         >
           Payout Beneficiary
         </TransactionButton>
@@ -293,7 +293,7 @@ const ProposeCuratorDialog: FC<{
       <div className="overflow-hidden px-1 space-y-4">
         <label className="flex flex-col">
           <span className="px-1">Curator</span>
-          <AccountInput
+          <AddressInput
             className="w-full"
             value={curator}
             onChange={setCurator}

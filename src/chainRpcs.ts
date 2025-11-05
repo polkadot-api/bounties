@@ -1,24 +1,26 @@
 import { KnownChains } from "./chainRoute";
 
 const polkadot: Record<string, string> = {
-  Allnodes: "wss://polkadot-rpc.publicnode.com",
-  Blockops: "wss://polkadot-public-rpc.blockops.network/ws",
-  Dwellir: "wss://polkadot-rpc.dwellir.com",
-  "Dwellir Tunisia": "wss://polkadot-rpc-tn.dwellir.com",
-  IBP1: "wss://rpc.ibp.network/polkadot",
-  IBP2: "wss://polkadot.dotters.network",
-  LuckyFriday: "wss://rpc-polkadot.luckyfriday.io",
-  Stakeworld: "wss://dot-rpc.stakeworld.io",
+  Dwellir: "wss://asset-hub-polkadot-rpc.dwellir.com",
+  "Dwellir Tunisia": "wss://statemint-rpc-tn.dwellir.com",
+  IBP1: "wss://sys.ibp.network/asset-hub-polkadot",
+  IBP2: "wss://asset-hub-polkadot.dotters.network",
+  LuckyFriday: "wss://rpc-asset-hub-polkadot.luckyfriday.io",
+  OnFinality: "wss://statemint.api.onfinality.io/public-ws",
+  Parity: "wss://polkadot-asset-hub-rpc.polkadot.io",
+  RadiumBlock: "wss://statemint.public.curie.radiumblock.co/ws",
+  Stakeworld: "wss://dot-rpc.stakeworld.io/assethub",
 };
 
 const kusama: Record<string, string> = {
-  Allnodes: "wss://kusama-rpc.publicnode.com",
-  Dwellir: "wss://kusama-rpc.dwellir.com",
-  "Dwellir Tunisia": "wss://kusama-rpc-tn.dwellir.com",
-  IBP1: "wss://rpc.ibp.network/kusama",
-  IBP2: "wss://kusama.dotters.network",
-  LuckyFriday: "wss://rpc-kusama.luckyfriday.io",
-  Stakeworld: "wss://ksm-rpc.stakeworld.io",
+  Dwellir: "wss://asset-hub-kusama-rpc.dwellir.com",
+  "Dwellir Tunisia": "wss://statemine-rpc-tn.dwellir.com",
+  IBP1: "wss://sys.ibp.network/statemine",
+  IBP2: "wss://asset-hub-kusama.dotters.network",
+  LuckyFriday: "wss://rpc-asset-hub-kusama.luckyfriday.io",
+  Parity: "wss://kusama-asset-hub-rpc.polkadot.io",
+  RadiumBlock: "wss://statemine.public.curie.radiumblock.co/ws",
+  Stakeworld: "wss://ksm-rpc.stakeworld.io/assethub",
 };
 
 export const chainRpcs: Record<KnownChains, Record<string, string>> = {

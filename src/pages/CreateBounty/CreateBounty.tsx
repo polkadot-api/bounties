@@ -1,4 +1,3 @@
-import { selectedAccount$ } from "@/components/AccountSelector";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,14 +6,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { selectedAccount$ } from "@/state/account";
+import { referendaSdk } from "@/state/referenda";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Subscribe, useStateObservable } from "@react-rxjs/core";
 import { approveBountyState$ } from "./approveBounty.state";
+import { ReferendumCreatedStep } from "./AproveBounty";
 import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state";
 import { ProposeBountyStep } from "./ProposeBountyForm";
 import { SubmitReferendumStep } from "./SubmitReferendumForm";
-import { ReferendumCreatedStep } from "./AproveBounty";
-import { referendaSdk } from "@/state/referenda";
 
 export const CreateBountyButton = () => {
   const account = useStateObservable(selectedAccount$);

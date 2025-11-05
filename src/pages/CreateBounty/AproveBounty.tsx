@@ -1,4 +1,3 @@
-import { selectedAccount$ } from "@/components/AccountSelector";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,6 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { selectedAccount$ } from "@/state/account";
+import { referendaSdk } from "@/state/referenda";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Subscribe, useStateObservable } from "@react-rxjs/core";
 import { FC } from "react";
@@ -15,7 +16,6 @@ import {
   approveBountyState$,
   SubmittedReferendum,
 } from "./approveBounty.state";
-import { referendaSdk } from "@/state/referenda";
 
 export const ApproveBountyButton: FC<{ id: number; className?: string }> = ({
   id,

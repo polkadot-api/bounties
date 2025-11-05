@@ -1,6 +1,5 @@
 import { client, typedApi } from "@/chain";
 import { matchedChain } from "@/chainRoute";
-import { AccountInput } from "@/components/AccountSelector/AccountInput";
 import { ExternalLink } from "@/components/ExternalLink";
 import { format } from "@/components/token-formatter";
 import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
@@ -21,6 +20,7 @@ import { NestedLinkedAccountsResult } from "@polkadot-api/sdk-accounts";
 import { state, useStateObservable } from "@react-rxjs/core";
 import { Trash2 } from "lucide-react";
 import { Binary, SS58String, Transaction } from "polkadot-api";
+import { AddressInput } from "polkahub";
 import { FC, useEffect, useMemo, useState } from "react";
 import { catchError, combineLatest, map, takeLast } from "rxjs";
 import { twMerge } from "tailwind-merge";
@@ -242,7 +242,8 @@ const BatchChildBountiesForm: FC<
                 />
               </td>
               <td className="p-1">
-                <AccountInput
+                <AddressInput
+                  className="min-w-52"
                   value={row.recipient}
                   onChange={rowUpdater(i, "recipient")}
                 />

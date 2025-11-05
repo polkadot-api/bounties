@@ -1,4 +1,4 @@
-import { polkadot } from "@polkadot-api/descriptors";
+import { dotAh } from "@polkadot-api/descriptors";
 import { state } from "@react-rxjs/core";
 import { createClient } from "polkadot-api";
 import { withLogsRecorder } from "polkadot-api/logs-provider";
@@ -6,13 +6,13 @@ import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat";
 import { getSmProvider } from "polkadot-api/sm-provider";
 import { startFromWorker } from "polkadot-api/smoldot/from-worker";
 import SmWorker from "polkadot-api/smoldot/worker?worker";
-import { getWsProvider } from "polkadot-api/ws-provider/web";
+import { getWsProvider } from "polkadot-api/ws-provider";
 import { map, take } from "rxjs";
 import { matchedChain } from "./chainRoute";
 import { chainRpcs } from "./chainRpcs";
 import { withChopsticksEnhancer } from "./lib/chopsticksEnhancer";
 
-const USE_CHOPSTICKS = import.meta.env.VITE_WITH_CHOPSTICKS;
+export const USE_CHOPSTICKS = import.meta.env.VITE_WITH_CHOPSTICKS;
 
 export const smoldot = startFromWorker(new SmWorker(), {
   logCallback: (level, target, message) => {
@@ -29,7 +29,16 @@ export const polkadotChain = polkadotChainSpec.then(({ chainSpec }) =>
 );
 
 const knownChains = {
-  polkadot: () => polkadotChain,
+  polkadot: () =>
+    Promise.all([
+      polkadotChain,
+      import("polkadot-api/chains/polkadot_asset_hub"),
+    ]).then(([chain, { chainSpec }]) =>
+      smoldot.addChain({
+        chainSpec,
+        potentialRelayChains: [chain],
+      })
+    ),
   kusama: () =>
     import("polkadot-api/chains/ksmcc3").then(({ chainSpec }) =>
       smoldot.addChain({
@@ -57,7 +66,7 @@ export const client = createClient(
   withLogsRecorder((...v) => console.debug("relayChain", ...v), getProvider())
 );
 
-export const typedApi = client.getTypedApi(polkadot);
+export const typedApi = client.getTypedApi(dotAh);
 
 export const hasConnected$ = state(
   client.finalizedBlock$.pipe(

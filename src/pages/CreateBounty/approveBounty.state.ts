@@ -1,5 +1,5 @@
 import { typedApi } from "@/chain";
-import { selectedAccount$ } from "@/components/AccountSelector";
+import { selectedAccount$ } from "@/state/account";
 import { bounty$ } from "@/state/bounties";
 import { referendaSdk } from "@/state/referenda";
 import { state } from "@react-rxjs/core";
@@ -48,7 +48,7 @@ export const approveBountyState$ = state(
             getApproveBountyTx(bounty.id).getEncodedData(token),
             bounty.value
           )
-          .signSubmitAndWatch(selectedAccount.polkadotSigner)
+          .signSubmitAndWatch(selectedAccount.signer!)
           .pipe(
             startWith({
               type: "signing",
