@@ -1,4 +1,5 @@
 import { typedApi, USE_CHOPSTICKS } from "@/chain";
+import { identity$, isVerified } from "@/components/OnChainIdentity";
 import { SELECTED_TOKEN } from "@/components/TokenInput";
 import { withDefault } from "@react-rxjs/core";
 import {
@@ -38,14 +39,29 @@ const ledgerAccountProvider = createLedgerProvider(
 );
 export const mimirProvider = createMimirProvider("Bounties");
 
-export const polkaHub = createPolkaHub([
-  selectedAccountPlugin,
-  pjsWalletProvider,
-  polkadotVaultProvider,
-  readOnlyProvider,
-  ledgerAccountProvider,
-  mimirProvider,
-]);
+export const polkaHub = createPolkaHub(
+  [
+    selectedAccountPlugin,
+    pjsWalletProvider,
+    polkadotVaultProvider,
+    readOnlyProvider,
+    ledgerAccountProvider,
+    mimirProvider,
+  ],
+  {
+    getIdentity: (address) =>
+      identity$(address).pipe(
+        map((identity) =>
+          identity
+            ? {
+                name: identity.displayName,
+                verified: isVerified(identity) ?? false,
+              }
+            : null
+        )
+      ),
+  }
+);
 
 export const selectedAccount$ =
   selectedAccountPlugin.selectedAccount$.pipeState(withDefault(null));

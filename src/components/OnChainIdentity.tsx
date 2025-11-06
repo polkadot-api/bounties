@@ -53,7 +53,7 @@ export interface Identity {
 export const isVerified = (identity: Identity | null) =>
   identity?.judgments.some((j) => j.judgement === "Reasonable");
 
-const identity$ = state(
+export const identity$ = state(
   (address: SS58String) =>
     from(typedApi.query.Identity.IdentityOf.getValue(address)).pipe(
       map((res): Identity | null => {
