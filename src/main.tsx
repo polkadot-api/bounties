@@ -8,6 +8,7 @@ import { routeChain } from "./chainRoute.ts";
 import "./index.css";
 import { polkaHub } from "./state/account.ts";
 import { bountiesState$ } from "./state/bounties.ts";
+import { GithubLink } from "./components/Github.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <Subscribe source$={bountiesState$}>
@@ -16,6 +17,7 @@ createRoot(document.getElementById("root")!).render(
         <PolkaHubProvider polkaHub={polkaHub}>
           <App />
         </PolkaHubProvider>
+        <GithubLink repo="https://github.com/polkadot-api/bounties" />
       </BrowserRouter>
     </StrictMode>
   </Subscribe>

@@ -1,5 +1,6 @@
 import { KnownChains, matchedChain } from "@/chainRoute";
 import { ChainSelector } from "@/components/ChainSelector/ChainSelector";
+import { LightClientRpcToggle } from "@/components/LightClientRpcToggle";
 import { Link } from "react-router-dom";
 import { AccountSelector } from "./AccountSelector";
 
@@ -17,6 +18,7 @@ export const Header = () => (
       <div className="flex items-center gap-2">
         <AccountSelector />
         <ChainSelector />
+        <LightClientRpcToggle />
       </div>
     </div>
   </div>

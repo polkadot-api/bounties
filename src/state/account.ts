@@ -11,7 +11,7 @@ import {
   createReadOnlyProvider,
   createSelectedAccountPlugin,
 } from "polkahub";
-import { defer, firstValueFrom, map } from "rxjs";
+import { defer, map } from "rxjs";
 
 const ss58Format$ = defer(typedApi.constants.System.SS58Prefix);
 
@@ -26,16 +26,10 @@ const ledgerAccountProvider = createLedgerProvider(
     const module = await import("@ledgerhq/hw-transport-webhid");
     return module.default.create();
   },
-  () =>
-    firstValueFrom(
-      ss58Format$.pipe(
-        map((ss58Format) => ({
-          decimals: SELECTED_TOKEN.decimals,
-          tokenSymbol: SELECTED_TOKEN.symbol,
-          ss58Format,
-        }))
-      )
-    )
+  async () => ({
+    decimals: SELECTED_TOKEN.decimals,
+    tokenSymbol: SELECTED_TOKEN.symbol,
+  })
 );
 export const mimirProvider = createMimirProvider("Bounties");
 
@@ -60,6 +54,7 @@ export const polkaHub = createPolkaHub(
             : null
         )
       ),
+    ss58Format: ss58Format$,
   }
 );
 

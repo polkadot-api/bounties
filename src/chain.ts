@@ -48,7 +48,7 @@ const knownChains = {
 };
 
 export const useLightClient =
-  new URLSearchParams(location.search).get("smoldot") === "true";
+  window.localStorage.getItem("use-smoldot") === "true";
 function getProvider() {
   if (USE_CHOPSTICKS) {
     return withChopsticksEnhancer(getWsProvider("ws://localhost:8132"));
