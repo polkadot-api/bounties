@@ -15,22 +15,20 @@ import { defer, map } from "rxjs";
 
 const ss58Format$ = defer(typedApi.constants.System.SS58Prefix);
 
+const getNetworkInfo = async () => ({
+  decimals: SELECTED_TOKEN.decimals,
+  tokenSymbol: SELECTED_TOKEN.symbol,
+});
 const selectedAccountPlugin = createSelectedAccountPlugin();
 const pjsWalletProvider = createPjsWalletProvider();
-const polkadotVaultProvider = createPolkadotVaultProvider();
+const polkadotVaultProvider = createPolkadotVaultProvider({ getNetworkInfo });
 const readOnlyProvider = createReadOnlyProvider({
   fakeSigner: USE_CHOPSTICKS,
 });
-const ledgerAccountProvider = createLedgerProvider(
-  async () => {
-    const module = await import("@ledgerhq/hw-transport-webhid");
-    return module.default.create();
-  },
-  async () => ({
-    decimals: SELECTED_TOKEN.decimals,
-    tokenSymbol: SELECTED_TOKEN.symbol,
-  })
-);
+const ledgerAccountProvider = createLedgerProvider(async () => {
+  const module = await import("@ledgerhq/hw-transport-webhid");
+  return module.default.create();
+}, getNetworkInfo);
 export const mimirProvider = createMimirProvider("Bounties");
 
 export const polkaHub = createPolkaHub(
