@@ -140,6 +140,7 @@ const BatchChildBountiesForm: FC<
 > = ({ id, curator, onSubmit, onValue }) => {
   const [extendExpiry, setExtendExpiry] = useState(true);
   const [rows, setRows] = useState<ChildRow[]>([]);
+  const [offset, setOffset] = useState(0);
   const multisigUrl = useStateObservable(curatorMultisigUrl$(curator));
   const childId = useStateObservable(nextChildId$(id));
   const minimumValue = usePromise(
@@ -157,8 +158,8 @@ const BatchChildBountiesForm: FC<
 
   const batchTx = useMemo(
     () =>
-      isValid ? createBatchTx(id, childId, rows, curator, extendExpiry) : null,
-    [isValid, childId, rows, curator, extendExpiry]
+      isValid ? createBatchTx(id, childId, rows, curator, extendExpiry, offset) : null,
+    [isValid, childId, rows, curator, extendExpiry, offset]
   );
   const url = useMemo(
     () => (multisigUrl ? multisigUrl.generateUrl(batchTx) : null),
@@ -272,11 +273,26 @@ const BatchChildBountiesForm: FC<
           Also extend bounty expiration date
         </Label>
       </div>
+      <div>
+        <Label className="flex flex-col gap-2">
+          <span className="text-sm">
+            (Optional) Child Bounty ID Offset (to avoid conflicts with existing multisig transactions)
+          </span>
+          <Input
+            type="number"
+            min="0"
+            value={offset}
+            onChange={(evt) => setOffset(Number(evt.target.value))}
+            placeholder="0"
+            className="w-32"
+          />
+        </Label>
+      </div>
       <div className="flex justify-between items-start gap-2">
         <div className="text-sm text-muted-foreground">
           Note: This transaction will only work for the current child bounty
-          count. It might fail if someone creates another child bounty while
-          it's getting approved.
+          count{offset > 0 ? " plus the specified offset" : ""}. It might fail if someone creates another child bounty while
+          it's getting approved{offset > 0 ? ". Use the offset field to avoid conflicts with existing pending multisig transactions" : ""}.
         </div>
         <Button disabled={!isValid} onClick={submit}>
           Submit
@@ -310,7 +326,8 @@ const createBatchTx = (
   childId: number,
   rows: ChildRow[],
   curator: SS58String,
-  extendExpiry: boolean
+  extendExpiry: boolean,
+  offset: number = 0
 ) => {
   const txs = [
     typedApi.tx.System.remark_with_event({
@@ -334,22 +351,22 @@ const createBatchTx = (
       }),
       typedApi.tx.ChildBounties.propose_curator({
         parent_bounty_id: id,
-        child_bounty_id: childId + i,
+        child_bounty_id: childId + offset + i,
         curator: MultiAddress.Id(curator),
         fee: 0n,
       }),
       typedApi.tx.ChildBounties.accept_curator({
         parent_bounty_id: id,
-        child_bounty_id: childId + i,
+        child_bounty_id: childId + offset + i,
       }),
       typedApi.tx.ChildBounties.award_child_bounty({
         parent_bounty_id: id,
-        child_bounty_id: childId + i,
+        child_bounty_id: childId + offset + i,
         beneficiary: MultiAddress.Id(row.recipient),
       }),
       typedApi.tx.ChildBounties.claim_child_bounty({
         parent_bounty_id: id,
-        child_bounty_id: childId + i,
+        child_bounty_id: childId + offset + i,
       }),
     ]),
   ];
