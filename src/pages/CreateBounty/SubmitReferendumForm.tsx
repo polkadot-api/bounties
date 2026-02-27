@@ -16,6 +16,7 @@ import {
 } from "./approveBounty.state"
 import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state"
 import { isTxInProgress, TxProgress } from "./TxProgress"
+import { toHex } from "polkadot-api/utils"
 
 export const approveBountyDetails$ = state(
   (bountyId: number) =>
@@ -55,7 +56,7 @@ export const SubmitReferendumForm: FC<{
     return <div>Loading…</div>
   }
 
-  const proposal = details.proposalCall.asHex()
+  const proposal = toHex(details.proposalCall)
 
   return (
     <div className={twMerge(className, "space-y-2")}>
@@ -85,7 +86,7 @@ export const SubmitReferendumForm: FC<{
             <span className="text-sm text-foreground/70 ml-1">
               (
               <CopyText
-                text={details.proposalCall.asHex()}
+                text={toHex(details.proposalCall)}
                 binary
                 className="align-middle"
               />{" "}

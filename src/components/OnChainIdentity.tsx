@@ -1,42 +1,37 @@
-import { polkadotChain, smoldot } from "@/chain"
+import { smoldot } from "@/chain"
 import { cn } from "@/lib/utils"
-import {
-  IdentityData,
-  IdentityJudgement,
-  polkadot_people,
-} from "@polkadot-api/descriptors"
+import { IdentityJudgement, polkadot_people } from "@polkadot-api/descriptors"
 import { PolkadotIdenticon } from "@polkadot-api/react-components"
 import { state, useStateObservable } from "@react-rxjs/core"
 import { CheckCircle } from "lucide-react"
-import {
-  Binary,
-  createClient,
-  getSs58AddressInfo,
-  SS58String,
-} from "polkadot-api"
+import { createClient, getSs58AddressInfo, SS58String } from "polkadot-api"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
 import { getSmProvider } from "polkadot-api/sm-provider"
 import { FC } from "react"
 import { catchError, from, map, of, tap } from "rxjs"
 import { CopyText } from "./CopyText"
-
-const peopleChainSpec = import("polkadot-api/chains/polkadot_people")
+import { createIdentitySdk } from "@polkadot-api/sdk-accounts"
 
 const client = createClient(
   withLogsRecorder(
     (...v) => console.debug("peopleChain", ...v),
-    getSmProvider(
-      Promise.all([polkadotChain, peopleChainSpec]).then(
-        ([relayChain, { chainSpec }]) =>
-          smoldot.addChain({
-            chainSpec,
-            potentialRelayChains: [relayChain],
-          }),
+    getSmProvider(() =>
+      Promise.all([
+        import("polkadot-api/chains/polkadot").then(({ chainSpec }) =>
+          smoldot.addChain({ chainSpec }),
+        ),
+        import("polkadot-api/chains/polkadot_people"),
+      ]).then(([relay, { chainSpec }]) =>
+        smoldot.addChain({
+          chainSpec,
+          potentialRelayChains: [relay],
+        }),
       ),
     ),
   ),
 )
 const typedApi = client.getTypedApi(polkadot_people)
+const sdk = createIdentitySdk(typedApi)
 
 const CACHE_KEY = "identity-cache"
 const cache: Record<SS58String, Identity | undefined> = JSON.parse(
@@ -55,19 +50,15 @@ export const isVerified = (identity: Identity | null) =>
 
 export const identity$ = state(
   (address: SS58String) =>
-    from(typedApi.query.Identity.IdentityOf.getValue(address)).pipe(
-      map((res): Identity | null => {
-        const displayName = res && readIdentityData(res.info.display)
-        return displayName
+    from(sdk.getIdentity(address)).pipe(
+      map((identity) =>
+        identity?.info.display
           ? {
-              displayName: displayName.asText(),
-              judgments: res.judgements.map(([registrar, judgement]) => ({
-                registrar,
-                judgement: judgement.type,
-              })),
+              displayName: identity.info.display,
+              judgments: identity.judgements,
             }
-          : null
-      }),
+          : null,
+      ),
       tap((v) => {
         if (v != null) {
           cache[address] = v
@@ -132,12 +123,6 @@ export const OnChainIdentity: FC<{
   )
 }
 
-const readIdentityData = (identityData: IdentityData): Binary | null => {
-  if (identityData.type === "None" || identityData.type === "Raw0") return null
-  if (identityData.type === "Raw1")
-    return Binary.fromBytes(new Uint8Array(identityData.value))
-  return identityData.value
-}
 const getPublicKey = (address: string) => {
   const info = getSs58AddressInfo(address)
   return info.isValid ? info.publicKey : null

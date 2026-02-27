@@ -66,10 +66,10 @@ export function trackTransaction(tx$: Observable<TxEvent>) {
 
         const multisigExecuted =
           typedApi.event.Multisig.MultisigExecuted.filter(res.events)[0]
-        if (multisigExecuted && !multisigExecuted.result.success) {
+        if (multisigExecuted && !multisigExecuted.payload.result.success) {
           id = toast.error(
             "Multisig call failed: " +
-              JSON.stringify(multisigExecuted.result.value),
+              JSON.stringify(multisigExecuted.payload.result.value),
             { autoClose: false },
           )
           return

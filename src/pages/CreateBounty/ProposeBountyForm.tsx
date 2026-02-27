@@ -33,9 +33,7 @@ const getProposeBountySchema = ({
 }) => {
   return z.object({
     value: z
-      .bigint({
-        invalid_type_error: "Value is required",
-      })
+      .bigint({ error: "Value is required" })
       .min(minValue, `Must be at least ${format(minValue, SELECTED_TOKEN)}`),
     description: z.string().max(maxLength),
   })

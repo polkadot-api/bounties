@@ -54,7 +54,9 @@ export const BountyDetails: FC<PropsWithChildren<{ bounty: Bounty }>> = ({
 
 const bountyBalance$ = state(
   (id: SS58String) =>
-    typedApi.query.System.Account.watchValue(id).pipe(map((v) => v.data.free)),
+    typedApi.query.System.Account.watchValue(id).pipe(
+      map((v) => v.value.data.free),
+    ),
   null,
 )
 
@@ -65,7 +67,7 @@ const BountyBalance: FC<{ id: SS58String }> = ({ id }) => {
 }
 
 // Borrowed from next bounties-sdk version
-const bountyIdPrefix = Binary.fromText("modlpy/trsry\u0008bt").asBytes()
+const bountyIdPrefix = Binary.fromText("modlpy/trsry\u0008bt")
 const getBountyAccount = (id: number) =>
   AccountId().dec(createId(bountyIdPrefix, u32.enc(id)))
 const ZERO = new Array(32).fill(0)

@@ -22,8 +22,8 @@ export const [proposeBounty$, proposeBounty] = createSignal<{
 
 export const getBountyIndex = (state: SubmitTxState) =>
   state.type === "finalized"
-    ? (typedApi.event.Bounties.BountyProposed.filter(state.events)[0]?.index ??
-      null)
+    ? (typedApi.event.Bounties.BountyProposed.filter(state.events)[0]?.payload
+        .index ?? null)
     : null
 
 export const proposeBountyState$ = state(

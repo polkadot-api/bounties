@@ -2,11 +2,10 @@ import { dotAh } from "@polkadot-api/descriptors"
 import { state } from "@react-rxjs/core"
 import { createClient } from "polkadot-api"
 import { withLogsRecorder } from "polkadot-api/logs-provider"
-import { withPolkadotSdkCompat } from "polkadot-api/polkadot-sdk-compat"
 import { getSmProvider } from "polkadot-api/sm-provider"
 import { startFromWorker } from "polkadot-api/smoldot/from-worker"
 import SmWorker from "polkadot-api/smoldot/worker?worker"
-import { getWsProvider } from "polkadot-api/ws-provider"
+import { getWsProvider } from "polkadot-api/ws"
 import { map, take } from "rxjs"
 import { matchedChain } from "./chainRoute"
 import { chainRpcs } from "./chainRpcs"
@@ -21,28 +20,29 @@ export const smoldot = startFromWorker(new SmWorker(), {
   forbidWs: true,
 })
 
-const polkadotChainSpec = import("polkadot-api/chains/polkadot")
-export const polkadotChain = polkadotChainSpec.then(({ chainSpec }) =>
-  smoldot.addChain({
-    chainSpec,
-  }),
-)
-
 const knownChains = {
   polkadot: () =>
     Promise.all([
-      polkadotChain,
+      import("polkadot-api/chains/polkadot").then(({ chainSpec }) =>
+        smoldot.addChain({ chainSpec }),
+      ),
       import("polkadot-api/chains/polkadot_asset_hub"),
-    ]).then(([chain, { chainSpec }]) =>
+    ]).then(([relay, { chainSpec }]) =>
       smoldot.addChain({
         chainSpec,
-        potentialRelayChains: [chain],
+        potentialRelayChains: [relay],
       }),
     ),
   kusama: () =>
-    import("polkadot-api/chains/ksmcc3").then(({ chainSpec }) =>
+    Promise.all([
+      import("polkadot-api/chains/kusama").then(({ chainSpec }) =>
+        smoldot.addChain({ chainSpec }),
+      ),
+      import("polkadot-api/chains/kusama_asset_hub"),
+    ]).then(([relay, { chainSpec }]) =>
       smoldot.addChain({
         chainSpec,
+        potentialRelayChains: [relay],
       }),
     ),
 }
@@ -55,11 +55,11 @@ function getProvider() {
   }
 
   if (useLightClient) {
-    return getSmProvider(knownChains[matchedChain]())
+    return getSmProvider(knownChains[matchedChain])
   }
 
   const urls = Object.values(chainRpcs[matchedChain])
-  return withPolkadotSdkCompat(getWsProvider(shuffleArray(urls)))
+  return getWsProvider(shuffleArray(urls))
 }
 
 export const client = createClient(

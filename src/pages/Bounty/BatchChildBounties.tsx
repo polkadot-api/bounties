@@ -24,6 +24,7 @@ import { AddressInput } from "polkahub"
 import { FC, useEffect, useMemo, useState } from "react"
 import { catchError, combineLatest, map, takeLast } from "rxjs"
 import { twMerge } from "tailwind-merge"
+import { toHex } from "polkadot-api/utils"
 
 interface ChildRow {
   name: string
@@ -40,11 +41,13 @@ const emptyRow: ChildRow = {
 const unsafeApi = client.getUnsafeApi()
 const nextChildId$ = state(
   (id: number) =>
-    unsafeApi.query.ChildBounties.ParentTotalChildBounties.watchValue(id).pipe(
-      catchError(() =>
-        typedApi.query.ChildBounties.ChildBountyCount.watchValue(),
-      ),
-    ),
+    unsafeApi.query.ChildBounties.ParentTotalChildBounties.watchValue(id)
+      .pipe(
+        catchError(() =>
+          typedApi.query.ChildBounties.ChildBountyCount.watchValue(),
+        ),
+      )
+      .pipe(map(({ value }) => value as number)),
   null,
 )
 
@@ -52,11 +55,11 @@ const curatorMultisigUrl$ = state(
   (curator: SS58String) =>
     combineLatest([
       getNestedLinkedAccounts$(curator),
-      typedApi.compatibilityToken,
+      typedApi.getStaticApis(),
     ]).pipe(
       takeLast(1),
-      map(([result, token]) => {
-        let txWrapper = (tx: Transaction<any, any, any, any>) => tx
+      map(([result, staticApi]) => {
+        let txWrapper = (tx: Transaction) => tx
 
         let currentResult: NestedLinkedAccountsResult | null = result
         let addr = curator
@@ -85,13 +88,16 @@ const curatorMultisigUrl$ = state(
               }
               return {
                 generateUrl: (tx: Transaction<any, any, any, any> | null) => {
-                  const callData = tx
-                    ? txWrapper(tx).getEncodedData(token).asHex()
-                    : null
+                  const finalTx = tx && txWrapper(tx).decodedCall
+                  const callData =
+                    finalTx &&
+                    staticApi.tx[finalTx.type as "Proxy"][
+                      finalTx.value.type as "proxy"
+                    ].getCallData(finalTx.value.value)
 
                   const params = new URLSearchParams()
                   params.set("chain", "sm-" + matchedChain)
-                  callData != null && params.set("calldata", callData)
+                  callData != null && params.set("calldata", toHex(callData))
                   params.set("signatories", multisigInfo.addresses.join("_"))
                   params.set("threshold", String(multisigInfo.threshold))
                   return `https://multisig.usepapi.app/?${params.toString()}`

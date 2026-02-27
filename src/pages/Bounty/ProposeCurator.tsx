@@ -35,7 +35,9 @@ import {
   defer,
   exhaustMap,
   filter,
+  from,
   map,
+  mergeMap,
   of,
   startWith,
   switchMap,
@@ -93,46 +95,47 @@ export const proposeCuratorState$ = state(
         })),
       ),
     ),
-    withLatestFrom(
-      selectedAccount$.pipe(filter((v) => !!v)),
-      typedApi.compatibilityToken,
-    ),
-    exhaustMap(([proposal, selectedAccount, token]) =>
-      defer(() => {
-        const proposeCuratorTx = typedApi.tx.Bounties.propose_curator({
-          bounty_id: proposal.bountyId,
-          curator: MultiAddress.Id(proposal.curator),
-          fee: proposal.fee,
-        }).getEncodedData(token)
-
-        return referendaSdk
-          .createSpenderReferenda(proposeCuratorTx, proposal.fee)
-          .signSubmitAndWatch(selectedAccount.signer!)
-          .pipe(
-            startWith({
-              type: "signing",
-            } satisfies SubmitTxState),
-            map((v): SubmitTxState => {
-              if (v.type === "finalized") {
-                if (!v.ok) {
-                  console.error(v.dispatchError)
-                  return {
-                    type: "idle",
-                    error: v.dispatchError.type,
+    withLatestFrom(selectedAccount$.pipe(filter((v) => !!v))),
+    exhaustMap(([proposal, selectedAccount]) =>
+      defer(() =>
+        from(
+          typedApi.tx.Bounties.propose_curator({
+            bounty_id: proposal.bountyId,
+            curator: MultiAddress.Id(proposal.curator),
+            fee: proposal.fee,
+          }).getEncodedData(),
+        ).pipe(
+          mergeMap((callData) =>
+            referendaSdk
+              .createSpenderReferenda(callData, proposal.fee)
+              .signSubmitAndWatch(selectedAccount.signer!)
+              .pipe(
+                startWith({
+                  type: "signing",
+                } satisfies SubmitTxState),
+                map((v): SubmitTxState => {
+                  if (v.type === "finalized") {
+                    if (!v.ok) {
+                      console.error(v.dispatchError)
+                      return {
+                        type: "idle",
+                        error: v.dispatchError.type,
+                      }
+                    }
+                    if (referendaSdk.getSubmittedReferendum(v) === null) {
+                      return {
+                        type: "idle",
+                        error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
+                      }
+                    }
                   }
-                }
-                if (referendaSdk.getSubmittedReferendum(v) === null) {
-                  return {
-                    type: "idle",
-                    error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
-                  }
-                }
-              }
 
-              return v
-            }),
-          )
-      }).pipe(
+                  return v
+                }),
+              ),
+          ),
+        ),
+      ).pipe(
         catchError((err) =>
           of({
             type: "idle",

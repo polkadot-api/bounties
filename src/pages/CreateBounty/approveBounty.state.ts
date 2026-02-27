@@ -9,7 +9,9 @@ import {
   defer,
   exhaustMap,
   filter,
+  from,
   map,
+  mergeMap,
   of,
   startWith,
   switchMap,
@@ -37,42 +39,40 @@ export const approveBountyState$ = state(
         take(1),
       ),
     ),
-    withLatestFrom(
-      selectedAccount$.pipe(filter((v) => !!v)),
-      typedApi.compatibilityToken,
-    ),
-    exhaustMap(([bounty, selectedAccount, token]) =>
+    withLatestFrom(selectedAccount$.pipe(filter((v) => !!v))),
+    exhaustMap(([bounty, selectedAccount]) =>
       defer(() =>
-        referendaSdk
-          .createSpenderReferenda(
-            getApproveBountyTx(bounty.id).getEncodedData(token),
-            bounty.value,
-          )
-          .signSubmitAndWatch(selectedAccount.signer!)
-          .pipe(
-            startWith({
-              type: "signing",
-            } satisfies SubmitTxState),
-            map((v): SubmitTxState => {
-              if (v.type === "finalized") {
-                if (!v.ok) {
-                  console.error(v.dispatchError)
-                  return {
-                    type: "idle",
-                    error: v.dispatchError.type,
+        from(getApproveBountyTx(bounty.id).getEncodedData()).pipe(
+          mergeMap((callData) =>
+            referendaSdk
+              .createSpenderReferenda(callData, bounty.value)
+              .signSubmitAndWatch(selectedAccount.signer!)
+              .pipe(
+                startWith({
+                  type: "signing",
+                } satisfies SubmitTxState),
+                map((v): SubmitTxState => {
+                  if (v.type === "finalized") {
+                    if (!v.ok) {
+                      console.error(v.dispatchError)
+                      return {
+                        type: "idle",
+                        error: v.dispatchError.type,
+                      }
+                    }
+                    if (referendaSdk.getSubmittedReferendum(v) === null) {
+                      return {
+                        type: "idle",
+                        error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
+                      }
+                    }
                   }
-                }
-                if (referendaSdk.getSubmittedReferendum(v) === null) {
-                  return {
-                    type: "idle",
-                    error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
-                  }
-                }
-              }
 
-              return v
-            }),
+                  return v
+                }),
+              ),
           ),
+        ),
       ).pipe(
         catchError((err) =>
           of({

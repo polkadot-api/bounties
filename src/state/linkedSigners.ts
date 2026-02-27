@@ -8,7 +8,7 @@ import {
   subscanProvider,
   throttleMultisigProvider,
 } from "@polkadot-api/sdk-accounts"
-import { toHex } from "@polkadot-api/utils"
+import { toHex } from "polkadot-api/utils"
 import { getSs58AddressInfo, PolkadotSigner } from "polkadot-api"
 import {
   catchError,
