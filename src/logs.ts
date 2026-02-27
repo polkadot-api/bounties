@@ -216,4 +216,4 @@ export const logs = [
   `1-2025-05-26T16:35:58.318Z-<<-{"jsonrpc":"2.0","id":"1-40","result":null}`,
   `1-2025-05-26T16:36:00.699Z-<<-{"jsonrpc":"2.0","method":"chainHead_v1_followEvent","params":{"subscription":"FZmr1UKT8EucsNjeTTSwmKa5erMkg1aQZMPxocZXWsL8","result":{"event":"newBlock","blockHash":"0x26be0a8abff7f7dba180015b7842971f5f148865a83845daae5101b90f4d37d5","parentBlockHash":"0xae7f282a4d30594bd34f8043167011e9711f0339bfffdbeb8cb55f603047bdbc","newRuntime":null}}}`,
   `1-2025-05-26T16:36:00.708Z-<<-{"jsonrpc":"2.0","method":"chainHead_v1_followEvent","params":{"subscription":"FZmr1UKT8EucsNjeTTSwmKa5erMkg1aQZMPxocZXWsL8","result":{"event":"bestBlockChanged","bestBlockHash":"0x26be0a8abff7f7dba180015b7842971f5f148865a83845daae5101b90f4d37d5"}}}`,
-];
+]

@@ -1,7 +1,7 @@
-import { typedApi, USE_CHOPSTICKS } from "@/chain";
-import { identity$, isVerified } from "@/components/OnChainIdentity";
-import { SELECTED_TOKEN } from "@/components/TokenInput";
-import { withDefault } from "@react-rxjs/core";
+import { typedApi, USE_CHOPSTICKS } from "@/chain"
+import { identity$, isVerified } from "@/components/OnChainIdentity"
+import { SELECTED_TOKEN } from "@/components/TokenInput"
+import { withDefault } from "@react-rxjs/core"
 import {
   createLedgerProvider,
   createMimirProvider,
@@ -10,26 +10,26 @@ import {
   createPolkaHub,
   createReadOnlyProvider,
   createSelectedAccountPlugin,
-} from "polkahub";
-import { defer, map } from "rxjs";
+} from "polkahub"
+import { defer, map } from "rxjs"
 
-const ss58Format$ = defer(typedApi.constants.System.SS58Prefix);
+const ss58Format$ = defer(typedApi.constants.System.SS58Prefix)
 
 const getNetworkInfo = async () => ({
   decimals: SELECTED_TOKEN.decimals,
   tokenSymbol: SELECTED_TOKEN.symbol,
-});
-const selectedAccountPlugin = createSelectedAccountPlugin();
-const pjsWalletProvider = createPjsWalletProvider();
-const polkadotVaultProvider = createPolkadotVaultProvider({ getNetworkInfo });
+})
+const selectedAccountPlugin = createSelectedAccountPlugin()
+const pjsWalletProvider = createPjsWalletProvider()
+const polkadotVaultProvider = createPolkadotVaultProvider({ getNetworkInfo })
 const readOnlyProvider = createReadOnlyProvider({
   fakeSigner: USE_CHOPSTICKS,
-});
+})
 const ledgerAccountProvider = createLedgerProvider(async () => {
-  const module = await import("@ledgerhq/hw-transport-webhid");
-  return module.default.create();
-}, getNetworkInfo);
-export const mimirProvider = createMimirProvider("Bounties");
+  const module = await import("@ledgerhq/hw-transport-webhid")
+  return module.default.create()
+}, getNetworkInfo)
+export const mimirProvider = createMimirProvider("Bounties")
 
 export const polkaHub = createPolkaHub(
   [
@@ -49,12 +49,12 @@ export const polkaHub = createPolkaHub(
                 name: identity.displayName,
                 verified: isVerified(identity) ?? false,
               }
-            : null
-        )
+            : null,
+        ),
       ),
     ss58Format: ss58Format$,
-  }
-);
+  },
+)
 
 export const selectedAccount$ =
-  selectedAccountPlugin.selectedAccount$.pipeState(withDefault(null));
+  selectedAccountPlugin.selectedAccount$.pipeState(withDefault(null))

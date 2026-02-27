@@ -1,45 +1,45 @@
-import { typedApi } from "@/chain";
-import { IdentityLinks } from "@/components/IdentityLinks";
-import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { typedApi } from "@/chain"
+import { IdentityLinks } from "@/components/IdentityLinks"
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { TransactionDialog } from "@/Transactions";
-import { ActiveBounty as SdkActiveBounty } from "@polkadot-api/sdk-governance";
-import { state, useStateObservable } from "@react-rxjs/core";
-import { Binary, Transaction } from "polkadot-api";
-import { AddressInput } from "polkahub";
-import { FC, useEffect, useRef, useState } from "react";
-import { Link, Route, Routes } from "react-router-dom";
-import { defer, map } from "rxjs";
-import { BatchChildBounties } from "./BatchChildBounties";
-import { BlockDue, getBlockTimeDiff } from "./BlockDue";
-import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
-import { BountyDetails } from "./BountyDetails";
-import { ChildBounties } from "./ChildBounty/ChildBounties";
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { TransactionDialog } from "@/Transactions"
+import { ActiveBounty as SdkActiveBounty } from "@polkadot-api/sdk-governance"
+import { state, useStateObservable } from "@react-rxjs/core"
+import { Binary, Transaction } from "polkadot-api"
+import { AddressInput } from "polkahub"
+import { FC, useEffect, useRef, useState } from "react"
+import { Link, Route, Routes } from "react-router-dom"
+import { defer, map } from "rxjs"
+import { BatchChildBounties } from "./BatchChildBounties"
+import { BlockDue, getBlockTimeDiff } from "./BlockDue"
+import { BountyDetail, BountyDetailGroup } from "./BountyDetail"
+import { BountyDetails } from "./BountyDetails"
+import { ChildBounties } from "./ChildBounty/ChildBounties"
 import {
   childBountyKeys$,
   hasActiveChildBounties$,
-} from "./ChildBounty/childBounties.state";
-import { ChildBounty as SdkChildBounty } from "./ChildBounty/ChildBounty";
-import { bountyCuratorSigner$ } from "./curatorSigner";
-import { remark } from "./remark";
+} from "./ChildBounty/childBounties.state"
+import { ChildBounty as SdkChildBounty } from "./ChildBounty/ChildBounty"
+import { bountyCuratorSigner$ } from "./curatorSigner"
+import { remark } from "./remark"
 
 export const ActiveBounty: FC<{
-  bounty: SdkActiveBounty;
+  bounty: SdkActiveBounty
 }> = ({ bounty }) => {
-  const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id));
+  const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id))
 
   useEffect(() => {
-    const sub = childBountyKeys$(bounty.id).subscribe();
-    return () => sub.unsubscribe();
-  }, []);
+    const sub = childBountyKeys$(bounty.id).subscribe()
+    return () => sub.unsubscribe()
+  }, [])
 
   return (
     <Routes>
@@ -104,26 +104,21 @@ export const ActiveBounty: FC<{
         }
       />
     </Routes>
-  );
-};
+  )
+}
 
 /**
- * unassign_curator
- *  => reject origin.
- *  => curator voluntarily giving up the bounty.
- *  => anyone if the due time has passed.
- * extend_bounty_expiry
- *  => curator
- * award_bounty
- *  => curator if there are no child bounties active
- * close_bounty
- *  => reject origin if no active child bounties
+ * Unassign_curator => reject origin.
+ * => curator voluntarily giving up the bounty.
+ * => anyone if the due time has passed.
+ * extend_bounty_expiry => curator award_bounty => curator if there are no child
+ * bounties active close_bounty => reject origin if no active child bounties.
  */
 const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
-  const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id));
+  const curatorSigner = useStateObservable(bountyCuratorSigner$(bounty.id))
   const hasActiveChildBounties = useStateObservable(
-    hasActiveChildBounties$(bounty.id)
-  );
+    hasActiveChildBounties$(bounty.id),
+  )
 
   const renderExtendExpiry = () => (
     <TransactionDialog
@@ -134,7 +129,7 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
     >
       Extend Expiry
     </TransactionDialog>
-  );
+  )
   const renderAwardBounty = () =>
     !hasActiveChildBounties ? (
       <TransactionDialog
@@ -147,7 +142,7 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
       >
         Award Bounty
       </TransactionDialog>
-    ) : null;
+    ) : null
 
   return (
     <div className="flex gap-2 border border-border rounded p-2">
@@ -156,21 +151,21 @@ const BountyActions: FC<{ bounty: SdkActiveBounty }> = ({ bounty }) => {
         {renderAwardBounty()}
       </div>
     </div>
-  );
-};
+  )
+}
 
 const nextUpdate$ = state(
   defer(typedApi.constants.Bounties.BountyUpdatePeriod).pipe(
-    map((blocks) => new Date(Date.now() + getBlockTimeDiff(0, blocks)))
+    map((blocks) => new Date(Date.now() + getBlockTimeDiff(0, blocks))),
   ),
-  null
-);
+  null,
+)
 const ExtendExpiryDailog: FC<{
-  bounty: SdkActiveBounty;
-  onSubmit: (tx: Transaction<any, any, any, any>) => void;
+  bounty: SdkActiveBounty
+  onSubmit: (tx: Transaction<any, any, any, any>) => void
 }> = ({ bounty, onSubmit }) => {
-  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
-  const nextUpdate = useStateObservable(nextUpdate$);
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
+  const nextUpdate = useStateObservable(nextUpdate$)
 
   return (
     <DialogContent>
@@ -200,13 +195,13 @@ const ExtendExpiryDailog: FC<{
         </Button>
       </div>
     </DialogContent>
-  );
-};
+  )
+}
 
 export const AwardBountyDialog: FC<{
-  onSubmit: (value: string) => void;
+  onSubmit: (value: string) => void
 }> = ({ onSubmit }) => {
-  const [value, setValue] = useState<string | null>(null);
+  const [value, setValue] = useState<string | null>(null)
 
   return (
     <DialogContent>
@@ -231,15 +226,15 @@ export const AwardBountyDialog: FC<{
         </Button>
       </div>
     </DialogContent>
-  );
-};
+  )
+}
 
 const AddChildDialog: FC<{
-  id: number;
-  onSubmit: (tx: Transaction<any, any, any, any>) => void;
+  id: number
+  onSubmit: (tx: Transaction<any, any, any, any>) => void
 }> = ({ id, onSubmit }) => {
-  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [value, setValue] = useState<bigint | null>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
+  const [value, setValue] = useState<bigint | null>(null)
 
   return (
     <DialogContent>
@@ -269,7 +264,7 @@ const AddChildDialog: FC<{
                 parent_bounty_id: id,
                 description: Binary.fromText(textAreaRef.current!.value),
                 value: value!,
-              })
+              }),
             )
           }
         >
@@ -277,5 +272,5 @@ const AddChildDialog: FC<{
         </Button>
       </div>
     </DialogContent>
-  );
-};
+  )
+}

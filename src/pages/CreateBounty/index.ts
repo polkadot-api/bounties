@@ -1,1 +1,1 @@
-export * from "./CreateBounty";
+export * from "./CreateBounty"

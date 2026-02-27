@@ -1,1 +1,1 @@
-export * from "./Bounty";
+export * from "./Bounty"

@@ -1,28 +1,28 @@
-import { getNestedLinkedAccounts$ } from "@/state/linkedSigners";
-import { NestedLinkedAccountsResult } from "@polkadot-api/sdk-accounts";
-import { state, useStateObservable } from "@react-rxjs/core";
-import { SS58String } from "polkadot-api";
-import { FC } from "react";
-import { OnChainIdentity } from "./OnChainIdentity";
+import { getNestedLinkedAccounts$ } from "@/state/linkedSigners"
+import { NestedLinkedAccountsResult } from "@polkadot-api/sdk-accounts"
+import { state, useStateObservable } from "@react-rxjs/core"
+import { SS58String } from "polkadot-api"
+import { FC } from "react"
+import { OnChainIdentity } from "./OnChainIdentity"
 
 const nestedLinks$ = state(
   (address: SS58String) => getNestedLinkedAccounts$(address),
-  null
-);
+  null,
+)
 
 export const IdentityLinks: FC<{ address: SS58String }> = ({ address }) => {
-  const nestedLinks = useStateObservable(nestedLinks$(address));
+  const nestedLinks = useStateObservable(nestedLinks$(address))
 
   return (
     <div>
       <OnChainIdentity value={address} />
       <NestedLinksDisplay links={nestedLinks} />
     </div>
-  );
-};
+  )
+}
 
 const NestedLinksDisplay: FC<{
-  links: NestedLinkedAccountsResult | null;
+  links: NestedLinkedAccountsResult | null
 }> = ({ links }) =>
   !links || links.type === "root" ? null : (
     <div>
@@ -40,4 +40,4 @@ const NestedLinksDisplay: FC<{
         ))}
       </ul>
     </div>
-  );
+  )

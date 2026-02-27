@@ -1,48 +1,48 @@
-import { IdentityLinks } from "@/components/IdentityLinks";
-import { Loading } from "@/components/Loading";
-import { OnChainIdentity } from "@/components/OnChainIdentity";
-import { selectedAccount$ } from "@/state/account";
-import { bounty$ } from "@/state/bounties";
-import { TransactionButton } from "@/Transactions";
+import { IdentityLinks } from "@/components/IdentityLinks"
+import { Loading } from "@/components/Loading"
+import { OnChainIdentity } from "@/components/OnChainIdentity"
+import { selectedAccount$ } from "@/state/account"
+import { bounty$ } from "@/state/bounties"
+import { TransactionButton } from "@/Transactions"
 import type {
   CuratorProposedBounty,
   FundedBounty,
   PendingPayoutBounty,
   ProposedBounty,
-} from "@polkadot-api/sdk-governance";
-import { useStateObservable } from "@react-rxjs/core";
-import { FC } from "react";
-import { useParams } from "react-router-dom";
-import { ApproveBountyButton } from "../CreateBounty/AproveBounty";
-import { ActiveBounty } from "./ActiveBounty";
-import { BlockDue, isBlockDue$ } from "./BlockDue";
-import { BountyDetail, BountyDetailGroup } from "./BountyDetail";
-import { BountyDetails } from "./BountyDetails";
+} from "@polkadot-api/sdk-governance"
+import { useStateObservable } from "@react-rxjs/core"
+import { FC } from "react"
+import { useParams } from "react-router-dom"
+import { ApproveBountyButton } from "../CreateBounty/AproveBounty"
+import { ActiveBounty } from "./ActiveBounty"
+import { BlockDue, isBlockDue$ } from "./BlockDue"
+import { BountyDetail, BountyDetailGroup } from "./BountyDetail"
+import { BountyDetails } from "./BountyDetails"
 import {
   ApproveBountyReferendum,
   ProposeBountyReferendum,
-} from "./BountyReferendum";
-import { bountyCuratorSigner$ } from "./curatorSigner";
-import { ProposeCurator } from "./ProposeCurator";
+} from "./BountyReferendum"
+import { bountyCuratorSigner$ } from "./curatorSigner"
+import { ProposeCurator } from "./ProposeCurator"
 
 export const Bounty = () => {
-  const id = Number(useParams().id);
-  const bounty = useStateObservable(bounty$(id));
+  const id = Number(useParams().id)
+  const bounty = useStateObservable(bounty$(id))
 
-  if (!bounty) return <Loading className="p-2">Loading bounty…</Loading>;
+  if (!bounty) return <Loading className="p-2">Loading bounty…</Loading>
 
   const getContent = () => {
     switch (bounty.type) {
       case "Proposed":
-        return <ProposedBounty bounty={bounty} />;
+        return <ProposedBounty bounty={bounty} />
       case "Funded":
-        return <FundedBounty bounty={bounty} />;
+        return <FundedBounty bounty={bounty} />
       case "Active":
-        return <ActiveBounty bounty={bounty} />;
+        return <ActiveBounty bounty={bounty} />
       case "CuratorProposed":
-        return <CuratorProposedBounty bounty={bounty} />;
+        return <CuratorProposedBounty bounty={bounty} />
       case "PendingPayout":
-        return <PendingPayoutBounty bounty={bounty} />;
+        return <PendingPayoutBounty bounty={bounty} />
       case "Approved":
       case "ApprovedWithCurator":
         return (
@@ -55,15 +55,15 @@ export const Bounty = () => {
               </p>
             </BountyDetailGroup>
           </BountyDetails>
-        );
+        )
     }
-  };
+  }
 
-  return <div className="flex flex-col gap-2 p-2">{getContent()}</div>;
-};
+  return <div className="flex flex-col gap-2 p-2">{getContent()}</div>
+}
 
 const FundedBounty: FC<{
-  bounty: FundedBounty;
+  bounty: FundedBounty
 }> = ({ bounty }) => (
   <BountyDetails bounty={bounty}>
     <BountyDetailGroup>
@@ -72,14 +72,14 @@ const FundedBounty: FC<{
     <FundedBountyActions bounty={bounty} />
     <ProposeBountyReferendum id={bounty.id} />
   </BountyDetails>
-);
+)
 
 const FundedBountyActions: FC<{ bounty: FundedBounty }> = ({ bounty }) => (
   <ProposeCurator id={bounty.id} />
-);
+)
 
 const ProposedBounty: FC<{
-  bounty: ProposedBounty;
+  bounty: ProposedBounty
 }> = ({ bounty }) => (
   <BountyDetails bounty={bounty}>
     <BountyDetailGroup>
@@ -87,17 +87,17 @@ const ProposedBounty: FC<{
     </BountyDetailGroup>
     <ProposedBountyActions bounty={bounty} />
   </BountyDetails>
-);
+)
 
 const ProposedBountyActions: FC<{ bounty: ProposedBounty }> = ({ bounty }) => (
   <>
     <ApproveBountyButton id={bounty.id} className="self-start" />
     <ApproveBountyReferendum id={bounty.id} />
   </>
-);
+)
 
 const CuratorProposedBounty: FC<{
-  bounty: CuratorProposedBounty;
+  bounty: CuratorProposedBounty
 }> = ({ bounty }) => {
   return (
     <BountyDetails bounty={bounty}>
@@ -109,13 +109,13 @@ const CuratorProposedBounty: FC<{
       </BountyDetailGroup>
       <CuratorProposedActions bounty={bounty} />
     </BountyDetails>
-  );
-};
+  )
+}
 
 const CuratorProposedActions: FC<{ bounty: CuratorProposedBounty }> = ({
   bounty,
 }) => {
-  const signer = useStateObservable(bountyCuratorSigner$(bounty.id));
+  const signer = useStateObservable(bountyCuratorSigner$(bounty.id))
   return (
     <div className="flex justify-between">
       <TransactionButton signer={signer} createTx={bounty.acceptCuratorRole}>
@@ -129,14 +129,14 @@ const CuratorProposedActions: FC<{ bounty: CuratorProposedBounty }> = ({
         Reject Curator Role
       </TransactionButton>
     </div>
-  );
-};
+  )
+}
 
 const PendingPayoutBounty: FC<{
-  bounty: PendingPayoutBounty;
+  bounty: PendingPayoutBounty
 }> = ({ bounty }) => {
-  const isDue = useStateObservable(isBlockDue$(bounty.unlockAt));
-  const selectedAccount = useStateObservable(selectedAccount$);
+  const isDue = useStateObservable(isBlockDue$(bounty.unlockAt))
+  const selectedAccount = useStateObservable(selectedAccount$)
 
   return (
     <BountyDetails bounty={bounty}>
@@ -162,5 +162,5 @@ const PendingPayoutBounty: FC<{
         </TransactionButton>
       </div>
     </BountyDetails>
-  );
-};
+  )
+}

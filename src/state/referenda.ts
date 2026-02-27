@@ -1,19 +1,19 @@
-import { typedApi } from "@/chain";
-import { createReferendaSdk } from "@polkadot-api/sdk-governance";
-import { state } from "@react-rxjs/core";
-import { map, MonoTypeOperatorFunction, Observable } from "rxjs";
+import { typedApi } from "@/chain"
+import { createReferendaSdk } from "@polkadot-api/sdk-governance"
+import { state } from "@react-rxjs/core"
+import { map, MonoTypeOperatorFunction, Observable } from "rxjs"
 
-export const referendaSdk = createReferendaSdk(typedApi);
+export const referendaSdk = createReferendaSdk(typedApi)
 
 const sharedOngoingReferenda$ = state(
   referendaSdk.watch.referenda$.pipe(
     map((v) => Array.from(v.values()).filter((ref) => ref.type === "Ongoing")),
   ),
-);
+)
 
 export const ongoingReferenda$ = sharedOngoingReferenda$.pipe(
   delayUnsubscription(60 * 1000),
-);
+)
 
 function delayUnsubscription<T>(ms: number): MonoTypeOperatorFunction<T> {
   return (source$) =>
@@ -22,10 +22,10 @@ function delayUnsubscription<T>(ms: number): MonoTypeOperatorFunction<T> {
         next: subscriber.next.bind(subscriber),
         error: subscriber.error.bind(subscriber),
         complete: subscriber.complete.bind(subscriber),
-      });
+      })
 
       return () => {
-        setTimeout(subscription.unsubscribe, ms);
-      };
-    });
+        setTimeout(subscription.unsubscribe, ms)
+      }
+    })
 }

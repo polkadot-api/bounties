@@ -1,61 +1,61 @@
-import { CopyText } from "@/components/CopyText";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { bounty$ } from "@/state/bounties";
-import { referendaSdk } from "@/state/referenda";
-import { PolkadotRuntimeOriginCallerOriginal } from "@polkadot-api/sdk-governance";
-import { state, useStateObservable } from "@react-rxjs/core";
-import { Loader2 } from "lucide-react";
-import { FC, ReactNode } from "react";
-import { filter, map, switchMap } from "rxjs";
-import { twMerge } from "tailwind-merge";
+import { CopyText } from "@/components/CopyText"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { bounty$ } from "@/state/bounties"
+import { referendaSdk } from "@/state/referenda"
+import { PolkadotRuntimeOriginCallerOriginal } from "@polkadot-api/sdk-governance"
+import { state, useStateObservable } from "@react-rxjs/core"
+import { Loader2 } from "lucide-react"
+import { FC, ReactNode } from "react"
+import { filter, map, switchMap } from "rxjs"
+import { twMerge } from "tailwind-merge"
 import {
   approveBounty,
   approveBountyState$,
   getApproveBountyTx,
-} from "./approveBounty.state";
-import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state";
-import { isTxInProgress, TxProgress } from "./TxProgress";
+} from "./approveBounty.state"
+import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state"
+import { isTxInProgress, TxProgress } from "./TxProgress"
 
 export const approveBountyDetails$ = state(
   (bountyId: number) =>
     bounty$(bountyId).pipe(
       filter((v) => !!v),
       switchMap((bounty) => {
-        const proposal = getApproveBountyTx(bountyId).getEncodedData();
+        const proposal = getApproveBountyTx(bountyId).getEncodedData()
         const approveBountyReferenda = proposal.then((data) =>
           referendaSdk
             .createSpenderReferenda(data, bounty.value)
-            .getEncodedData()
-        );
-        const spenderTrack = referendaSdk.getSpenderTrack(bounty!.value);
+            .getEncodedData(),
+        )
+        const spenderTrack = referendaSdk.getSpenderTrack(bounty!.value)
 
         return Promise.all([
           spenderTrack.origin,
           proposal,
           approveBountyReferenda,
-        ] as const);
+        ] as const)
       }),
       map(([origin, proposalCall, referendaCall]) => ({
         origin,
         proposalCall,
         referendaCall,
-      }))
+      })),
     ),
-  null
-);
+  null,
+)
 
 export const SubmitReferendumForm: FC<{
-  bountyIndex: number;
-  className?: string;
+  bountyIndex: number
+  className?: string
 }> = ({ className, bountyIndex }) => {
-  const details = useStateObservable(approveBountyDetails$(bountyIndex));
+  const details = useStateObservable(approveBountyDetails$(bountyIndex))
 
   if (!details) {
-    return <div>Loading…</div>;
+    return <div>Loading…</div>
   }
 
-  const proposal = details.proposalCall.asHex();
+  const proposal = details.proposalCall.asHex()
 
   return (
     <div className={twMerge(className, "space-y-2")}>
@@ -74,7 +74,7 @@ export const SubmitReferendumForm: FC<{
           <Label>Track</Label>
           <div className="pl-2 text-foreground/80">
             {getTrackName(
-              details.origin as PolkadotRuntimeOriginCallerOriginal
+              details.origin as PolkadotRuntimeOriginCallerOriginal,
             )}
           </div>
         </div>
@@ -96,56 +96,56 @@ export const SubmitReferendumForm: FC<{
       </div>
       <SubmitButton onClick={() => approveBounty(bountyIndex)} />
     </div>
-  );
-};
+  )
+}
 
 const SubmitButton: FC<{ onClick: () => void }> = ({ onClick }) => {
-  const approveBountyState = useStateObservable(approveBountyState$);
-  const isLoading = approveBountyState.type !== "idle";
+  const approveBountyState = useStateObservable(approveBountyState$)
+  const isLoading = approveBountyState.type !== "idle"
 
   return (
     <Button type="submit" disabled={isLoading} forceSvgSize onClick={onClick}>
       Sign and Submit
       {isLoading && <Loader2 className="animate-spin" />}
     </Button>
-  );
-};
+  )
+}
 
 const getTrackName = (origin: PolkadotRuntimeOriginCallerOriginal) => {
-  if (origin.type !== "Origins") return "Root";
-  const spenderOrigin = origin.value;
+  if (origin.type !== "Origins") return "Root"
+  const spenderOrigin = origin.value
   switch (spenderOrigin.type) {
     case "SmallTipper":
-      return "Small Tipper";
+      return "Small Tipper"
     case "BigTipper":
-      return "Big Tipper";
+      return "Big Tipper"
     case "SmallSpender":
-      return "Small Spender";
+      return "Small Spender"
     case "MediumSpender":
-      return "Medium Spender";
+      return "Medium Spender"
     case "BigSpender":
-      return "Big Spender";
+      return "Big Spender"
   }
-  return spenderOrigin.type;
-};
+  return spenderOrigin.type
+}
 
 export const SubmitReferendumStep: FC<{
-  bountyId?: number;
-  title?: ReactNode;
+  bountyId?: number
+  title?: ReactNode
 }> = ({ title, bountyId }) => {
-  const approveBountyState = useStateObservable(approveBountyState$);
-  const proposeBountyState = useStateObservable(proposeBountyState$);
+  const approveBountyState = useStateObservable(approveBountyState$)
+  const proposeBountyState = useStateObservable(proposeBountyState$)
 
-  const bountyIndex = bountyId ?? getBountyIndex(proposeBountyState);
+  const bountyIndex = bountyId ?? getBountyIndex(proposeBountyState)
 
-  if (bountyIndex === null) return null;
+  if (bountyIndex === null) return null
 
   return (
     <div className="overflow-hidden px-1 relative">
       <div
         className={twMerge(
           "transition-opacity",
-          isTxInProgress(approveBountyState) && "opacity-0"
+          isTxInProgress(approveBountyState) && "opacity-0",
         )}
       >
         {title}
@@ -153,5 +153,5 @@ export const SubmitReferendumStep: FC<{
       </div>
       <TxProgress state={approveBountyState} />
     </div>
-  );
-};
+  )
+}

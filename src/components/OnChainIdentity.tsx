@@ -1,26 +1,26 @@
-import { polkadotChain, smoldot } from "@/chain";
-import { cn } from "@/lib/utils";
+import { polkadotChain, smoldot } from "@/chain"
+import { cn } from "@/lib/utils"
 import {
   IdentityData,
   IdentityJudgement,
   polkadot_people,
-} from "@polkadot-api/descriptors";
-import { PolkadotIdenticon } from "@polkadot-api/react-components";
-import { state, useStateObservable } from "@react-rxjs/core";
-import { CheckCircle } from "lucide-react";
+} from "@polkadot-api/descriptors"
+import { PolkadotIdenticon } from "@polkadot-api/react-components"
+import { state, useStateObservable } from "@react-rxjs/core"
+import { CheckCircle } from "lucide-react"
 import {
   Binary,
   createClient,
   getSs58AddressInfo,
   SS58String,
-} from "polkadot-api";
-import { withLogsRecorder } from "polkadot-api/logs-provider";
-import { getSmProvider } from "polkadot-api/sm-provider";
-import { FC } from "react";
-import { catchError, from, map, of, tap } from "rxjs";
-import { CopyText } from "./CopyText";
+} from "polkadot-api"
+import { withLogsRecorder } from "polkadot-api/logs-provider"
+import { getSmProvider } from "polkadot-api/sm-provider"
+import { FC } from "react"
+import { catchError, from, map, of, tap } from "rxjs"
+import { CopyText } from "./CopyText"
 
-const peopleChainSpec = import("polkadot-api/chains/polkadot_people");
+const peopleChainSpec = import("polkadot-api/chains/polkadot_people")
 
 const client = createClient(
   withLogsRecorder(
@@ -31,33 +31,33 @@ const client = createClient(
           smoldot.addChain({
             chainSpec,
             potentialRelayChains: [relayChain],
-          })
-      )
-    )
-  )
-);
-const typedApi = client.getTypedApi(polkadot_people);
+          }),
+      ),
+    ),
+  ),
+)
+const typedApi = client.getTypedApi(polkadot_people)
 
-const CACHE_KEY = "identity-cache";
+const CACHE_KEY = "identity-cache"
 const cache: Record<SS58String, Identity | undefined> = JSON.parse(
-  localStorage.getItem(CACHE_KEY) ?? "{}"
-);
+  localStorage.getItem(CACHE_KEY) ?? "{}",
+)
 
 export interface Identity {
-  displayName: string;
+  displayName: string
   judgments: Array<{
-    registrar: number;
-    judgement: IdentityJudgement["type"];
-  }>;
+    registrar: number
+    judgement: IdentityJudgement["type"]
+  }>
 }
 export const isVerified = (identity: Identity | null) =>
-  identity?.judgments.some((j) => j.judgement === "Reasonable");
+  identity?.judgments.some((j) => j.judgement === "Reasonable")
 
 export const identity$ = state(
   (address: SS58String) =>
     from(typedApi.query.Identity.IdentityOf.getValue(address)).pipe(
       map((res): Identity | null => {
-        const displayName = res && readIdentityData(res.info.display);
+        const displayName = res && readIdentityData(res.info.display)
         return displayName
           ? {
               displayName: displayName.asText(),
@@ -66,30 +66,30 @@ export const identity$ = state(
                 judgement: judgement.type,
               })),
             }
-          : null;
+          : null
       }),
       tap((v) => {
         if (v != null) {
-          cache[address] = v;
+          cache[address] = v
         } else {
-          delete cache[address];
+          delete cache[address]
         }
-        localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
       }),
-      catchError(() => of(null))
+      catchError(() => of(null)),
     ),
-  (address) => cache[address] ?? null
-);
+  (address) => cache[address] ?? null,
+)
 
 export const OnChainIdentity: FC<{
-  value: SS58String;
-  name?: string;
-  className?: string;
-  copyable?: boolean;
+  value: SS58String
+  name?: string
+  className?: string
+  copyable?: boolean
 }> = ({ value, name: inputName, className, copyable = true }) => {
-  const identity = useStateObservable(identity$(value));
+  const identity = useStateObservable(identity$(value))
 
-  const name = identity?.displayName ?? inputName;
+  const name = identity?.displayName ?? inputName
 
   const identicon = (
     <PolkadotIdenticon
@@ -97,7 +97,7 @@ export const OnChainIdentity: FC<{
       publicKey={getPublicKey(value)}
       size={28}
     />
-  );
+  )
   return (
     <div className={cn("flex items-center gap-1 overflow-hidden", className)}>
       {copyable ? (
@@ -129,16 +129,16 @@ export const OnChainIdentity: FC<{
         ) : null}
       </div>
     </div>
-  );
-};
+  )
+}
 
 const readIdentityData = (identityData: IdentityData): Binary | null => {
-  if (identityData.type === "None" || identityData.type === "Raw0") return null;
+  if (identityData.type === "None" || identityData.type === "Raw0") return null
   if (identityData.type === "Raw1")
-    return Binary.fromBytes(new Uint8Array(identityData.value));
-  return identityData.value;
-};
+    return Binary.fromBytes(new Uint8Array(identityData.value))
+  return identityData.value
+}
 const getPublicKey = (address: string) => {
-  const info = getSs58AddressInfo(address);
-  return info.isValid ? info.publicKey : null;
-};
+  const info = getSs58AddressInfo(address)
+  return info.isValid ? info.publicKey : null
+}

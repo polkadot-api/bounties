@@ -1,5 +1,5 @@
-import { mimirProvider } from "@/state/account";
-import { useStateObservable } from "@react-rxjs/core";
+import { mimirProvider } from "@/state/account"
+import { useStateObservable } from "@react-rxjs/core"
 import {
   ManageLedger,
   ManagePjsWallets,
@@ -8,10 +8,10 @@ import {
   MimirButton,
   PolkaHubModal,
   SelectAccountField,
-} from "polkahub";
+} from "polkahub"
 
 export const AccountSelector = () => {
-  const isMimir = useStateObservable(mimirProvider.isReady$);
+  const isMimir = useStateObservable(mimirProvider.isReady$)
 
   if (isMimir) {
     return (
@@ -25,7 +25,7 @@ export const AccountSelector = () => {
           </div>
         </div>
       </PolkaHubModal>
-    );
+    )
   }
 
   return (
@@ -41,5 +41,5 @@ export const AccountSelector = () => {
         </div>
       </div>
     </PolkaHubModal>
-  );
-};
+  )
+}

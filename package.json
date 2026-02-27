@@ -52,15 +52,26 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@homer0/prettier-plugin-jsdoc": "^11.0.2",
     "@tailwindcss/vite": "^4.2.1",
     "@types/node": "^25.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "globals": "^17.3.0",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": false,
+    "trailingComma": "all",
+    "jsdocExperimentalFormatCommentsWithoutTags": true,
+    "plugins": [
+      "@homer0/prettier-plugin-jsdoc"
+    ]
   },
   "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
 }

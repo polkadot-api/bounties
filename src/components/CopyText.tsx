@@ -1,14 +1,14 @@
-import { CopyText as OGCopyText } from "@polkadot-api/react-components";
-import { CheckCircle, Copy } from "lucide-react";
-import { PropsWithChildren } from "react";
-import { CopyBinaryIcon } from "./Icons";
+import { CopyText as OGCopyText } from "@polkadot-api/react-components"
+import { CheckCircle, Copy } from "lucide-react"
+import { PropsWithChildren } from "react"
+import { CopyBinaryIcon } from "./Icons"
 
 export const CopyText: React.FC<
   PropsWithChildren<{
-    text: string;
-    disabled?: boolean;
-    className?: string;
-    binary?: boolean;
+    text: string
+    disabled?: boolean
+    className?: string
+    binary?: boolean
   }>
 > = ({ children, binary = false, ...rest }) => {
   return (
@@ -20,5 +20,5 @@ export const CopyText: React.FC<
     >
       {children ?? (binary ? <CopyBinaryIcon size={16} /> : <Copy size={16} />)}
     </OGCopyText>
-  );
-};
+  )
+}

@@ -1,23 +1,23 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { selectedAccount$ } from "@/state/account";
-import { referendaSdk } from "@/state/referenda";
-import { DialogTrigger } from "@radix-ui/react-dialog";
-import { Subscribe, useStateObservable } from "@react-rxjs/core";
-import { approveBountyState$ } from "./approveBounty.state";
-import { ReferendumCreatedStep } from "./AproveBounty";
-import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state";
-import { ProposeBountyStep } from "./ProposeBountyForm";
-import { SubmitReferendumStep } from "./SubmitReferendumForm";
+} from "@/components/ui/dialog"
+import { selectedAccount$ } from "@/state/account"
+import { referendaSdk } from "@/state/referenda"
+import { DialogTrigger } from "@radix-ui/react-dialog"
+import { Subscribe, useStateObservable } from "@react-rxjs/core"
+import { approveBountyState$ } from "./approveBounty.state"
+import { ReferendumCreatedStep } from "./AproveBounty"
+import { getBountyIndex, proposeBountyState$ } from "./proposeBounty.state"
+import { ProposeBountyStep } from "./ProposeBountyForm"
+import { SubmitReferendumStep } from "./SubmitReferendumForm"
 
 export const CreateBountyButton = () => {
-  const account = useStateObservable(selectedAccount$);
+  const account = useStateObservable(selectedAccount$)
 
   return (
     <Dialog>
@@ -26,8 +26,8 @@ export const CreateBountyButton = () => {
       </DialogTrigger>
       <CreateBountyDialog />
     </Dialog>
-  );
-};
+  )
+}
 
 const CreateBountyDialog = () => (
   <DialogContent>
@@ -42,14 +42,14 @@ const CreateBountyDialog = () => (
       <CreateBountyDialogContent />
     </Subscribe>
   </DialogContent>
-);
+)
 
 const CreateBountyDialogContent = () => {
-  const proposeBountyState = useStateObservable(proposeBountyState$);
-  const approveBountyState = useStateObservable(approveBountyState$);
+  const proposeBountyState = useStateObservable(proposeBountyState$)
+  const approveBountyState = useStateObservable(approveBountyState$)
 
   if (proposeBountyState.type !== "finalized") {
-    return <ProposeBountyStep />;
+    return <ProposeBountyStep />
   }
   if (approveBountyState.type !== "finalized") {
     return (
@@ -61,7 +61,7 @@ const CreateBountyDialogContent = () => {
           </p>
         }
       />
-    );
+    )
   }
 
   return (
@@ -70,5 +70,5 @@ const CreateBountyDialogContent = () => {
         referendum={referendaSdk.getSubmittedReferendum(approveBountyState)}
       />
     </div>
-  );
-};
+  )
+}

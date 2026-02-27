@@ -1,4 +1,4 @@
-import { KnownChains } from "./chainRoute";
+import { KnownChains } from "./chainRoute"
 
 const polkadot: Record<string, string> = {
   Dwellir: "wss://asset-hub-polkadot-rpc.dwellir.com",
@@ -10,7 +10,7 @@ const polkadot: Record<string, string> = {
   Parity: "wss://polkadot-asset-hub-rpc.polkadot.io",
   RadiumBlock: "wss://statemint.public.curie.radiumblock.co/ws",
   Stakeworld: "wss://dot-rpc.stakeworld.io/assethub",
-};
+}
 
 const kusama: Record<string, string> = {
   Dwellir: "wss://asset-hub-kusama-rpc.dwellir.com",
@@ -21,9 +21,9 @@ const kusama: Record<string, string> = {
   Parity: "wss://kusama-asset-hub-rpc.polkadot.io",
   RadiumBlock: "wss://statemine.public.curie.radiumblock.co/ws",
   Stakeworld: "wss://ksm-rpc.stakeworld.io/assethub",
-};
+}
 
 export const chainRpcs: Record<KnownChains, Record<string, string>> = {
   polkadot,
   kusama,
-};
+}

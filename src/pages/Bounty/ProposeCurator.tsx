@@ -1,7 +1,7 @@
-import { typedApi } from "@/chain";
-import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { typedApi } from "@/chain"
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -18,18 +18,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { selectedAccount$ } from "@/state/account";
-import { bounty$ } from "@/state/bounties";
-import { referendaSdk } from "@/state/referenda";
-import { MultiAddress } from "@polkadot-api/descriptors";
-import { state, Subscribe, useStateObservable } from "@react-rxjs/core";
-import { createSignal } from "@react-rxjs/utils";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { SS58String } from "polkadot-api";
-import { AddressInput } from "polkahub";
-import { FC } from "react";
-import { useForm } from "react-hook-form";
+} from "@/components/ui/form"
+import { selectedAccount$ } from "@/state/account"
+import { bounty$ } from "@/state/bounties"
+import { referendaSdk } from "@/state/referenda"
+import { MultiAddress } from "@polkadot-api/descriptors"
+import { state, Subscribe, useStateObservable } from "@react-rxjs/core"
+import { createSignal } from "@react-rxjs/utils"
+import { AlertCircle, Loader2 } from "lucide-react"
+import { SS58String } from "polkadot-api"
+import { AddressInput } from "polkahub"
+import { FC } from "react"
+import { useForm } from "react-hook-form"
 import {
   catchError,
   defer,
@@ -41,12 +41,12 @@ import {
   switchMap,
   take,
   withLatestFrom,
-} from "rxjs";
-import { ReferendumCreatedStep } from "../CreateBounty/AproveBounty";
-import { SubmitTxState } from "../CreateBounty/TxProgress";
+} from "rxjs"
+import { ReferendumCreatedStep } from "../CreateBounty/AproveBounty"
+import { SubmitTxState } from "../CreateBounty/TxProgress"
 
 export const ProposeCurator: FC<{ id: number }> = ({ id }) => {
-  const account = useStateObservable(selectedAccount$);
+  const account = useStateObservable(selectedAccount$)
 
   return (
     <Dialog>
@@ -57,8 +57,8 @@ export const ProposeCurator: FC<{ id: number }> = ({ id }) => {
       </DialogTrigger>
       <ProposeCuratorDialog id={id} />
     </Dialog>
-  );
-};
+  )
+}
 
 const ProposeCuratorDialog: FC<{ id: number }> = ({ id }) => (
   <DialogContent>
@@ -73,13 +73,13 @@ const ProposeCuratorDialog: FC<{ id: number }> = ({ id }) => (
       <ProposeCuratorDialogContent id={id} />
     </Subscribe>
   </DialogContent>
-);
+)
 
 export const [proposeCurator$, proposeCurator] = createSignal<{
-  bountyId: number;
-  curator: SS58String;
-  fee: bigint;
-}>();
+  bountyId: number
+  curator: SS58String
+  fee: bigint
+}>()
 
 export const proposeCuratorState$ = state(
   proposeCurator$.pipe(
@@ -90,12 +90,12 @@ export const proposeCuratorState$ = state(
         map((bounty) => ({
           ...proposal,
           bounty,
-        }))
-      )
+        })),
+      ),
     ),
     withLatestFrom(
       selectedAccount$.pipe(filter((v) => !!v)),
-      typedApi.compatibilityToken
+      typedApi.compatibilityToken,
     ),
     exhaustMap(([proposal, selectedAccount, token]) =>
       defer(() => {
@@ -103,7 +103,7 @@ export const proposeCuratorState$ = state(
           bounty_id: proposal.bountyId,
           curator: MultiAddress.Id(proposal.curator),
           fee: proposal.fee,
-        }).getEncodedData(token);
+        }).getEncodedData(token)
 
         return referendaSdk
           .createSpenderReferenda(proposeCuratorTx, proposal.fee)
@@ -115,43 +115,43 @@ export const proposeCuratorState$ = state(
             map((v): SubmitTxState => {
               if (v.type === "finalized") {
                 if (!v.ok) {
-                  console.error(v.dispatchError);
+                  console.error(v.dispatchError)
                   return {
                     type: "idle",
                     error: v.dispatchError.type,
-                  };
+                  }
                 }
                 if (referendaSdk.getSubmittedReferendum(v) === null) {
                   return {
                     type: "idle",
                     error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
-                  };
+                  }
                 }
               }
 
-              return v;
-            })
-          );
+              return v
+            }),
+          )
       }).pipe(
         catchError((err) =>
           of({
             type: "idle",
             error: err.message,
-          } satisfies SubmitTxState)
-        )
-      )
-    )
+          } satisfies SubmitTxState),
+        ),
+      ),
+    ),
   ),
   {
     type: "idle",
-  } satisfies SubmitTxState
-);
+  } satisfies SubmitTxState,
+)
 
 const ProposeCuratorDialogContent: FC<{ id: number }> = ({ id }) => {
-  const proposeCuratorState = useStateObservable(proposeCuratorState$);
+  const proposeCuratorState = useStateObservable(proposeCuratorState$)
 
   if (proposeCuratorState.type !== "finalized") {
-    return <ProposeBountyForm id={id} />;
+    return <ProposeBountyForm id={id} />
   }
 
   return (
@@ -160,14 +160,14 @@ const ProposeCuratorDialogContent: FC<{ id: number }> = ({ id }) => {
         referendum={referendaSdk.getSubmittedReferendum(proposeCuratorState)}
       />
     </div>
-  );
-};
+  )
+}
 
 const ProposeBountyForm: FC<{ id: number }> = ({ id }) => {
-  const bounty = useStateObservable(bounty$(id));
-  const form = useForm<{ curator: SS58String; fee: bigint }>();
+  const bounty = useStateObservable(bounty$(id))
+  const form = useForm<{ curator: SS58String; fee: bigint }>()
 
-  if (!bounty) return null;
+  if (!bounty) return null
 
   return (
     <Form {...form}>
@@ -176,7 +176,7 @@ const ProposeBountyForm: FC<{ id: number }> = ({ id }) => {
           proposeCurator({
             ...res,
             bountyId: id,
-          })
+          }),
         )}
         className="space-y-4"
       >
@@ -224,14 +224,14 @@ const ProposeBountyForm: FC<{ id: number }> = ({ id }) => {
         <SubmitButton />
       </form>
     </Form>
-  );
-};
+  )
+}
 
 // TODO many of this is common with ProposeBountyForm
 const ErrorBox = () => {
-  const proposeCuratorState = useStateObservable(proposeCuratorState$);
+  const proposeCuratorState = useStateObservable(proposeCuratorState$)
   if (proposeCuratorState.type !== "idle" || !proposeCuratorState.error)
-    return null;
+    return null
 
   return (
     <Alert variant="destructive">
@@ -239,17 +239,17 @@ const ErrorBox = () => {
       <AlertTitle>Submit failed</AlertTitle>
       <AlertDescription>{proposeCuratorState.error}</AlertDescription>
     </Alert>
-  );
-};
+  )
+}
 
 const SubmitButton = () => {
-  const proposeCuratorState = useStateObservable(proposeCuratorState$);
-  const isLoading = proposeCuratorState.type !== "idle";
+  const proposeCuratorState = useStateObservable(proposeCuratorState$)
+  const isLoading = proposeCuratorState.type !== "idle"
 
   return (
     <Button type="submit" disabled={isLoading} forceSvgSize>
       Sign and Submit
       {isLoading && <Loader2 className="animate-spin" />}
     </Button>
-  );
-};
+  )
+}

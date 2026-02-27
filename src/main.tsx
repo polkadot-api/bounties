@@ -1,14 +1,14 @@
-import { Subscribe } from "@react-rxjs/core";
-import { PolkaHubProvider } from "polkahub";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App.tsx";
-import { routeChain } from "./chainRoute.ts";
-import "./index.css";
-import { polkaHub } from "./state/account.ts";
-import { bountiesState$ } from "./state/bounties.ts";
-import { GithubLink } from "./components/Github.tsx";
+import { Subscribe } from "@react-rxjs/core"
+import { PolkaHubProvider } from "polkahub"
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { BrowserRouter } from "react-router-dom"
+import App from "./App.tsx"
+import { routeChain } from "./chainRoute.ts"
+import "./index.css"
+import { polkaHub } from "./state/account.ts"
+import { bountiesState$ } from "./state/bounties.ts"
+import { GithubLink } from "./components/Github.tsx"
 
 createRoot(document.getElementById("root")!).render(
   <Subscribe source$={bountiesState$}>
@@ -20,5 +20,5 @@ createRoot(document.getElementById("root")!).render(
         <GithubLink repo="https://github.com/polkadot-api/bounties" />
       </BrowserRouter>
     </StrictMode>
-  </Subscribe>
-);
+  </Subscribe>,
+)

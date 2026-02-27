@@ -1,23 +1,23 @@
-import { typedApi } from "@/chain";
-import { createBountiesSdk } from "@polkadot-api/sdk-governance";
-import { state } from "@react-rxjs/core";
-import { combineLatest, filter, map, mergeMap } from "rxjs";
-import { ongoingReferenda$ } from "./referenda";
-import { combineKeys } from "@react-rxjs/utils";
+import { typedApi } from "@/chain"
+import { createBountiesSdk } from "@polkadot-api/sdk-governance"
+import { state } from "@react-rxjs/core"
+import { combineLatest, filter, map, mergeMap } from "rxjs"
+import { ongoingReferenda$ } from "./referenda"
+import { combineKeys } from "@react-rxjs/utils"
 
-export const bountiesSdk = createBountiesSdk(typedApi);
+export const bountiesSdk = createBountiesSdk(typedApi)
 
 export const bountyIds$ = state(
   bountiesSdk.watch.bountyIds$.pipe(map((v) => v.reverse())),
-  null
-);
+  null,
+)
 
-export const bounty$ = state(bountiesSdk.watch.getBountyById$, null);
+export const bounty$ = state(bountiesSdk.watch.getBountyById$, null)
 
 export const bountiesState$ = combineKeys(
   bountyIds$.pipe(filter(Boolean)),
-  bountiesSdk.watch.getBountyById$
-);
+  bountiesSdk.watch.getBountyById$,
+)
 
 export const bountyApprovingReferenda$ = state(
   (bountyId: number) =>
@@ -28,12 +28,12 @@ export const bountyApprovingReferenda$ = state(
       mergeMap(([bounty, referenda]) =>
         bounty.type === "Proposed"
           ? bounty.filterApprovingReferenda(referenda)
-          : [[]]
+          : [[]],
       ),
-      map((v) => v.map((v) => v.referendum))
+      map((v) => v.map((v) => v.referendum)),
     ),
-  null
-);
+  null,
+)
 export const bountyProposingCuratorReferenda$ = state(
   (bountyId: number) =>
     combineLatest([
@@ -43,8 +43,8 @@ export const bountyProposingCuratorReferenda$ = state(
       mergeMap(([bounty, referenda]) =>
         bounty.type === "Funded"
           ? bounty.filterProposingReferenda(referenda)
-          : [[]]
-      )
+          : [[]],
+      ),
     ),
-  null
-);
+  null,
+)

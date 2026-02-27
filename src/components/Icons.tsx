@@ -1,12 +1,12 @@
-import { Copy, LoaderCircle, LucideProps } from "lucide-react";
-import { twMerge } from "tailwind-merge";
+import { Copy, LoaderCircle, LucideProps } from "lucide-react"
+import { twMerge } from "tailwind-merge"
 
 export const Spinner = (props: LucideProps) => (
   <LoaderCircle
     {...props}
     className={twMerge("animate-spin", props.className)}
   />
-);
+)
 
 export const CopyBinaryIcon = ({ size = 16, ...props }: LucideProps) => (
   <svg
@@ -30,4 +30,4 @@ export const CopyBinaryIcon = ({ size = 16, ...props }: LucideProps) => (
       0x
     </text>
   </svg>
-);
+)

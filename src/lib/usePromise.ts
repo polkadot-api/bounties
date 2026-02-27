@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
 export const usePromise = <T>(initFn: () => Promise<T>, defaultValue: T): T => {
-  const [value, setValue] = useState(defaultValue);
+  const [value, setValue] = useState(defaultValue)
 
   useEffect(() => {
-    initFn().then(setValue);
-  }, []);
+    initFn().then(setValue)
+  }, [])
 
-  return value;
-};
+  return value
+}

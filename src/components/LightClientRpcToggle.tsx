@@ -1,8 +1,8 @@
-import { useLightClient } from "@/chain";
-import { cn } from "@/lib/utils";
-import { CloudAlert, ShieldCheck } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { useLightClient } from "@/chain"
+import { cn } from "@/lib/utils"
+import { CloudAlert, ShieldCheck } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
+import { TooltipProvider } from "@radix-ui/react-tooltip"
 
 const config = {
   light: {
@@ -34,10 +34,10 @@ const config = {
     className:
       "border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400",
   },
-};
+}
 
 export const LightClientRpcToggle = () => {
-  const { tip, className } = config[useLightClient ? "light" : "rpc"];
+  const { tip, className } = config[useLightClient ? "light" : "rpc"]
 
   return (
     <TooltipProvider>
@@ -47,13 +47,13 @@ export const LightClientRpcToggle = () => {
           onClick={() => {
             window.localStorage.setItem(
               "use-smoldot",
-              (!useLightClient).toString()
-            );
-            window.location.reload();
+              (!useLightClient).toString(),
+            )
+            window.location.reload()
           }}
           className={cn(
             "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border shadow-xs dark:bg-input/30 dark:border-input size-9 relative transition-all duration-200",
-            className
+            className,
           )}
         >
           {useLightClient ? (
@@ -65,5 +65,5 @@ export const LightClientRpcToggle = () => {
         <TooltipContent className="max-w-[100vw]">{tip}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
-};
+  )
+}

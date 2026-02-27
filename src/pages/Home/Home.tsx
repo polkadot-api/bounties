@@ -1,15 +1,15 @@
-import { DotValue } from "@/components/DotValue";
-import { Loading } from "@/components/Loading";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { bounty$, bountyIds$ } from "@/state/bounties";
-import { useStateObservable } from "@react-rxjs/core";
-import { FC } from "react";
-import { useNavigate } from "react-router-dom";
-import { CreateBountyButton } from "../CreateBounty";
+import { DotValue } from "@/components/DotValue"
+import { Loading } from "@/components/Loading"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { bounty$, bountyIds$ } from "@/state/bounties"
+import { useStateObservable } from "@react-rxjs/core"
+import { FC } from "react"
+import { useNavigate } from "react-router-dom"
+import { CreateBountyButton } from "../CreateBounty"
 
 export const HomePage = () => {
-  const bounties = useStateObservable(bountyIds$);
+  const bounties = useStateObservable(bountyIds$)
 
   return (
     <div className="p-2">
@@ -33,13 +33,13 @@ export const HomePage = () => {
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}
 
 const BountyRow: FC<{ id: number }> = ({ id }) => {
-  const bounty = useStateObservable(bounty$(id));
-  const navigate = useNavigate();
-  if (!bounty) return null;
+  const bounty = useStateObservable(bounty$(id))
+  const navigate = useNavigate()
+  if (!bounty) return null
 
   return (
     <TableRow
@@ -57,5 +57,5 @@ const BountyRow: FC<{ id: number }> = ({ id }) => {
         />
       </TableCell>
     </TableRow>
-  );
-};
+  )
+}

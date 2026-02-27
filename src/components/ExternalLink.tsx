@@ -1,9 +1,9 @@
-import { ExternalLink as ExternalLinkIcon } from "lucide-react";
-import { FC, PropsWithChildren } from "react";
+import { ExternalLink as ExternalLinkIcon } from "lucide-react"
+import { FC, PropsWithChildren } from "react"
 
 export const ExternalLink: FC<
   PropsWithChildren<{
-    href: string;
+    href: string
   }>
 > = ({ href, children }) => (
   <a
@@ -14,4 +14,4 @@ export const ExternalLink: FC<
     <span>{children}</span>
     <ExternalLinkIcon className="inline-block" size={16} />
   </a>
-);
+)

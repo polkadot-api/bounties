@@ -1,15 +1,15 @@
-import { typedApi } from "@/chain";
-import { getLinkedSigner$ } from "@/state/linkedSigners";
-import { createChildBountiesSdk } from "@polkadot-api/sdk-governance";
-import { state } from "@react-rxjs/core";
-import { map, of, switchMap } from "rxjs";
+import { typedApi } from "@/chain"
+import { getLinkedSigner$ } from "@/state/linkedSigners"
+import { createChildBountiesSdk } from "@polkadot-api/sdk-governance"
+import { state } from "@react-rxjs/core"
+import { map, of, switchMap } from "rxjs"
 
-export const childBountiesSdk = createChildBountiesSdk(typedApi);
+export const childBountiesSdk = createChildBountiesSdk(typedApi)
 
 export const childBountyKeys$ = state(
   (parentId: number) => childBountiesSdk.watch(parentId).bountyIds$,
-  null
-);
+  null,
+)
 
 export const hasActiveChildBounties$ = state(
   (parentId: number) =>
@@ -19,17 +19,17 @@ export const hasActiveChildBounties$ = state(
         map(
           (v) =>
             Array.from(v.values()).find((child) => child.type === "Active") !=
-            null
-        )
+            null,
+        ),
       ),
-  false
-);
+  false,
+)
 
 export const childBounty$ = state(
   (parentId: number, id: number) =>
     childBountiesSdk.watch(parentId).getBountyById$(id),
-  null
-);
+  null,
+)
 
 export const childBountyCuratorSigner$ = state(
   (parentId: number, id: number) =>
@@ -37,8 +37,8 @@ export const childBountyCuratorSigner$ = state(
       switchMap((v) =>
         v?.status.value && "curator" in v.status.value
           ? getLinkedSigner$(v.status.value.curator)
-          : of(null)
-      )
+          : of(null),
+      ),
     ),
-  null
-);
+  null,
+)

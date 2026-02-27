@@ -1,9 +1,9 @@
-import { typedApi } from "@/chain";
-import { selectedAccount$ } from "@/state/account";
-import { bounty$ } from "@/state/bounties";
-import { referendaSdk } from "@/state/referenda";
-import { state } from "@react-rxjs/core";
-import { createSignal } from "@react-rxjs/utils";
+import { typedApi } from "@/chain"
+import { selectedAccount$ } from "@/state/account"
+import { bounty$ } from "@/state/bounties"
+import { referendaSdk } from "@/state/referenda"
+import { state } from "@react-rxjs/core"
+import { createSignal } from "@react-rxjs/utils"
 import {
   catchError,
   defer,
@@ -15,38 +15,38 @@ import {
   switchMap,
   take,
   withLatestFrom,
-} from "rxjs";
-import { SubmitTxState } from "./TxProgress";
+} from "rxjs"
+import { SubmitTxState } from "./TxProgress"
 
-export const [approveBounty$, approveBounty] = createSignal<number>();
+export const [approveBounty$, approveBounty] = createSignal<number>()
 
 export type SubmittedReferendum = ReturnType<
   typeof referendaSdk.getSubmittedReferendum
->;
+>
 
 export const getApproveBountyTx = (bountyId: number) =>
   typedApi.tx.Bounties.approve_bounty({
     bounty_id: bountyId,
-  });
+  })
 
 export const approveBountyState$ = state(
   approveBounty$.pipe(
     switchMap((bountyId) =>
       bounty$(bountyId).pipe(
         filter((v) => !!v),
-        take(1)
-      )
+        take(1),
+      ),
     ),
     withLatestFrom(
       selectedAccount$.pipe(filter((v) => !!v)),
-      typedApi.compatibilityToken
+      typedApi.compatibilityToken,
     ),
     exhaustMap(([bounty, selectedAccount, token]) =>
       defer(() =>
         referendaSdk
           .createSpenderReferenda(
             getApproveBountyTx(bounty.id).getEncodedData(token),
-            bounty.value
+            bounty.value,
           )
           .signSubmitAndWatch(selectedAccount.signer!)
           .pipe(
@@ -56,34 +56,34 @@ export const approveBountyState$ = state(
             map((v): SubmitTxState => {
               if (v.type === "finalized") {
                 if (!v.ok) {
-                  console.error(v.dispatchError);
+                  console.error(v.dispatchError)
                   return {
                     type: "idle",
                     error: v.dispatchError.type,
-                  };
+                  }
                 }
                 if (referendaSdk.getSubmittedReferendum(v) === null) {
                   return {
                     type: "idle",
                     error: `Transaction succeeded, but bounty index could not be identified. Refresh the list of bounties and continue the flow from there`,
-                  };
+                  }
                 }
               }
 
-              return v;
-            })
-          )
+              return v
+            }),
+          ),
       ).pipe(
         catchError((err) =>
           of({
             type: "idle",
             error: err.message,
-          } satisfies SubmitTxState)
-        )
-      )
-    )
+          } satisfies SubmitTxState),
+        ),
+      ),
+    ),
   ),
   {
     type: "idle",
-  } satisfies SubmitTxState
-);
+  } satisfies SubmitTxState,
+)

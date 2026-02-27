@@ -1,13 +1,13 @@
-import { KnownChains, matchedChain } from "@/chainRoute";
-import { Icon } from "@radix-ui/react-select";
-import { Check, ChevronDown } from "lucide-react";
-import { ReactSVG } from "react-svg";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import kusama from "./kusama.svg";
-import polkadot from "./polkadot.svg";
+import { KnownChains, matchedChain } from "@/chainRoute"
+import { Icon } from "@radix-ui/react-select"
+import { Check, ChevronDown } from "lucide-react"
+import { ReactSVG } from "react-svg"
+import { Button } from "../ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import kusama from "./kusama.svg"
+import polkadot from "./polkadot.svg"
 
-const logos: Record<KnownChains, string> = { polkadot, kusama };
+const logos: Record<KnownChains, string> = { polkadot, kusama }
 
 export const ChainSelector = () => (
   <div>
@@ -17,8 +17,8 @@ export const ChainSelector = () => (
           <ReactSVG
             src={logos[matchedChain]}
             beforeInjection={(svg) => {
-              svg.setAttribute("width", String(24));
-              svg.setAttribute("height", String(24));
+              svg.setAttribute("width", String(24))
+              svg.setAttribute("height", String(24))
             }}
           />
           <Icon asChild>
@@ -30,7 +30,7 @@ export const ChainSelector = () => (
         <button
           className="block hover:bg-accent relative p-1 pr-2 w-full text-left rounded pl-7"
           onClick={() => {
-            window.location.href = "/";
+            window.location.href = "/"
           }}
         >
           {matchedChain === "polkadot" ? (
@@ -43,7 +43,7 @@ export const ChainSelector = () => (
         <button
           className="block hover:bg-accent relative p-1 pr-2 w-full text-left rounded pl-7"
           onClick={() => {
-            window.location.href = "/kusama";
+            window.location.href = "/kusama"
           }}
         >
           {matchedChain === "kusama" ? (
@@ -56,4 +56,4 @@ export const ChainSelector = () => (
       </PopoverContent>
     </Popover>
   </div>
-);
+)

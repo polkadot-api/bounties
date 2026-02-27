@@ -1,15 +1,15 @@
-import { DotValue } from "@/components/DotValue";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { useStateObservable } from "@react-rxjs/core";
-import { FC } from "react";
-import { useNavigate } from "react-router-dom";
-import { childBounty$, childBountyKeys$ } from "./childBounties.state";
+import { DotValue } from "@/components/DotValue"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { useStateObservable } from "@react-rxjs/core"
+import { FC } from "react"
+import { useNavigate } from "react-router-dom"
+import { childBounty$, childBountyKeys$ } from "./childBounties.state"
 
 export const ChildBounties: FC<{
-  id: number;
+  id: number
 }> = ({ id }) => {
-  const childBounties = useStateObservable(childBountyKeys$(id));
+  const childBounties = useStateObservable(childBountyKeys$(id))
 
   return (
     <Card>
@@ -34,14 +34,14 @@ export const ChildBounties: FC<{
         )}
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
 const ChildRow: FC<{ id: number; parent: number }> = ({ id, parent }) => {
-  const child = useStateObservable(childBounty$(parent, id));
-  const navigate = useNavigate();
+  const child = useStateObservable(childBounty$(parent, id))
+  const navigate = useNavigate()
 
-  if (!child) return null;
+  if (!child) return null
 
   return (
     <TableRow className="cursor-pointer" onClick={() => navigate(`${id}`)}>
@@ -56,5 +56,5 @@ const ChildRow: FC<{ id: number; parent: number }> = ({ id, parent }) => {
         />
       </TableCell>
     </TableRow>
-  );
-};
+  )
+}

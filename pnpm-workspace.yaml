@@ -1,4 +1,4 @@
 onlyBuiltDependencies:
-  - '@reown/appkit'
+  - "@reown/appkit"
   - bufferutil
   - esbuild

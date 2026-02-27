@@ -1,41 +1,41 @@
-import { TransactionButton, TransactionDialog } from "@/Transactions";
-import { DotValue } from "@/components/DotValue";
-import { IdentityLinks } from "@/components/IdentityLinks";
-import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TransactionButton, TransactionDialog } from "@/Transactions"
+import { DotValue } from "@/components/DotValue"
+import { IdentityLinks } from "@/components/IdentityLinks"
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { selectedAccount$ } from "@/state/account";
+} from "@/components/ui/dialog"
+import { selectedAccount$ } from "@/state/account"
 import {
   ActiveChildBounty,
   AddedChildBounty,
   CuratorProposedChildBounty,
   PendingPayoutChildBounty,
   ChildBounty as SdkChildBounty,
-} from "@polkadot-api/sdk-governance";
-import { useStateObservable } from "@react-rxjs/core";
-import { PolkadotSigner } from "polkadot-api";
-import { AddressInput } from "polkahub";
-import { FC, PropsWithChildren, useState } from "react";
-import { useParams } from "react-router-dom";
-import { AwardBountyDialog } from "../ActiveBounty";
-import { BlockDue, isBlockDue$ } from "../BlockDue";
-import { BountyDetail } from "../BountyDetail";
-import { bountyCuratorSigner$ } from "../curatorSigner";
-import { remark } from "../remark";
-import { childBounty$, childBountyCuratorSigner$ } from "./childBounties.state";
+} from "@polkadot-api/sdk-governance"
+import { useStateObservable } from "@react-rxjs/core"
+import { PolkadotSigner } from "polkadot-api"
+import { AddressInput } from "polkahub"
+import { FC, PropsWithChildren, useState } from "react"
+import { useParams } from "react-router-dom"
+import { AwardBountyDialog } from "../ActiveBounty"
+import { BlockDue, isBlockDue$ } from "../BlockDue"
+import { BountyDetail } from "../BountyDetail"
+import { bountyCuratorSigner$ } from "../curatorSigner"
+import { remark } from "../remark"
+import { childBounty$, childBountyCuratorSigner$ } from "./childBounties.state"
 
 export const ChildBounty: FC = () => {
-  const parent = Number(useParams().id);
-  const id = Number(useParams().childId);
+  const parent = Number(useParams().id)
+  const id = Number(useParams().childId)
 
-  const childBounty = useStateObservable(childBounty$(parent, id));
-  if (!childBounty) return null;
+  const childBounty = useStateObservable(childBounty$(parent, id))
+  if (!childBounty) return null
 
   return (
     <Card className="border border-border rounded p-2 flex flex-col gap-2">
@@ -68,22 +68,22 @@ export const ChildBounty: FC = () => {
         ) : null}
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
 const ChildBountyDetails: FC<PropsWithChildren> = ({ children }) => (
   <div className="flex gap-2 border border-border rounded p-2 flex-col">
     {children}
   </div>
-);
+)
 
 const Added: FC<{
-  bounty: AddedChildBounty;
+  bounty: AddedChildBounty
 }> = ({ bounty }) => {
   const parentSigner = useStateObservable(
     // TODO standarize camelCase
-    bountyCuratorSigner$(bounty.parent_bounty)
-  );
+    bountyCuratorSigner$(bounty.parent_bounty),
+  )
 
   return (
     <>
@@ -106,18 +106,18 @@ const Added: FC<{
         <CloseBountyButton bounty={bounty} parentSigner={parentSigner} />
       </div>
     </>
-  );
-};
+  )
+}
 
 const CuratorProposed: FC<{
-  bounty: CuratorProposedChildBounty;
+  bounty: CuratorProposedChildBounty
 }> = ({ bounty }) => {
   const parentSigner = useStateObservable(
-    bountyCuratorSigner$(bounty.parent_bounty)
-  );
+    bountyCuratorSigner$(bounty.parent_bounty),
+  )
   const childSigner = useStateObservable(
-    childBountyCuratorSigner$(bounty.parent_bounty, bounty.id)
-  );
+    childBountyCuratorSigner$(bounty.parent_bounty, bounty.id),
+  )
 
   return (
     <>
@@ -159,18 +159,18 @@ const CuratorProposed: FC<{
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
 const Active: FC<{
-  bounty: ActiveChildBounty;
+  bounty: ActiveChildBounty
 }> = ({ bounty }) => {
   const parentSigner = useStateObservable(
-    bountyCuratorSigner$(bounty.parent_bounty)
-  );
+    bountyCuratorSigner$(bounty.parent_bounty),
+  )
   const childSigner = useStateObservable(
-    childBountyCuratorSigner$(bounty.parent_bounty, bounty.id)
-  );
+    childBountyCuratorSigner$(bounty.parent_bounty, bounty.id),
+  )
 
   return (
     <>
@@ -213,12 +213,12 @@ const Active: FC<{
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
 const CloseBountyButton: FC<{
-  bounty: SdkChildBounty;
-  parentSigner: PolkadotSigner | null;
+  bounty: SdkChildBounty
+  parentSigner: PolkadotSigner | null
 }> = ({ bounty, parentSigner }) =>
   "close" in bounty ? (
     <TransactionButton
@@ -228,16 +228,16 @@ const CloseBountyButton: FC<{
     >
       Close Bounty
     </TransactionButton>
-  ) : null;
+  ) : null
 
 const PendingPayout: FC<{
-  bounty: PendingPayoutChildBounty;
+  bounty: PendingPayoutChildBounty
 }> = ({ bounty }) => {
   const parentSigner = useStateObservable(
-    bountyCuratorSigner$(bounty.parent_bounty)
-  );
-  const isDue = useStateObservable(isBlockDue$(bounty.unlockAt));
-  const selectedAccount = useStateObservable(selectedAccount$);
+    bountyCuratorSigner$(bounty.parent_bounty),
+  )
+  const isDue = useStateObservable(isBlockDue$(bounty.unlockAt))
+  const selectedAccount = useStateObservable(selectedAccount$)
 
   return (
     <>
@@ -272,14 +272,14 @@ const PendingPayout: FC<{
         ) : null}
       </div>
     </>
-  );
-};
+  )
+}
 
 const ProposeCuratorDialog: FC<{
-  onSubmit: (curator: string, fee: bigint) => void;
+  onSubmit: (curator: string, fee: bigint) => void
 }> = ({ onSubmit }) => {
-  const [curator, setCurator] = useState<string | null>(null);
-  const [fee, setFee] = useState<bigint | null>(null);
+  const [curator, setCurator] = useState<string | null>(null)
+  const [fee, setFee] = useState<bigint | null>(null)
 
   return (
     <DialogContent>
@@ -316,5 +316,5 @@ const ProposeCuratorDialog: FC<{
         </Button>
       </div>
     </DialogContent>
-  );
-};
+  )
+}

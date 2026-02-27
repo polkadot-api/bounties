@@ -1,27 +1,24 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { selectedAccount$ } from "@/state/account";
-import { referendaSdk } from "@/state/referenda";
-import { DialogTrigger } from "@radix-ui/react-dialog";
-import { Subscribe, useStateObservable } from "@react-rxjs/core";
-import { FC } from "react";
-import { SubmitReferendumStep } from "./SubmitReferendumForm";
-import {
-  approveBountyState$,
-  SubmittedReferendum,
-} from "./approveBounty.state";
+} from "@/components/ui/dialog"
+import { selectedAccount$ } from "@/state/account"
+import { referendaSdk } from "@/state/referenda"
+import { DialogTrigger } from "@radix-ui/react-dialog"
+import { Subscribe, useStateObservable } from "@react-rxjs/core"
+import { FC } from "react"
+import { SubmitReferendumStep } from "./SubmitReferendumForm"
+import { approveBountyState$, SubmittedReferendum } from "./approveBounty.state"
 
 export const ApproveBountyButton: FC<{ id: number; className?: string }> = ({
   id,
   className,
 }) => {
-  const account = useStateObservable(selectedAccount$);
+  const account = useStateObservable(selectedAccount$)
 
   return (
     <Dialog>
@@ -32,8 +29,8 @@ export const ApproveBountyButton: FC<{ id: number; className?: string }> = ({
       </DialogTrigger>
       <ApproveBountyDialog id={id} />
     </Dialog>
-  );
-};
+  )
+}
 
 const ApproveBountyDialog: FC<{ id: number }> = ({ id }) => (
   <DialogContent>
@@ -47,13 +44,13 @@ const ApproveBountyDialog: FC<{ id: number }> = ({ id }) => (
       <ApproveBountyDialogContent id={id} />
     </Subscribe>
   </DialogContent>
-);
+)
 
 const ApproveBountyDialogContent: FC<{ id: number }> = ({ id }) => {
-  const approveBountyState = useStateObservable(approveBountyState$);
+  const approveBountyState = useStateObservable(approveBountyState$)
 
   if (approveBountyState.type !== "finalized") {
-    return <SubmitReferendumStep bountyId={id} />;
+    return <SubmitReferendumStep bountyId={id} />
   }
 
   return (
@@ -62,13 +59,13 @@ const ApproveBountyDialogContent: FC<{ id: number }> = ({ id }) => {
         referendum={referendaSdk.getSubmittedReferendum(approveBountyState)}
       />
     </div>
-  );
-};
+  )
+}
 
 export const ReferendumCreatedStep: FC<{ referendum: SubmittedReferendum }> = ({
   referendum,
 }) => {
-  if (!referendum) return null;
+  if (!referendum) return null
 
   return (
     <div className="space-y-4">
@@ -100,5 +97,5 @@ export const ReferendumCreatedStep: FC<{ referendum: SubmittedReferendum }> = ({
         start voting!
       </p>
     </div>
-  );
-};
+  )
+}

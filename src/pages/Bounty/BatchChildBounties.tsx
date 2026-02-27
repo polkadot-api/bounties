@@ -1,52 +1,52 @@
-import { client, typedApi } from "@/chain";
-import { matchedChain } from "@/chainRoute";
-import { ExternalLink } from "@/components/ExternalLink";
-import { format } from "@/components/token-formatter";
-import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput";
-import { Button } from "@/components/ui/button";
+import { client, typedApi } from "@/chain"
+import { matchedChain } from "@/chainRoute"
+import { ExternalLink } from "@/components/ExternalLink"
+import { format } from "@/components/token-formatter"
+import { SELECTED_TOKEN, TokenInput } from "@/components/TokenInput"
+import { Button } from "@/components/ui/button"
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { usePromise } from "@/lib/usePromise";
-import { getNestedLinkedAccounts$ } from "@/state/linkedSigners";
-import { MultiAddress } from "@polkadot-api/descriptors";
-import { NestedLinkedAccountsResult } from "@polkadot-api/sdk-accounts";
-import { state, useStateObservable } from "@react-rxjs/core";
-import { Trash2 } from "lucide-react";
-import { Binary, SS58String, Transaction } from "polkadot-api";
-import { AddressInput } from "polkahub";
-import { FC, useEffect, useMemo, useState } from "react";
-import { catchError, combineLatest, map, takeLast } from "rxjs";
-import { twMerge } from "tailwind-merge";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { usePromise } from "@/lib/usePromise"
+import { getNestedLinkedAccounts$ } from "@/state/linkedSigners"
+import { MultiAddress } from "@polkadot-api/descriptors"
+import { NestedLinkedAccountsResult } from "@polkadot-api/sdk-accounts"
+import { state, useStateObservable } from "@react-rxjs/core"
+import { Trash2 } from "lucide-react"
+import { Binary, SS58String, Transaction } from "polkadot-api"
+import { AddressInput } from "polkahub"
+import { FC, useEffect, useMemo, useState } from "react"
+import { catchError, combineLatest, map, takeLast } from "rxjs"
+import { twMerge } from "tailwind-merge"
 
 interface ChildRow {
-  name: string;
-  amount: bigint | null;
-  recipient: SS58String;
+  name: string
+  amount: bigint | null
+  recipient: SS58String
 }
 const emptyRow: ChildRow = {
   name: "",
   amount: null,
   recipient: "",
-};
+}
 
 // For an upcoming change not yet released as a wasm which is significant
-const unsafeApi = client.getUnsafeApi();
+const unsafeApi = client.getUnsafeApi()
 const nextChildId$ = state(
   (id: number) =>
     unsafeApi.query.ChildBounties.ParentTotalChildBounties.watchValue(id).pipe(
       catchError(() =>
-        typedApi.query.ChildBounties.ChildBountyCount.watchValue()
-      )
+        typedApi.query.ChildBounties.ChildBountyCount.watchValue(),
+      ),
     ),
-  null
-);
+  null,
+)
 
 const curatorMultisigUrl$ = state(
   (curator: SS58String) =>
@@ -56,65 +56,65 @@ const curatorMultisigUrl$ = state(
     ]).pipe(
       takeLast(1),
       map(([result, token]) => {
-        let txWrapper = (tx: Transaction<any, any, any, any>) => tx;
+        let txWrapper = (tx: Transaction<any, any, any, any>) => tx
 
-        let currentResult: NestedLinkedAccountsResult | null = result;
-        let addr = curator;
+        let currentResult: NestedLinkedAccountsResult | null = result
+        let addr = curator
         while (currentResult) {
           switch (currentResult.type) {
             case "root":
-              return null;
+              return null
             case "proxy": {
-              const proxyAddr = addr;
-              addr = currentResult.value.accounts[0].address;
-              currentResult = currentResult.value.accounts[0].linkedAccounts;
+              const proxyAddr = addr
+              addr = currentResult.value.accounts[0].address
+              currentResult = currentResult.value.accounts[0].linkedAccounts
 
-              const prevWrapper = txWrapper;
+              const prevWrapper = txWrapper
               txWrapper = (tx) =>
                 typedApi.tx.Proxy.proxy({
                   real: MultiAddress.Id(proxyAddr),
                   call: prevWrapper(tx).decodedCall,
                   force_proxy_type: undefined,
-                });
-              break;
+                })
+              break
             }
             case "multisig": {
               const multisigInfo = {
                 addresses: currentResult.value.accounts.map((v) => v.address),
                 threshold: currentResult.value.threshold,
-              };
+              }
               return {
                 generateUrl: (tx: Transaction<any, any, any, any> | null) => {
                   const callData = tx
                     ? txWrapper(tx).getEncodedData(token).asHex()
-                    : null;
+                    : null
 
-                  const params = new URLSearchParams();
-                  params.set("chain", "sm-" + matchedChain);
-                  callData != null && params.set("calldata", callData);
-                  params.set("signatories", multisigInfo.addresses.join("_"));
-                  params.set("threshold", String(multisigInfo.threshold));
-                  return `https://multisig.usepapi.app/?${params.toString()}`;
+                  const params = new URLSearchParams()
+                  params.set("chain", "sm-" + matchedChain)
+                  callData != null && params.set("calldata", callData)
+                  params.set("signatories", multisigInfo.addresses.join("_"))
+                  params.set("threshold", String(multisigInfo.threshold))
+                  return `https://multisig.usepapi.app/?${params.toString()}`
                 },
-              };
+              }
             }
           }
         }
 
-        return null;
-      })
+        return null
+      }),
     ),
-  null
-);
+  null,
+)
 
 interface BatchChildBountiesProps {
-  id: number;
-  curator: SS58String;
-  onSubmit: (tx: Transaction<any, any, any, any>) => void;
+  id: number
+  curator: SS58String
+  onSubmit: (tx: Transaction<any, any, any, any>) => void
 }
 
 export const BatchChildBounties: FC<BatchChildBountiesProps> = (props) => {
-  const [hasValue, setHasValue] = useState(false);
+  const [hasValue, setHasValue] = useState(false)
 
   return (
     <DialogContent
@@ -130,45 +130,45 @@ export const BatchChildBounties: FC<BatchChildBountiesProps> = (props) => {
       </DialogHeader>
       <BatchChildBountiesForm {...props} onValue={setHasValue} />
     </DialogContent>
-  );
-};
+  )
+}
 
 const BatchChildBountiesForm: FC<
   BatchChildBountiesProps & {
-    onValue: (value: boolean) => void;
+    onValue: (value: boolean) => void
   }
 > = ({ id, curator, onSubmit, onValue }) => {
-  const [extendExpiry, setExtendExpiry] = useState(true);
-  const [rows, setRows] = useState<ChildRow[]>([]);
-  const multisigUrl = useStateObservable(curatorMultisigUrl$(curator));
-  const childId = useStateObservable(nextChildId$(id));
+  const [extendExpiry, setExtendExpiry] = useState(true)
+  const [rows, setRows] = useState<ChildRow[]>([])
+  const multisigUrl = useStateObservable(curatorMultisigUrl$(curator))
+  const childId = useStateObservable(nextChildId$(id))
   const minimumValue = usePromise(
     async () => typedApi.constants.ChildBounties.ChildBountyValueMinimum(),
-    null
-  );
+    null,
+  )
 
   const isValid =
     childId != null &&
     rows.length > 0 &&
     minimumValue != null &&
     rows.every(
-      (r) => r.amount != null && r.amount >= minimumValue && r.recipient
-    );
+      (r) => r.amount != null && r.amount >= minimumValue && r.recipient,
+    )
 
   const batchTx = useMemo(
     () =>
       isValid ? createBatchTx(id, childId, rows, curator, extendExpiry) : null,
-    [isValid, childId, rows, curator, extendExpiry]
-  );
+    [isValid, childId, rows, curator, extendExpiry],
+  )
   const url = useMemo(
     () => (multisigUrl ? multisigUrl.generateUrl(batchTx) : null),
-    [multisigUrl, batchTx]
-  );
+    [multisigUrl, batchTx],
+  )
   const submit = () => {
-    if (!batchTx) return null;
+    if (!batchTx) return null
 
-    onSubmit(batchTx);
-  };
+    onSubmit(batchTx)
+  }
 
   const rowUpdater = (index: number, prop: keyof ChildRow) => (value: any) =>
     setRows((rows) => {
@@ -179,7 +179,7 @@ const BatchChildBountiesForm: FC<
             ...emptyRow,
             [prop]: value,
           },
-        ];
+        ]
       }
       return rows.map((row, i) =>
         i === index
@@ -187,15 +187,15 @@ const BatchChildBountiesForm: FC<
               ...row,
               [prop]: value,
             }
-          : row
-      );
-    });
+          : row,
+      )
+    })
 
   const total = rows
     .map((v) => v.amount)
-    .reduce((acc, v) => (acc == null || v == null ? null : acc + v), 0n);
+    .reduce((acc, v) => (acc == null || v == null ? null : acc + v), 0n)
 
-  useEffect(() => onValue(rows.length > 0), [rows]);
+  useEffect(() => onValue(rows.length > 0), [rows])
 
   return (
     <div className="overflow-auto px-1 space-y-4">
@@ -215,7 +215,7 @@ const BatchChildBountiesForm: FC<
                 <button
                   className={twMerge(
                     "text-destructive",
-                    i == rows.length ? "invisible" : ""
+                    i == rows.length ? "invisible" : "",
                   )}
                   tabIndex={-1}
                   onClick={() =>
@@ -265,7 +265,7 @@ const BatchChildBountiesForm: FC<
         <Label
           className={twMerge(
             "flex items-center gap-1",
-            !extendExpiry && "text-muted-foreground"
+            !extendExpiry && "text-muted-foreground",
           )}
         >
           <Switch checked={extendExpiry} onCheckedChange={setExtendExpiry} />
@@ -302,20 +302,20 @@ const BatchChildBountiesForm: FC<
         </div>
       ) : null}
     </div>
-  );
-};
+  )
+}
 
 const createBatchTx = (
   id: number,
   childId: number,
   rows: ChildRow[],
   curator: SS58String,
-  extendExpiry: boolean
+  extendExpiry: boolean,
 ) => {
   const txs = [
     typedApi.tx.System.remark_with_event({
       remark: Binary.fromText(
-        "Transaction created with https://bounties.usepapi.app/"
+        "Transaction created with https://bounties.usepapi.app/",
       ),
     }),
     ...(extendExpiry
@@ -352,9 +352,9 @@ const createBatchTx = (
         child_bounty_id: childId + i,
       }),
     ]),
-  ];
+  ]
 
   return typedApi.tx.Utility.batch_all({
     calls: txs.map((c) => c.decodedCall),
-  });
-};
+  })
+}
